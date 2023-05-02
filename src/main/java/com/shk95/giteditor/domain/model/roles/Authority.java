@@ -4,10 +4,10 @@ import lombok.Getter;
 
 @Getter
 public enum Authority {
-	ROLE_USER("USER"), ROLE_ADMIN("ADMIN");
-	private final String description;
+	ROLE_USER, ROLE_ADMIN
+//	private final String description;
 
-	Authority(String description) {
+	/*Authority(String description) {
 		this.description = description;
-	}
+	}*/
 }

@@ -45,25 +45,24 @@ public class User extends BaseTimeEntity implements UserDetails {
 	@Builder.Default
 	private List<String> roles = new ArrayList<>();
 
-
 	@Override
 	public boolean isAccountNonExpired() {
-		return false;
+		return true;
 	}
 
 	@Override
 	public boolean isAccountNonLocked() {
-		return false;
+		return true;
 	}
 
 	@Override
 	public boolean isCredentialsNonExpired() {
-		return false;
+		return true;
 	}
 
 	@Override
 	public boolean isEnabled() {
-		return false;
+		return true;
 	}
 
 	@Override
@@ -73,13 +72,6 @@ public class User extends BaseTimeEntity implements UserDetails {
 			.collect(Collectors.toList());
 	}
 
-	public Long getId() {
-		return id;
-	}
-
-	public String getUsername() {
-		return username;
-	}
 
 	public String getEmailAddress() {
 		return emailAddress;
@@ -87,6 +79,11 @@ public class User extends BaseTimeEntity implements UserDetails {
 
 	public String getPassword() {
 		return password;
+	}
+
+	@Override
+	public String getUsername() {
+		return username;
 	}
 
 	public List<String> getRoles() {

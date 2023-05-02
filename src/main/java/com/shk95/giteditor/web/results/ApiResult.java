@@ -4,6 +4,7 @@ import org.springframework.util.Assert;
 
 import java.util.HashMap;
 
+@Deprecated
 public class ApiResult extends HashMap<String, Object> {
   private static final long serialVersionUID = 877825499039674411L;
 

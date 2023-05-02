@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.Assert;
 
+@Deprecated
 @NoArgsConstructor
 public class Result {
   public static ResponseEntity<ApiResult> created() {

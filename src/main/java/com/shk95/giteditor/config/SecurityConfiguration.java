@@ -1,12 +1,10 @@
 package com.shk95.giteditor.config;
 
-import com.shk95.giteditor.domain.application.impl.UserServiceImpl;
 import com.shk95.giteditor.domain.common.security.jwt.AuthEntryPointJwt;
 import com.shk95.giteditor.domain.common.security.jwt.JwtAuthenticationFilter;
 import com.shk95.giteditor.domain.common.security.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -17,8 +15,16 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-@Configuration
 @EnableWebSecurity
+/*
+@EnableGlobalMethodSecurity 주석은 Spring에서 메서드 수준 보안을 활성화하는 데 사용됩니다. 메서드 수준 보안의 다양한 측면을 구성하는 세 가지 특성을 제공합니다.
+
+securedEnabled: 메소드 보안을 위해 @Secured 주석을 활성화해야 하는지 여부를 나타냅니다. true로 설정하면 Spring은 보안 상태를 결정하기 위해 메소드에서 @Secured 주석을 찾습니다.
+jsr250Enabled: 메서드 보안을 위해 @RolesAllowed 주석을 활성화해야 하는지 여부를 나타냅니다. true로 설정하면 Spring은 보안 상태를 결정하기 위해 메소드에서 @RolesAllowed 주석을 찾습니다.
+prePostEnabled: 메서드 보안을 위해 @PreAuthorize 및 @PostAuthorize 주석을 활성화해야 하는지 여부를 나타냅니다. true로 설정하면 Spring은 보안 상태를 결정하기 위해 메서드에서 @PreAuthorize 및 @PostAuthorize 주석을 찾습니다.
+
+prePostEnabled 속성을 true로 설정하면 이 어노테이션은 Spring의 메소드 레벨 보안을 위해 @PreAuthorize 및 @PostAuthorize 어노테이션을 사용할 수 있습니다. 이를 통해 부울 값으로 평가되는 SpEL 표현식을 기반으로 메서드를 보호할 수 있습니다. 예를 들어 @PreAuthorize("hasRole('ROLE_ADMIN')")를 사용하여 "ROLE_ADMIN" 역할이 있는 사용자만 주석이 달린 메서드를 실행할 수 있도록 할 수 있습니다.
+ */
 @EnableGlobalMethodSecurity(
 	// securedEnabled = true,
 	// jsr250Enabled = true,
@@ -26,11 +32,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfiguration {
 
-	private final UserServiceImpl userDetailsService;
 	private final JwtTokenProvider jwtTokenProvider;
 	private final RedisTemplate redisTemplate;
 	private final AuthEntryPointJwt entryPoint;
-
 
 	@Bean
 	public JwtAuthenticationFilter authenticationJwtTokenFilter() {
@@ -38,37 +42,18 @@ public class SecurityConfiguration {
 		return new JwtAuthenticationFilter(jwtTokenProvider, redisTemplate);
 	}
 
-/*	@Bean
-	public DaoAuthenticationProvider authenticationProvider() {
-		DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-
-		authProvider.setUserDetailsService(userDetailsService);
-		authProvider.setPasswordEncoder(passwordEncoder());
-
-		return authProvider;
-	}*/
-
-/*	@Bean
-	public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
-		return authConfig.getAuthenticationManager();
-	}*/
-
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 		http.httpBasic().disable().cors().and().csrf().disable().formLogin().disable()
 //			.logout().disable()
-//			.exceptionHandling().authenticationEntryPoint(unauthorizedHandler).and()
 
 			.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
 			.and()
 			.authorizeRequests()
-			.antMatchers("/api/*").permitAll()
-			.antMatchers("/api/users/**").hasRole("USER")
-			.antMatchers("/api/admin/**").hasRole("ADMIN")
+			.antMatchers("/api/auth/*").permitAll()
+			.antMatchers("/api/users/**").hasRole("ROLE_USER")
+			.antMatchers("/api/admin/**").hasRole("ROLE_ADMIN")
 			.anyRequest().authenticated()
-
-//		http.authenticationProvider(authenticationProvider());
-
 			.and()
 			.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class)
 
@@ -103,6 +88,5 @@ public class SecurityConfiguration {
 			.build();
 		return new InMemoryUserDetailsManager(user1, admin);
 	}*/
-
 
 }

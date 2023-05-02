@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.Errors;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -24,7 +25,7 @@ public class AuthController {
 
 
 	@PostMapping("/login")
-	public ResponseEntity<?> login(@Validated UserRequestDto.Login login, Errors errors) {
+	public ResponseEntity<?> login(@Validated @RequestBody UserRequestDto.Login login, Errors errors) {
 		// validation check
 		if (errors.hasErrors()) {
 			return response.invalidFields(this.refineErrors(errors));
@@ -33,7 +34,7 @@ public class AuthController {
 	}
 
 	@PostMapping("/sign-up")
-	public ResponseEntity<?> signUp(@Validated UserRequestDto.SignUp signUp, Errors errors) {
+	public ResponseEntity<?> signUp(@Validated @RequestBody UserRequestDto.SignUp signUp, Errors errors) {
 		// validation check
 		if (errors.hasErrors()) {
 			return response.invalidFields(this.refineErrors(errors));
@@ -42,7 +43,7 @@ public class AuthController {
 	}
 
 	@PostMapping("/reissue")
-	public ResponseEntity<?> reissue(@Validated UserRequestDto.Reissue reissue, Errors errors) {
+	public ResponseEntity<?> reissue(@Validated @RequestBody UserRequestDto.Reissue reissue, Errors errors) {
 		// validation check
 		if (errors.hasErrors()) {
 			return response.invalidFields(this.refineErrors(errors));
@@ -51,7 +52,7 @@ public class AuthController {
 	}
 
 	@PostMapping("/logout")
-	public ResponseEntity<?> logout(@Validated UserRequestDto.Logout logout, Errors errors) {
+	public ResponseEntity<?> logout(@Validated @RequestBody UserRequestDto.Logout logout, Errors errors) {
 		// validation check
 		if (errors.hasErrors()) {
 			return response.invalidFields(this.refineErrors(errors));

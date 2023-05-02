@@ -1,3 +1,4 @@
+/*
 package com.shk95.giteditor.domain.application.impl;
 
 import com.shk95.giteditor.domain.application.UserService;
@@ -43,13 +44,15 @@ public class _UserServiceImpl implements UserService {
 	private RegistrationManagement registrationManagement;
 
 
-	/*public UserServiceImpl(RegistrationManagement registrationManagement,
+	*/
+/*public UserServiceImpl(RegistrationManagement registrationManagement,
 	                       MailManager mailManager,
 	                       CustomUserRepository customUserRepository) {
 		this.registrationManagement = registrationManagement;
 		this.mailManager = mailManager;
 		this.customUserRepository = customUserRepository;
-	}*/
+	}*//*
+
 
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -69,6 +72,7 @@ public class _UserServiceImpl implements UserService {
 	}
 
 
+*/
 /*	@Override
 	public User findById(Long userId) {
 		return null;
@@ -83,7 +87,8 @@ public class _UserServiceImpl implements UserService {
 			command.getPassword());
 
 		sendWelcomeMessage(newUser);
-	}*/
+	}*//*
+
 
 	private void sendWelcomeMessage(User user) {
 		mailManager.send(
@@ -161,3 +166,4 @@ public class _UserServiceImpl implements UserService {
 		return Result.created();
 	}
 }
+*/
