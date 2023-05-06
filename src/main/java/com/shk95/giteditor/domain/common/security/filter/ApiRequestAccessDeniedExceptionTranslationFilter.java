@@ -1,4 +1,4 @@
-package com.shk95.giteditor.domain.common.security;
+package com.shk95.giteditor.domain.common.security.filter;
 
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.web.util.ThrowableAnalyzer;
@@ -12,9 +12,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+@Deprecated
 public class ApiRequestAccessDeniedExceptionTranslationFilter extends GenericFilterBean {
 
-  private ThrowableAnalyzer throwableAnalyzer = new DefaultThrowableAnalyzer();
+  private final ThrowableAnalyzer throwableAnalyzer = new DefaultThrowableAnalyzer();
 
   @Override
   public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)

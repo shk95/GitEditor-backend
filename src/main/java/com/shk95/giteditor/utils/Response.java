@@ -1,21 +1,19 @@
-package com.shk95.giteditor.web.payload.response;
+package com.shk95.giteditor.utils;
 
 import lombok.Builder;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Component;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 
-@Component
 public class Response {
 
-	public ResponseEntity<?> success(Object data, String msg, HttpStatus status) {
+	public static ResponseEntity<?> success(Object data, String msg, HttpStatus status) {
 		Body body = Body.builder()
-			.state(status.value())
+			.status(status.value())
 			.data(data)
 			.result("success")
 			.message(msg)
@@ -28,7 +26,7 @@ public class Response {
 	 * <p> 메세지만 가진 성공 응답을 반환한다.</p>
 	 * <pre>
 	 *     {
-	 *         "state" : 200,
+	 *         "status" : 200,
 	 *         "result" : success,
 	 *         "message" : message,
 	 *         "data" : [],
@@ -39,7 +37,7 @@ public class Response {
 	 * @param msg 응답 바디 message 필드에 포함될 정보
 	 * @return 응답 객체
 	 */
-	public ResponseEntity<?> success(String msg) {
+	public static ResponseEntity<?> success(String msg) {
 		return success(Collections.emptyList(), msg, HttpStatus.OK);
 	}
 
@@ -47,7 +45,7 @@ public class Response {
 	 * <p> 데이터만 가진 성공 응답을 반환한다.</p>
 	 * <pre>
 	 *     {
-	 *         "state" : 200,
+	 *         "status" : 200,
 	 *         "result" : success,
 	 *         "message" : null,
 	 *         "data" : [{data1}, {data2}...],
@@ -58,7 +56,7 @@ public class Response {
 	 * @param data 응답 바디 data 필드에 포함될 정보
 	 * @return 응답 객체
 	 */
-	public ResponseEntity<?> success(Object data) {
+	public static ResponseEntity<?> success(Object data) {
 		return success(data, null, HttpStatus.OK);
 	}
 
@@ -66,7 +64,7 @@ public class Response {
 	 * <p> 성공 응답만 반환한다. </p>
 	 * <pre>
 	 *     {
-	 *         "state" : 200,
+	 *         "status" : 200,
 	 *         "result" : success,
 	 *         "message" : null,
 	 *         "data" : [],
@@ -76,13 +74,13 @@ public class Response {
 	 *
 	 * @return 응답 객체
 	 */
-	public ResponseEntity<?> success() {
+	public static ResponseEntity<?> success() {
 		return success(Collections.emptyList(), null, HttpStatus.OK);
 	}
 
-	public ResponseEntity<?> fail(Object data, String msg, HttpStatus status) {
+	public static ResponseEntity<?> fail(Object data, String msg, HttpStatus status) {
 		Body body = Body.builder()
-			.state(status.value())
+			.status(status.value())
 			.data(data)
 			.result("fail")
 			.message(msg)
@@ -95,7 +93,7 @@ public class Response {
 	 * <p> 메세지를 가진 실패 응답을 반환한다. </p>
 	 * <pre>
 	 *     {
-	 *         "state" : HttpStatus Code,
+	 *         "status" : HttpStatus Code,
 	 *         "result" : fail,
 	 *         "message" : message,
 	 *         "data" : [],
@@ -107,13 +105,13 @@ public class Response {
 	 * @param status 응답 바디 status 필드에 포함될 응답 상태 코드
 	 * @return 응답 객체
 	 */
-	public ResponseEntity<?> fail(String msg, HttpStatus status) {
+	public static ResponseEntity<?> fail(String msg, HttpStatus status) {
 		return fail(Collections.emptyList(), msg, status);
 	}
 
-	public ResponseEntity<?> invalidFields(LinkedList<LinkedHashMap<String, String>> errors) {
+	public static ResponseEntity<?> invalidFields(LinkedList<LinkedHashMap<String, String>> errors) {
 		Body body = Body.builder()
-			.state(HttpStatus.BAD_REQUEST.value())
+			.status(HttpStatus.BAD_REQUEST.value())
 			.data(Collections.emptyList())
 			.result("fail")
 			.message("")
@@ -126,7 +124,7 @@ public class Response {
 	@Builder
 	private static class Body {
 
-		private int state;
+		private int status;
 		private String result;
 		private String message;
 		private Object data;

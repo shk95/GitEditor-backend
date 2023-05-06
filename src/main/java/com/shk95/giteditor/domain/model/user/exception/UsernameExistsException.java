@@ -1,4 +1,4 @@
-package com.shk95.giteditor.domain.model.user;
+package com.shk95.giteditor.domain.model.user.exception;
 
 public class UsernameExistsException extends RegistrationException {
 

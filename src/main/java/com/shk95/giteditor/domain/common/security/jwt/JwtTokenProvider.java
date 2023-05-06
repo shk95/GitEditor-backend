@@ -7,6 +7,7 @@ import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -90,8 +91,7 @@ public class JwtTokenProvider {
 		Claims claims = parseClaims(accessToken);
 
 		if (claims.get(AUTHORITIES_KEY) == null) {
-			//TODO:: Change Custom Exception
-			throw new RuntimeException("권한 정보가 없는 토큰입니다.");
+			throw new AccessDeniedException("권한 정보가 없는 토큰입니다.");
 		}
 
 		//클레임에서 권한 정보 가져오기

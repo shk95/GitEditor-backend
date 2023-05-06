@@ -1,4 +1,4 @@
-package com.shk95.giteditor.domain.common.security;
+package com.shk95.giteditor.domain.common.security.oauth;
 
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;

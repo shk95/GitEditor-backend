@@ -1,11 +1,10 @@
 package com.shk95.giteditor.config;
 
-import com.shk95.giteditor.domain.common.security.jwt.AuthEntryPointJwt;
-import com.shk95.giteditor.domain.common.security.jwt.JwtAuthenticationFilter;
-import com.shk95.giteditor.domain.common.security.jwt.JwtTokenProvider;
+import com.shk95.giteditor.domain.common.security.filter.JwtAuthenticationFilter;
+import com.shk95.giteditor.domain.common.security.handler.AuthEntryPointImpl;
+import com.shk95.giteditor.domain.common.security.handler.LogoutSuccessHandlerImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -32,33 +31,25 @@ prePostEnabled 속성을 true로 설정하면 이 어노테이션은 Spring의 �
 @RequiredArgsConstructor
 public class SecurityConfiguration {
 
-	private final JwtTokenProvider jwtTokenProvider;
-	private final RedisTemplate redisTemplate;
-	private final AuthEntryPointJwt entryPoint;
-
-	@Bean
-	public JwtAuthenticationFilter authenticationJwtTokenFilter() {
-
-		return new JwtAuthenticationFilter(jwtTokenProvider, redisTemplate);
-	}
+	private final AuthEntryPointImpl authEntryPoint;
+	private final LogoutSuccessHandlerImpl logoutSuccessHandler;
+	private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 		http.httpBasic().disable().cors().and().csrf().disable().formLogin().disable()
-//			.logout().disable()
 
-			.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-			.and()
+			.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
 			.authorizeRequests()
 			.antMatchers("/api/auth/*").permitAll()
 			.antMatchers("/api/users/**").hasRole("ROLE_USER")
 			.antMatchers("/api/admin/**").hasRole("ROLE_ADMIN")
-			.anyRequest().authenticated()
-			.and()
-			.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class)
-
-			.exceptionHandling().authenticationEntryPoint(entryPoint)
+			.anyRequest().authenticated().and()
+			.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+			.exceptionHandling().authenticationEntryPoint(authEntryPoint)
 		;
+		http.logout().logoutUrl("/api/auth/logout").logoutSuccessHandler(logoutSuccessHandler);
+
 		return http.build();
 	}
 

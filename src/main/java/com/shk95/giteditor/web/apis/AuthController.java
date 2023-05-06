@@ -1,8 +1,9 @@
 package com.shk95.giteditor.web.apis;
 
-import com.shk95.giteditor.domain.model.user.UserService;
+import com.shk95.giteditor.domain.application.UserService;
+import com.shk95.giteditor.utils.Resolver;
 import com.shk95.giteditor.web.payload.request.UserRequestDto;
-import com.shk95.giteditor.web.payload.response.Response;
+import com.shk95.giteditor.utils.Response;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.Errors;
@@ -12,23 +13,19 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-
 //@CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthController {
 	private final UserService usersService;
-	private final Response response;
 
 
 	@PostMapping("/login")
 	public ResponseEntity<?> login(@Validated @RequestBody UserRequestDto.Login login, Errors errors) {
 		// validation check
 		if (errors.hasErrors()) {
-			return response.invalidFields(this.refineErrors(errors));
+			return Response.invalidFields(Resolver.error.inputFields(errors));
 		}
 		return usersService.login(login);
 	}
@@ -37,7 +34,7 @@ public class AuthController {
 	public ResponseEntity<?> signUp(@Validated @RequestBody UserRequestDto.SignUp signUp, Errors errors) {
 		// validation check
 		if (errors.hasErrors()) {
-			return response.invalidFields(this.refineErrors(errors));
+			return Response.invalidFields(Resolver.error.inputFields(errors));
 		}
 		return usersService.signUp(signUp);
 	}
@@ -46,7 +43,7 @@ public class AuthController {
 	public ResponseEntity<?> reissue(@Validated @RequestBody UserRequestDto.Reissue reissue, Errors errors) {
 		// validation check
 		if (errors.hasErrors()) {
-			return response.invalidFields(this.refineErrors(errors));
+			return Response.invalidFields(Resolver.error.inputFields(errors));
 		}
 		return usersService.reissue(reissue);
 	}
@@ -55,20 +52,9 @@ public class AuthController {
 	public ResponseEntity<?> logout(@Validated @RequestBody UserRequestDto.Logout logout, Errors errors) {
 		// validation check
 		if (errors.hasErrors()) {
-			return response.invalidFields(this.refineErrors(errors));
+			return Response.invalidFields(Resolver.error.inputFields(errors));
 		}
 		return usersService.logout(logout);
-	}
-
-	public LinkedList<LinkedHashMap<String, String>> refineErrors(Errors errors) {
-		LinkedList<LinkedHashMap<String, String>> errorList = new LinkedList<>();
-		errors.getFieldErrors().forEach(e -> {
-			LinkedHashMap<String, String> error = new LinkedHashMap<>();
-			error.put("field", e.getField());
-			error.put("message", e.getDefaultMessage());
-			errorList.push(error);
-		});
-		return errorList;
 	}
 
 	//	private final JwtUtils jwtUtils;

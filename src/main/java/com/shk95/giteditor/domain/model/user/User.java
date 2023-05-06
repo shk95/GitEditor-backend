@@ -2,37 +2,35 @@ package com.shk95.giteditor.domain.model.user;
 
 
 import com.shk95.giteditor.domain.common.model.BaseTimeEntity;
+import com.shk95.giteditor.domain.model.roles.Authority;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.persistence.*;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @Entity
+@Getter
 @Table(name = "users",
 	uniqueConstraints = {
 		@UniqueConstraint(columnNames = "username"),
 		@UniqueConstraint(columnNames = "email_address")
 	})
-public class User extends BaseTimeEntity implements UserDetails {
+public class User extends BaseTimeEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
 	@Column(name = "username", nullable = false, length = 50, unique = true)
-	private String username;
+	private String username;// user id
 
 	@Column(name = "email_address", nullable = false, length = 100, unique = true)
 	private String emailAddress;
@@ -43,52 +41,7 @@ public class User extends BaseTimeEntity implements UserDetails {
 	@Column
 	@ElementCollection(fetch = FetchType.EAGER)
 	@Builder.Default
-	private List<String> roles = new ArrayList<>();
-
-	@Override
-	public boolean isAccountNonExpired() {
-		return true;
-	}
-
-	@Override
-	public boolean isAccountNonLocked() {
-		return true;
-	}
-
-	@Override
-	public boolean isCredentialsNonExpired() {
-		return true;
-	}
-
-	@Override
-	public boolean isEnabled() {
-		return true;
-	}
-
-	@Override
-	public Collection<? extends GrantedAuthority> getAuthorities() {
-		return this.roles.stream()
-			.map(SimpleGrantedAuthority::new)
-			.collect(Collectors.toList());
-	}
-
-
-	public String getEmailAddress() {
-		return emailAddress;
-	}
-
-	public String getPassword() {
-		return password;
-	}
-
-	@Override
-	public String getUsername() {
-		return username;
-	}
-
-	public List<String> getRoles() {
-		return roles;
-	}
+	private List<Authority> roles = new ArrayList<>();
 
 	@Override
 	public boolean equals(Object o) {
