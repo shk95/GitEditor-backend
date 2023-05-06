@@ -20,7 +20,7 @@ import java.util.Collection;
 public class RefreshToken {
 
 	@Id
-	private String id;
+	private String id;//username
 
 	private String ip;
 

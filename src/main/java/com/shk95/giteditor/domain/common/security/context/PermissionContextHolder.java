@@ -1,6 +1,6 @@
 package com.shk95.giteditor.domain.common.security.context;
 
-import com.ruoyi.common.core.text.Convert;
+import com.shk95.giteditor.utils.text.Convert;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 
