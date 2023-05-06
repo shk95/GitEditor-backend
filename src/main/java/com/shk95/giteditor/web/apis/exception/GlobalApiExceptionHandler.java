@@ -36,4 +36,10 @@ public class GlobalApiExceptionHandler extends ResponseEntityExceptionHandler {
 		log.info("Request denied. Illegal access token submitted");
 		return Response.fail(ex.getMessage(), HttpStatus.FORBIDDEN);
 	}
+
+	@ExceptionHandler({IllegalArgumentException.class})
+	protected ResponseEntity<?> handle(IllegalArgumentException ex) {
+		log.warn("Illegal Argument Exception : {}", ex.getMessage());
+		return Response.fail(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+	}
 }

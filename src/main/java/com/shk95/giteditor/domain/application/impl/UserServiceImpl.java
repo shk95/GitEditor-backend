@@ -26,6 +26,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Collections;
@@ -103,37 +104,38 @@ public class UserServiceImpl implements UserService {
 	}
 
 	public ResponseEntity<?> reissue(UserRequestDto.Reissue reissue, HttpServletRequest request) {
-
 		String accessToken = jwtTokenProvider.resolveToken(request);
 		String refreshToken = reissue.getRefreshToken();
 		String parseUsername = jwtTokenProvider.getAuthentication(accessToken).getName();
+		Assert.notNull(accessToken, "access token may not be null");
+		Assert.notNull(refreshToken, "refresh token may not be null");
+		Assert.notNull(parseUsername, "parseUsername may not be null");
 
-		// 1. Refresh Token 검증. 실패시 로그아웃 상태이다.
+		// Refresh Token 검증. 실패시 로그아웃 상태이다.
 		if (!jwtTokenProvider.validateToken(refreshToken)) {
-			// refresh token 만료(로그아웃 처리)
-			return Response.fail("Refresh Token 정보가 유효하지 않습니다.", HttpStatus.BAD_REQUEST);
+			return Response.fail("Refresh Token 정보가 유효하지 않습니다.", HttpStatus.NOT_ACCEPTABLE);
 		}
 		if (!jwtTokenProvider.isRefreshToken(refreshToken)) {
-			return Response.fail("Refresh Token 이 아닙니다.", HttpStatus.BAD_REQUEST);
+			return Response.fail("Refresh Token 이 아닙니다.", HttpStatus.NOT_ACCEPTABLE);
 		}
 		//refresh token
-		RefreshToken refreshTokenOld = refreshTokenRedisRepository.findByRefreshToken(refreshToken);
-		if (!Objects.equals(refreshTokenOld.getId(), parseUsername)) {
-			return Response.fail("Refresh Token 정보와 Access Token 정보가 일치하지 않습니다.", HttpStatus.BAD_REQUEST);
+		RefreshToken bySavedRefreshToken = refreshTokenRedisRepository.findByRefreshToken(refreshToken);
+		if (!Objects.equals(bySavedRefreshToken.getId(), parseUsername)) {
+			return Response.fail("Refresh Token 정보와 Access Token 정보가 일치하지 않습니다.", HttpStatus.NOT_ACCEPTABLE);
 		}
 		// 최초 로그인한 ip 와 같은지 확인 (처리 방식에 따라 재발급을 하지 않거나 메일 등의 알림을 주는 방법이 있음)
 		String currentIpAddress = Helper.getClientIp(request);
-		if (!refreshTokenOld.getIp().equals(currentIpAddress)) {
-			return Response.fail("IP 주소가 다릅니다.", HttpStatus.BAD_REQUEST);
+		if (!bySavedRefreshToken.getIp().equals(currentIpAddress)) {
+			return Response.fail("IP 주소가 다릅니다.", HttpStatus.NOT_ACCEPTABLE);
 		}
 		// Redis 에 저장된 RefreshToken 정보를 기반으로 JWT Token 생성
-		UserResponseDto.TokenInfo tokenInfo = jwtTokenProvider.generateToken(parseUsername, refreshTokenOld.getAuthorities());
+		UserResponseDto.TokenInfo tokenInfo = jwtTokenProvider.generateToken(parseUsername, bySavedRefreshToken.getAuthorities());
 
 		// Redis RefreshToken update
 		refreshTokenRedisRepository.save(RefreshToken.builder()
 			.id(parseUsername)
 			.ip(currentIpAddress)
-			.authorities(refreshTokenOld.getAuthorities())
+			.authorities(bySavedRefreshToken.getAuthorities())
 			.refreshToken(tokenInfo.getRefreshToken())
 			.build());
 
