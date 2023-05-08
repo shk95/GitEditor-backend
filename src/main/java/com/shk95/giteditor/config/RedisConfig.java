@@ -9,11 +9,10 @@ import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
-import org.springframework.data.redis.serializer.StringRedisSerializer;
 
-@EnableRedisRepositories
-@Configuration
 @RequiredArgsConstructor
+@Configuration
+@EnableRedisRepositories
 public class RedisConfig {
 
 	private final RedisProperties redisProperties;
@@ -28,12 +27,18 @@ public class RedisConfig {
 	}
 
 	@Bean
-	@SuppressWarnings(value = { "unchecked", "rawtypes" })
+	public RedisTemplate<?, ?> redisTemplate(RedisConnectionFactory redisConnectionFactory) {// redis repository
+
+		RedisTemplate<byte[], byte[]> template = new RedisTemplate<byte[], byte[]>();
+		template.setConnectionFactory(redisConnectionFactory);
+		return template;
+	}
+	/*@Bean
 	public RedisTemplate<String, Object> redisTemplate() {
 		RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
 		redisTemplate.setConnectionFactory(redisConnectionFactory());
 		redisTemplate.setKeySerializer(new StringRedisSerializer());
 		redisTemplate.setValueSerializer(new StringRedisSerializer());
 		return redisTemplate;
-	}
+	}*/
 }

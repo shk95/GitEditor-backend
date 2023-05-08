@@ -1,4 +1,4 @@
-package com.shk95.giteditor.infrastructure.repository.redis;
+package com.shk95.giteditor.domain.model.token;
 
 import com.shk95.giteditor.config.ExpireTime;
 import lombok.AllArgsConstructor;
@@ -12,10 +12,10 @@ import org.springframework.security.core.GrantedAuthority;
 
 import java.util.Collection;
 
-@Builder
-@Getter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
+@Getter
 @RedisHash(value = "refresh", timeToLive = ExpireTime.REFRESH_TOKEN_EXPIRE_TIME_FOR_REDIS)
 public class RefreshToken {
 

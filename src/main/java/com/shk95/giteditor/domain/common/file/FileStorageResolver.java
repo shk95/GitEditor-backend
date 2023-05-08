@@ -18,7 +18,7 @@ public class FileStorageResolver {
 
 	/**
 	 * Resolve the file storage should be used based on
-	 * active file storage configuration in application.properties
+	 * active file storage configuration in application.yml
 	 *
 	 * @return the active file storage instance
 	 */

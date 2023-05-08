@@ -16,13 +16,13 @@ import java.util.Objects;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Entity
 @Getter
 @Table(name = "users",
 	uniqueConstraints = {
 		@UniqueConstraint(columnNames = "username"),
 		@UniqueConstraint(columnNames = "email_address")
 	})
+@Entity
 public class User extends BaseTimeEntity {
 
 	@Id

@@ -8,15 +8,16 @@ import com.shk95.giteditor.domain.common.security.jwt.JwtTokenProvider;
 import com.shk95.giteditor.domain.model.roles.Authority;
 import com.shk95.giteditor.domain.model.user.User;
 import com.shk95.giteditor.domain.model.user.UserRepository;
-import com.shk95.giteditor.infrastructure.repository.redis.RefreshToken;
-import com.shk95.giteditor.infrastructure.repository.redis.RefreshTokenRedisRepository;
+import com.shk95.giteditor.domain.model.token.BlacklistTokenRepository;
+import com.shk95.giteditor.domain.model.token.BlacklistToken;
+import com.shk95.giteditor.domain.model.token.RefreshToken;
+import com.shk95.giteditor.domain.model.token.RefreshTokenRepository;
 import com.shk95.giteditor.utils.Helper;
 import com.shk95.giteditor.utils.Response;
 import com.shk95.giteditor.utils.SecurityUtil;
 import com.shk95.giteditor.web.payload.request.UserRequestDto;
 import com.shk95.giteditor.web.payload.response.UserResponseDto;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -31,7 +32,6 @@ import org.springframework.util.Assert;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Collections;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -40,8 +40,8 @@ public class UserServiceImpl implements UserService {
 	private final PasswordEncoder passwordEncoder;
 	private final JwtTokenProvider jwtTokenProvider;
 	private final AuthenticationManagerBuilder authenticationManagerBuilder;
-	private final RefreshTokenRedisRepository refreshTokenRedisRepository;
-	private final RedisTemplate redisTemplate;
+	private final RefreshTokenRepository refreshTokenRepository;
+	private final BlacklistTokenRepository blacklistTokenRepository;
 	private final SecurityUtil securityUtil;
 	private final MailManager mailManager;
 
@@ -53,7 +53,7 @@ public class UserServiceImpl implements UserService {
 	}
 
 	private UserDetails createUserDetails(User user) {
-		return UserDetailsImpl.builder().userId(user.getUsername()).password(user.getPassword()).roles(user.getRoles()).build();
+		return UserDetailsImpl.builder().username(user.getUsername()).password(user.getPassword()).roles(user.getRoles()).build();
 	}
 
 	public ResponseEntity<?> signUp(UserRequestDto.SignUp signUp) {
@@ -71,6 +71,8 @@ public class UserServiceImpl implements UserService {
 			.roles(Collections.singletonList(Authority.ROLE_USER))
 			.build();
 		userRepository.save(user);
+
+//		sendWelcomeMessage(user);
 
 		return Response.success("회원가입에 성공했습니다.");
 	}
@@ -93,7 +95,7 @@ public class UserServiceImpl implements UserService {
 		UserResponseDto.TokenInfo tokenInfo = jwtTokenProvider.generateToken(authentication);
 
 		// 4. Redis RefreshToken 저장
-		refreshTokenRedisRepository.save(RefreshToken.builder()
+		refreshTokenRepository.save(RefreshToken.builder()
 			.id(authentication.getName())
 			.ip(Helper.getClientIp(request))
 			.authorities(authentication.getAuthorities())
@@ -119,7 +121,7 @@ public class UserServiceImpl implements UserService {
 			return Response.fail("Refresh Token 이 아닙니다.", HttpStatus.NOT_ACCEPTABLE);
 		}
 		//refresh token
-		RefreshToken bySavedRefreshToken = refreshTokenRedisRepository.findByRefreshToken(refreshToken);
+		RefreshToken bySavedRefreshToken = refreshTokenRepository.findByRefreshToken(refreshToken);
 		if (!Objects.equals(bySavedRefreshToken.getId(), parseUsername)) {
 			return Response.fail("Refresh Token 정보와 Access Token 정보가 일치하지 않습니다.", HttpStatus.NOT_ACCEPTABLE);
 		}
@@ -132,7 +134,7 @@ public class UserServiceImpl implements UserService {
 		UserResponseDto.TokenInfo tokenInfo = jwtTokenProvider.generateToken(parseUsername, bySavedRefreshToken.getAuthorities());
 
 		// Redis RefreshToken update
-		refreshTokenRedisRepository.save(RefreshToken.builder()
+		refreshTokenRepository.save(RefreshToken.builder()
 			.id(parseUsername)
 			.ip(currentIpAddress)
 			.authorities(bySavedRefreshToken.getAuthorities())
@@ -152,13 +154,14 @@ public class UserServiceImpl implements UserService {
 		Authentication authentication = jwtTokenProvider.getAuthentication(logout.getAccessToken());
 
 		// 3. Redis 에서 해당 User id 로 저장된 Refresh Token 이 있는지 여부를 확인 후 있을 경우 삭제합니다.
-		refreshTokenRedisRepository.deleteRefreshTokenById(authentication.getName());
+		refreshTokenRepository.deleteRefreshTokenById(authentication.getName());
 
 		// 4. 해당 Access Token 유효시간 가지고 와서 BlackList 로 저장하기
 		Long expiration = jwtTokenProvider.getExpiration(logout.getAccessToken());
-
-		redisTemplate.opsForValue()
-			.set(logout.getAccessToken(), "logout", expiration, TimeUnit.MILLISECONDS);
+		blacklistTokenRepository.save(BlacklistToken.builder()
+			.accessToken(logout.getAccessToken())
+			.isLogout(true)
+			.expiration(expiration).build());
 
 		return Response.success("로그아웃 되었습니다.");
 	}
@@ -181,7 +184,7 @@ public class UserServiceImpl implements UserService {
 	private void sendWelcomeMessage(User user) {
 		mailManager.send(
 			user.getEmailAddress(),
-			"Welcome to TaskAgile",
+			"Welcome to GitEditor",
 			"welcome.ftl",
 			MessageVariable.from("user", user)
 		);

@@ -1,0 +1,80 @@
+spring:
+  datasource:
+    url: <>
+    username: <>
+    password: <>
+    driver-class-name: org.mariadb.jdbc.Driver
+
+  redis:
+    host: <>
+    port: 0000
+    password: 0000
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate:
+        show_sql: true
+
+  security:
+    oauth2:
+      client:
+        registration:
+          github:
+            client-id: <>
+            client-secret: <>
+            scope: <>
+        provider:
+          github:
+            authorization-uri: <>
+            token-uri: <>
+            user-info-uri: <>
+            user-name-attribute: <>
+
+  devtools:
+    livereload:
+      enabled: true
+
+  servlet:
+    multipart:
+      maxFileSize: 20MB
+      maxRequestSize: 100MB
+
+  freemarker:
+    template-loader-path: classpath:/mail-templates/
+
+  mail:
+    host: <>
+    port: 1025
+    properties:
+      mail:
+        smtp:
+          auth: false
+  config:
+    import: application-secret.yml, application-dev.yml
+  profiles:
+    group:
+      dev:
+        application-dev
+    include:
+      - application-secret
+
+app:
+  token-secret-key: test
+
+  file-storage:
+    local-root-folder: /data/files
+    temp-folder: /data/temp
+    active: s3FileStorage
+    s3-access-key: <Your S3 Access Key>
+    s3-secret-key: <Your S3 Secret Key>
+    s3-bucket-name: <Your S3 Bucket Name>
+    s3-region: <Your S3 Region>
+
+  image:
+    command-search-path: /usr/bin/
+
+  cdn:
+    url: <S3 root URL>

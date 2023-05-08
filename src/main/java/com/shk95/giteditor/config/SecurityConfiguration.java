@@ -9,7 +9,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.factory.PasswordEncoderFactories;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -22,7 +22,8 @@ securedEnabled: 메소드 보안을 위해 @Secured 주석을 활성화해야 �
 jsr250Enabled: 메서드 보안을 위해 @RolesAllowed 주석을 활성화해야 하는지 여부를 나타냅니다. true로 설정하면 Spring은 보안 상태를 결정하기 위해 메소드에서 @RolesAllowed 주석을 찾습니다.
 prePostEnabled: 메서드 보안을 위해 @PreAuthorize 및 @PostAuthorize 주석을 활성화해야 하는지 여부를 나타냅니다. true로 설정하면 Spring은 보안 상태를 결정하기 위해 메서드에서 @PreAuthorize 및 @PostAuthorize 주석을 찾습니다.
 
-prePostEnabled 속성을 true로 설정하면 이 어노테이션은 Spring의 메소드 레벨 보안을 위해 @PreAuthorize 및 @PostAuthorize 어노테이션을 사용할 수 있습니다. 이를 통해 부울 값으로 평가되는 SpEL 표현식을 기반으로 메서드를 보호할 수 있습니다. 예를 들어 @PreAuthorize("hasRole('ROLE_ADMIN')")를 사용하여 "ROLE_ADMIN" 역할이 있는 사용자만 주석이 달린 메서드를 실행할 수 있도록 할 수 있습니다.
+prePostEnabled 속성을 true로 설정하면 이 어노테이션은 Spring의 메소드 레벨 보안을 위해 @PreAuthorize 및 @PostAuthorize 어노테이션을 사용할 수 있습니다. 이를 통해 부울 값으로 평가되는 SpEL 표현식을 기반으로 메서드를 보호할 수 있습니다.
+예를 들어 @PreAuthorize("hasRole('ROLE_ADMIN')")를 사용하여 "ROLE_ADMIN" 역할이 있는 사용자만 주석이 달린 메서드를 실행할 수 있도록 할 수 있습니다.
  */
 @EnableGlobalMethodSecurity(
 	// securedEnabled = true,
@@ -41,14 +42,14 @@ public class SecurityConfiguration {
 
 			.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
 			.authorizeRequests()
-			.antMatchers("/api/auth/*").permitAll()
-			.antMatchers("/api/users/**").hasRole("USER")
-			.antMatchers("/api/admin/**").hasRole("ADMIN")
+			.antMatchers("/auth/*").permitAll()
+			.antMatchers("/api/**").hasRole("USER")
+			.antMatchers("/admin/**").hasRole("ADMIN")
 			.anyRequest().authenticated().and()
 			.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
 			.exceptionHandling().authenticationEntryPoint(authEntryPoint)
 		;
-		http.logout().logoutUrl("/api/auth/logout").logoutSuccessHandler(logoutSuccessHandler);
+		http.logout().logoutUrl("/auth/logout").logoutSuccessHandler(logoutSuccessHandler);
 
 		return http.build();
 	}
@@ -63,7 +64,7 @@ public class SecurityConfiguration {
 	@Bean
 	public PasswordEncoder passwordEncoder() {
 
-		return PasswordEncoderFactories.createDelegatingPasswordEncoder();
+		return new BCryptPasswordEncoder();
 	}
 
 	/*@Bean

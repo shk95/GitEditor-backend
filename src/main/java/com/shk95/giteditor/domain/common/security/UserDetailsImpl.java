@@ -13,7 +13,7 @@ import java.util.Set;
 @Builder
 @Getter
 public class UserDetailsImpl implements UserDetails{
-	private String userId;
+	private String username;
 	private String password;
 	private String accessToken;
 	private Long loginTime;
@@ -28,31 +28,31 @@ public class UserDetailsImpl implements UserDetails{
 
 	@Override
 	public String getPassword() {
-		return null;
+		return password;
 	}
 
 	@Override
 	public String getUsername() {
-		return null;
+		return username;
 	}
 
 	@Override
 	public boolean isAccountNonExpired() {
-		return false;
+		return true;
 	}
 
 	@Override
 	public boolean isAccountNonLocked() {
-		return false;
+		return true;
 	}
 
 	@Override
 	public boolean isCredentialsNonExpired() {
-		return false;
+		return true;
 	}
 
 	@Override
 	public boolean isEnabled() {
-		return false;
+		return true;
 	}
 }
