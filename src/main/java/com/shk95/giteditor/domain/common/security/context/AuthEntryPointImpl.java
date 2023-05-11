@@ -1,4 +1,4 @@
-package com.shk95.giteditor.domain.common.security.handler;
+package com.shk95.giteditor.domain.common.security.context;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.shk95.giteditor.utils.Response;

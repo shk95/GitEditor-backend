@@ -1,6 +1,7 @@
 package com.shk95.giteditor.web.apis;
 
 import com.shk95.giteditor.domain.application.UserService;
+import com.shk95.giteditor.domain.common.security.jwt.JwtTokenProvider;
 import com.shk95.giteditor.utils.Resolver;
 import com.shk95.giteditor.utils.Response;
 import com.shk95.giteditor.web.payload.request.UserRequestDto;
@@ -11,6 +12,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 @CrossOrigin(origins = "http://localhost:4000", maxAge = 5000)
 @RestController
@@ -18,43 +20,41 @@ import javax.servlet.http.HttpServletRequest;
 @RequiredArgsConstructor
 public class AuthController {
 	private final UserService usersService;
-
+	private final JwtTokenProvider jwtTokenProvider;
 
 	@PostMapping("/login")
-	public ResponseEntity<?> login(@Validated @RequestBody UserRequestDto.Login login, Errors errors
-		, HttpServletRequest request) {
+	public ResponseEntity<?> login(@Validated @RequestBody UserRequestDto.Login loginDto, Errors errors
+		, HttpServletRequest request, HttpServletResponse response) {
 		// validation check
 		if (errors.hasErrors()) {
 			return Response.invalidFields(Resolver.error.inputFields(errors));
 		}
-		return usersService.login(login, request);
+		return usersService.defaultLogin(loginDto, request, response);
 	}
 
 	@PostMapping("/sign-up")
-	public ResponseEntity<?> signUp(@Validated @RequestBody UserRequestDto.SignUp signUp, Errors errors) {
+	public ResponseEntity<?> signUp(@Validated @RequestBody UserRequestDto.SignUp signUpDto, Errors errors) {
 		// validation check
 		if (errors.hasErrors()) {
 			return Response.invalidFields(Resolver.error.inputFields(errors));
 		}
-		return usersService.signUp(signUp);
+		return usersService.defaultSignUp(signUpDto);
 	}
 
 	@PostMapping("/reissue")
-	public ResponseEntity<?> reissue(@Validated @RequestBody UserRequestDto.Reissue reissue, Errors errors
-		, HttpServletRequest request) {
-		// validation check
-		if (errors.hasErrors()) {
-			return Response.invalidFields(Resolver.error.inputFields(errors));
-		}
-		return usersService.reissue(reissue, request);
+	public ResponseEntity<?> reissue(HttpServletRequest request, HttpServletResponse response) {
+		String accessToken = jwtTokenProvider.resolveAccessToken(request);
+		//TODO accessToken 검증
+
+		//refreshToken 헤더에서 가져옴
+		String refreshToken = jwtTokenProvider.resolveRefreshToken(request);
+
+
+		return usersService.reissue(request, response);
 	}
 
 	@PostMapping("/logout")
-	public ResponseEntity<?> logout(@Validated @RequestBody UserRequestDto.Logout logout, Errors errors) {
-		// validation check
-		if (errors.hasErrors()) {
-			return Response.invalidFields(Resolver.error.inputFields(errors));
-		}
-		return usersService.logout(logout);
+	public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
+		return usersService.logout(request, response);
 	}
 }

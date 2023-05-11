@@ -1,6 +1,6 @@
 package com.shk95.giteditor.domain.application.impl;
 
-import com.shk95.giteditor.domain.model.roles.Authority;
+import com.shk95.giteditor.domain.model.roles.Role;
 import com.shk95.giteditor.domain.model.user.User;
 import com.shk95.giteditor.domain.model.user.UserRepository;
 import com.shk95.giteditor.web.payload.request.UserRequestDto;
@@ -35,15 +35,15 @@ class UserServiceImplTest {
 
 	static UserRequestDto.SignUp createSignupRequestDto() {
 		UserRequestDto.SignUp signUp = new UserRequestDto.SignUp();
-		signUp.setUsername("test1234");
+		signUp.setUserId("test1234");
 		signUp.setPassword("QWEqwe123!");
-		signUp.setEmailAddress("test@test.com");
+		signUp.setDefaultEmail("test@test.com");
 		return signUp;
 	}
 
 	static UserRequestDto.Login createLoginRequestDto() {
 		UserRequestDto.Login login = new UserRequestDto.Login();
-		login.setUsername("test1234");
+		login.setUserId("test1234");
 		login.setPassword("QWEqwe123!");
 		return login;
 	}
@@ -59,7 +59,7 @@ class UserServiceImplTest {
 
 	@Test
 	void signUp_willSuccess() {
-		System.out.println("#####"+userService.signUp(createSignupRequestDto())
+		System.out.println("#####"+userService.defaultSignUp(createSignupRequestDto())
 
 	}
 
@@ -82,12 +82,12 @@ class UserServiceImplTest {
 	@Test
 	void testLoadUserByUsername_WhenUserExists_ShouldReturnUserDetails() {
 		User user = User.builder()
-			.username("testuser")
+			.userId("testuser")
 			.password("testpassword")
-			.roles(Collections.singletonList(Authority.ROLE_USER))
+			.roles(Collections.singletonList(Role.))
 			.build();
 		when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
-		assertEquals(user.getUsername(), userService.loadUserByUsername("testuser").getUsername());
+		assertEquals(user.getUserId(), userService.loadUserByUsername("testuser").getUsername());
 		assertEquals(user.getPassword(), userService.loadUserByUsername("testuser").getPassword());
 		assertEquals(user.getRoles(), userService.loadUserByUsername("testuser").getAuthorities());
 	}

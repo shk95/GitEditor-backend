@@ -1,8 +1,9 @@
 package com.shk95.giteditor.domain.model.user;
 
-import com.shk95.giteditor.domain.model.user.exception.UserNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -10,12 +11,12 @@ public class UserFinder {
 
 	private final UserRepository userRepository;
 
-	public User find(String usernameOrEmailAddress) throws UserNotFoundException {
-		User user;
+	public Optional<User> find(String usernameOrEmailAddress) {
+		Optional<User> user;
 		if (usernameOrEmailAddress.contains("@")) {
-			user = userRepository.findByEmailAddress(usernameOrEmailAddress).orElseThrow(UserNotFoundException::new);
+			user = userRepository.findByDefaultEmail(usernameOrEmailAddress);
 		} else {
-			user = userRepository.findByUsername(usernameOrEmailAddress).orElseThrow(UserNotFoundException::new);
+			user = userRepository.findByUserId(usernameOrEmailAddress);
 		}
 		return user;
 	}

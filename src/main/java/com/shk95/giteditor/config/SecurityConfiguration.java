@@ -1,10 +1,14 @@
 package com.shk95.giteditor.config;
 
+import com.shk95.giteditor.domain.common.security.context.AuthEntryPointImpl;
 import com.shk95.giteditor.domain.common.security.filter.JwtAuthenticationFilter;
-import com.shk95.giteditor.domain.common.security.handler.AuthEntryPointImpl;
 import com.shk95.giteditor.domain.common.security.handler.LogoutSuccessHandlerImpl;
+import com.shk95.giteditor.domain.common.security.service.CustomOAuth2UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -35,10 +39,13 @@ public class SecurityConfiguration {
 	private final AuthEntryPointImpl authEntryPoint;
 	private final LogoutSuccessHandlerImpl logoutSuccessHandler;
 	private final JwtAuthenticationFilter jwtAuthenticationFilter;
+	private final CustomOAuth2UserService customOAuth2UserService;
+	private final AuthenticationConfiguration authenticationConfiguration;
 
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 		http.httpBasic().disable().cors().and().csrf().disable().formLogin().disable()
+//			.headers().frameOptions().disable().and()// x-frame 보안
 
 			.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
 			.authorizeRequests()
@@ -47,13 +54,21 @@ public class SecurityConfiguration {
 			.antMatchers("/admin/**").hasRole("ADMIN")
 			.anyRequest().authenticated().and()
 			.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-			.exceptionHandling().authenticationEntryPoint(authEntryPoint)
-		;
-		http.logout().logoutUrl("/auth/logout").logoutSuccessHandler(logoutSuccessHandler);
+			.logout().logoutUrl("/auth/logout").logoutSuccessHandler(logoutSuccessHandler).and()
+			.exceptionHandling().authenticationEntryPoint(authEntryPoint).and()
+			.oauth2Login().userInfoEndpoint().userService(customOAuth2UserService);
+
 
 		return http.build();
 	}
 
+	/*
+	 * auth 매니저 설정
+	 * */
+	@Bean
+	AuthenticationManager authenticationManager() throws Exception {
+		return authenticationConfiguration.getAuthenticationManager();
+	}
 /*
 	@Bean
 	public OAuth2UserService<OAuth2UserRequest, OAuth2User> githubUserService() {

@@ -21,7 +21,7 @@ public class LogoutSuccessHandlerImpl implements LogoutSuccessHandler {
 	@Override
 	public void onLogoutSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication)
 		throws IOException, ServletException {
-		String username = tokenProvider.getAuthentication(tokenProvider.resolveToken(request)).getName();
+		String username = tokenProvider.getAuthentication(tokenProvider.resolveAccessToken(request)).getName();
 		log.info("logout success. user : [{}]", username);
 	}
 }

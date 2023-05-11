@@ -24,9 +24,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	private final BlacklistTokenRepository blacklistTokenRepository;
 
 	@Override
-	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+		throws ServletException, IOException {
 		// 1. Request Header 에서 JWT 토큰 추출
-		String token = jwtTokenProvider.resolveToken(request);
+		String token = jwtTokenProvider.resolveAccessToken(request);
 
 		// 2. validateToken 으로 토큰 유효성 검사
 		if (token != null && jwtTokenProvider.validateToken(token)) {
@@ -37,8 +38,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 				SecurityContextHolder.getContext().setAuthentication(authentication);
 			}
 		}
-
-
 		filterChain.doFilter(request, response);
 	}
 }

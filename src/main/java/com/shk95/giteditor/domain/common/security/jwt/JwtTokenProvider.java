@@ -1,22 +1,23 @@
 package com.shk95.giteditor.domain.common.security.jwt;
 
 import com.shk95.giteditor.config.ExpireTime;
-import com.shk95.giteditor.web.payload.response.UserResponseDto;
+import com.shk95.giteditor.domain.common.exception.TokenValidFailedException;
+import com.shk95.giteditor.domain.common.security.UserDetailsImpl;
+import com.shk95.giteditor.web.payload.response.TokenResolverCommand;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import java.security.Key;
 import java.util.Arrays;
@@ -45,12 +46,12 @@ public class JwtTokenProvider {
 	}
 
 	//Authentication 을 가지고 AccessToken, RefreshToken 을 생성하는 메서드
-	public UserResponseDto.TokenInfo generateToken(Authentication authentication) {
+	public TokenResolverCommand.TokenInfo generateToken(Authentication authentication) {
 		return this.generateToken(authentication.getName(), authentication.getAuthorities());
 	}
 
 	//name, authorities 를 가지고 AccessToken, RefreshToken 을 생성하는 메서드
-	public UserResponseDto.TokenInfo generateToken(String name, Collection<? extends GrantedAuthority> inputAuthorities) {
+	public TokenResolverCommand.TokenInfo generateToken(String userId, Collection<? extends GrantedAuthority> inputAuthorities) {
 		//권한 가져오기
 		String authorities = inputAuthorities.stream()
 			.map(GrantedAuthority::getAuthority)
@@ -60,7 +61,7 @@ public class JwtTokenProvider {
 
 		//Generate AccessToken
 		String accessToken = Jwts.builder()
-			.setSubject(name)
+			.setSubject(userId)
 			.claim(AUTHORITIES_KEY, authorities)
 			.claim("type", TYPE_ACCESS)
 			.setIssuedAt(now)   //토큰 발행 시간 정보
@@ -76,22 +77,20 @@ public class JwtTokenProvider {
 			.signWith(key, SignatureAlgorithm.HS256)
 			.compact();
 
-		return UserResponseDto.TokenInfo.builder()
+		return TokenResolverCommand.TokenInfo.builder()
 			.grantType(BEARER_TYPE)
 			.accessToken(accessToken)
-			.accessTokenExpirationTime(ExpireTime.ACCESS_TOKEN_EXPIRE_TIME)
 			.refreshToken(refreshToken)
-			.refreshTokenExpirationTime(ExpireTime.REFRESH_TOKEN_EXPIRE_TIME)
 			.build();
 	}
 
 	//JWT 토큰을 복호화하여 토큰에 들어있는 정보를 꺼내는 메서드
 	public Authentication getAuthentication(String accessToken) {
 		//토큰 복호화
-		Claims claims = parseClaims(accessToken);
+		Claims claims = getClaims(accessToken);
 
 		if (claims.get(AUTHORITIES_KEY) == null) {
-			throw new AccessDeniedException("권한 정보가 없는 토큰입니다.");
+			throw new TokenValidFailedException("권한 정보가 없는 토큰입니다.");
 		}
 
 		//클레임에서 권한 정보 가져오기
@@ -101,8 +100,11 @@ public class JwtTokenProvider {
 				.collect(Collectors.toList());
 
 		//UserDetails 객체를 만들어서 Authentication 리턴
-		UserDetails principal = new User(claims.getSubject(), "", authorities);
-		return new UsernamePasswordAuthenticationToken(principal, "", authorities);
+		UserDetails principal = UserDetailsImpl.builder()
+			.userId(claims.getSubject())
+			.password("")
+			.authorities(authorities).build();
+		return new UsernamePasswordAuthenticationToken(principal, accessToken, authorities);
 	}
 
 	//토큰 정보를 검증하는 메서드
@@ -122,11 +124,11 @@ public class JwtTokenProvider {
 		return false;
 	}
 
-	private Claims parseClaims(String accessToken) {
+	public Claims getClaims(String accessToken) {
 		try {
 			return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(accessToken).getBody();
 		} catch (ExpiredJwtException e) {
-			// ???
+			// 만료된 토큰일경우에도
 			return e.getClaims();
 		}
 	}
@@ -143,11 +145,22 @@ public class JwtTokenProvider {
 	}
 
 	// bearer 토큰 타입 확인후 토큰값 리턴
-	public String resolveToken(HttpServletRequest request) {
+	public String resolveAccessToken(HttpServletRequest request) {
 		String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
 		if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(BEARER_TYPE)) {
 			return bearerToken.substring(7);
 		}
 		return null;
+	}
+
+	public String resolveRefreshToken(HttpServletRequest request) {
+		Cookie[] cookies = request.getCookies();
+		String refreshToken = null;
+		for (Cookie cookie : cookies) {
+			if (TYPE_REFRESH.equals(cookie.getName())) {
+				refreshToken = cookie.getValue();
+			}
+		}
+		return refreshToken;
 	}
 }
