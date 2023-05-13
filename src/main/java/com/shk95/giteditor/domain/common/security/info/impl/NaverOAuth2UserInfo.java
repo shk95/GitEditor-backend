@@ -5,6 +5,7 @@ import com.shk95.giteditor.domain.common.security.info.OAuth2UserInfo;
 
 import java.util.Map;
 
+@Deprecated
 public class NaverOAuth2UserInfo extends OAuth2UserInfo {
 
     public NaverOAuth2UserInfo(Map<String, Object> attributes) {

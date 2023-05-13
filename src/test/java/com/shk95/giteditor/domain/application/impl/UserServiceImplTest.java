@@ -59,7 +59,7 @@ class UserServiceImplTest {
 
 	@Test
 	void signUp_willSuccess() {
-		System.out.println("#####"+userService.defaultSignUp(createSignupRequestDto())
+		System.out.println("#####" + userService.defaultSignUp(createSignupRequestDto())
 
 	}
 
@@ -84,7 +84,7 @@ class UserServiceImplTest {
 		User user = User.builder()
 			.userId("testuser")
 			.password("testpassword")
-			.roles(Collections.singletonList(Role.))
+			.role(Role.USER)
 			.build();
 		when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
 		assertEquals(user.getUserId(), userService.loadUserByUsername("testuser").getUsername());

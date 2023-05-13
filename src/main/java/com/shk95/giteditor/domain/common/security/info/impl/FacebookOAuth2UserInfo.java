@@ -5,6 +5,7 @@ import com.shk95.giteditor.domain.common.security.info.OAuth2UserInfo;
 
 import java.util.Map;
 
+@Deprecated
 public class FacebookOAuth2UserInfo extends OAuth2UserInfo {
     public FacebookOAuth2UserInfo(Map<String, Object> attributes) {
         super(attributes);

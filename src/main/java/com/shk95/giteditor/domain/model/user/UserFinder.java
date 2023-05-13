@@ -11,12 +11,12 @@ public class UserFinder {
 
 	private final UserRepository userRepository;
 
-	public Optional<User> find(String usernameOrEmailAddress) {
+	public Optional<User> find(String userIdOrEmailAddress) {
 		Optional<User> user;
-		if (usernameOrEmailAddress.contains("@")) {
-			user = userRepository.findByDefaultEmail(usernameOrEmailAddress);
+		if (userIdOrEmailAddress.contains("@")) {
+			user = userRepository.findByDefaultEmail(userIdOrEmailAddress);
 		} else {
-			user = userRepository.findByUserId(usernameOrEmailAddress);
+			user = userRepository.findByUserId(userIdOrEmailAddress);
 		}
 		return user;
 	}

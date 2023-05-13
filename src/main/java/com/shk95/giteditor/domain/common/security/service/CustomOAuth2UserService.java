@@ -1,13 +1,14 @@
 package com.shk95.giteditor.domain.common.security.service;
 
 import com.shk95.giteditor.domain.common.security.UserDetailsImpl;
-import com.shk95.giteditor.domain.common.security.exception.OAuthProviderMissMatchException;
 import com.shk95.giteditor.domain.common.security.info.OAuth2UserInfo;
 import com.shk95.giteditor.domain.common.security.info.OAuth2UserInfoFactory;
 import com.shk95.giteditor.domain.common.security.oauth.ProviderType;
+import com.shk95.giteditor.domain.model.roles.Role;
 import com.shk95.giteditor.domain.model.user.User;
 import com.shk95.giteditor.domain.model.user.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -16,11 +17,14 @@ import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.util.Optional;
 
-@Service
+@Slf4j
 @RequiredArgsConstructor
+@Transactional
+@Service
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
 	private final UserRepository userRepository;
@@ -28,9 +32,8 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 	@Override
 	public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
 		OAuth2User user = super.loadUser(userRequest);
-
 		try {
-			return this.process(userRequest, user);
+			return this.authProcess(userRequest, user);
 		} catch (AuthenticationException ex) {
 			throw ex;
 		} catch (Exception ex) {
@@ -39,54 +42,48 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 		}
 	}
 
-	private OAuth2User process(OAuth2UserRequest userRequest, OAuth2User user) {
-		ProviderType providerType = ProviderType.valueOf(userRequest.getClientRegistration().getRegistrationId().toUpperCase());
+	private OAuth2User authProcess(OAuth2UserRequest oAuth2UserRequest, OAuth2User oAuth2User) {
+		ProviderType providerType
+			= ProviderType.valueOf(oAuth2UserRequest.getClientRegistration().getRegistrationId().toUpperCase());
 
-		OAuth2UserInfo userInfo = OAuth2UserInfoFactory.getOAuth2UserInfo(providerType, user.getAttributes());
-		User savedUser = userRepository.findByDefaultEmail(userInfo.getEmail())
-			.orElseThrow(() -> new UsernameNotFoundException("No User's email Found."));
+		String retrievedAccessToken = oAuth2UserRequest.getAccessToken().getTokenValue();
+		log.debug("oauth retrieved access token value : [{}]", retrievedAccessToken);
 
-		if (savedUser != null) {
-			if (providerType != savedUser.getProviderType()) {
+		OAuth2UserInfo userInfo = OAuth2UserInfoFactory.getOAuth2UserInfo(providerType, oAuth2User.getAttributes());
+		Optional<User> savedUser = userRepository.findByProviderEmail(userInfo.getEmail());
+
+		if (!savedUser.isPresent()) {
+			this.createUser(userInfo, providerType);
+			throw new UsernameNotFoundException("Cannot find user.");// oauth 인증 성공. 하지만 가입된 사용자는 아니다.
+		} /*else {//TODO: oAuth: authProcess: 검토
+			if (providerType != savedUser.get().getProviderType()) {
 				throw new OAuthProviderMissMatchException(
 					"Looks like you're signed up with " + providerType +
-						" account. Please use your " + savedUser.getProviderType() + " account to login."
+						" account. Please use your " + savedUser.get().getProviderType() + " account to login."
 				);
 			}
-			updateUser(savedUser, userInfo);
-		} else {
-			savedUser = createUser(userInfo, providerType);
-		}
-
-		return UserDetailsImpl.createUserDetailsBuilder(savedUser, user.getAttributes()).build();
+			updateUser(savedUser.get(), userInfo);
+		}*/
+		return UserDetailsImpl.createUserDetailsBuilder(savedUser.get(), oAuth2User.getAttributes()).build();
 	}
 
-	private User createUser(OAuth2UserInfo userInfo, ProviderType providerType) {
-		LocalDateTime now = LocalDateTime.now();
-		User user = new User(
-			userInfo.getId(),
-			userInfo.getName(),
-			userInfo.getEmail(),
-			"Y",
-			userInfo.getImageUrl(),
-			providerType,
-			Role.USER,
-			now,
-			now
-		);
-
-		return userRepository.saveAndFlush(user);
+	private void createUser(OAuth2UserInfo userInfo, ProviderType providerType) {
+		userRepository.saveAndFlush(User.builder()
+			.userId(userInfo.getId())// TODO: oauth: createUser: userId 중복성 문제
+			.username(userInfo.getName())
+			.defaultEmail(userInfo.getEmail())
+			.providerEmail(userInfo.getEmail())
+			.providerType(providerType)
+			.role(Role.USER)
+			.build());
 	}
 
-	private User updateUser(User user, OAuth2UserInfo userInfo) {
+	private void updateUserInfo(User user, OAuth2UserInfo userInfo) {
 		if (userInfo.getName() != null && !user.getUsername().equals(userInfo.getName())) {
-			user.setUsername(userInfo.getName());
+			user.updateUserName(userInfo.getName());
 		}
-
 		if (userInfo.getImageUrl() != null && !user.getProfileImageUrl().equals(userInfo.getImageUrl())) {
-			user.setProfileImageUrl(userInfo.getImageUrl());
+			user.updateProfileImageUrl(userInfo.getImageUrl());
 		}
-
-		return user;
 	}
 }

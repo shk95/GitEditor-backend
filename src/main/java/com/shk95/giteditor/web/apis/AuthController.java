@@ -29,7 +29,7 @@ public class AuthController {
 		if (errors.hasErrors()) {
 			return Response.invalidFields(Resolver.error.inputFields(errors));
 		}
-		return usersService.defaultLogin(loginDto, request, response);
+		return usersService.defaultLogin(request, response, loginDto);
 	}
 
 	@PostMapping("/sign-up")
@@ -43,13 +43,6 @@ public class AuthController {
 
 	@PostMapping("/reissue")
 	public ResponseEntity<?> reissue(HttpServletRequest request, HttpServletResponse response) {
-		String accessToken = jwtTokenProvider.resolveAccessToken(request);
-		//TODO accessToken 검증
-
-		//refreshToken 헤더에서 가져옴
-		String refreshToken = jwtTokenProvider.resolveRefreshToken(request);
-
-
 		return usersService.reissue(request, response);
 	}
 

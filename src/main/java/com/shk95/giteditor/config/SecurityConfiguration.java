@@ -3,12 +3,13 @@ package com.shk95.giteditor.config;
 import com.shk95.giteditor.domain.common.security.context.AuthEntryPointImpl;
 import com.shk95.giteditor.domain.common.security.filter.JwtAuthenticationFilter;
 import com.shk95.giteditor.domain.common.security.handler.LogoutSuccessHandlerImpl;
+import com.shk95.giteditor.domain.common.security.handler.OAuth2AuthenticationFailureHandler;
+import com.shk95.giteditor.domain.common.security.handler.OAuth2AuthenticationSuccessHandler;
+import com.shk95.giteditor.domain.common.security.handler.TokenAccessDeniedHandler;
+import com.shk95.giteditor.domain.common.security.repository.OAuth2AuthorizationRequestBasedOnCookieRepository;
 import com.shk95.giteditor.domain.common.security.service.CustomOAuth2UserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -17,6 +18,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
 
 @EnableWebSecurity
 /*
@@ -36,50 +41,71 @@ prePostEnabled 속성을 true로 설정하면 이 어노테이션은 Spring의 �
 @RequiredArgsConstructor
 public class SecurityConfiguration {
 
+	private final ApplicationProperties applicationProperties;
+
 	private final AuthEntryPointImpl authEntryPoint;
 	private final LogoutSuccessHandlerImpl logoutSuccessHandler;
 	private final JwtAuthenticationFilter jwtAuthenticationFilter;
 	private final CustomOAuth2UserService customOAuth2UserService;
-	private final AuthenticationConfiguration authenticationConfiguration;
+	private final TokenAccessDeniedHandler tokenAccessDeniedHandler;
+	private final OAuth2AuthorizationRequestBasedOnCookieRepository oAuth2AuthorizationRequestBasedOnCookieRepository;
+	private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
+	private final OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
 
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-		http.httpBasic().disable().cors().and().csrf().disable().formLogin().disable()
+		http
+			.cors()
+			.and()
+			.httpBasic().disable().csrf().disable().formLogin().disable()
 //			.headers().frameOptions().disable().and()// x-frame 보안
-
-			.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
+			.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+			.and()
+			.exceptionHandling().authenticationEntryPoint(authEntryPoint)// 로그인 인증 실패시 진입점
+			.accessDeniedHandler(tokenAccessDeniedHandler)// 사용자 token 인증 실패
+			.and()
+			.logout().logoutUrl("/auth/logout").logoutSuccessHandler(logoutSuccessHandler)
+			.and()
+			.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
 			.authorizeRequests()
 			.antMatchers("/auth/*").permitAll()
 			.antMatchers("/api/**").hasRole("USER")
 			.antMatchers("/admin/**").hasRole("ADMIN")
-			.anyRequest().authenticated().and()
-			.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-			.logout().logoutUrl("/auth/logout").logoutSuccessHandler(logoutSuccessHandler).and()
-			.exceptionHandling().authenticationEntryPoint(authEntryPoint).and()
-			.oauth2Login().userInfoEndpoint().userService(customOAuth2UserService);
-
-
+			.anyRequest().authenticated()
+			.and()
+			.oauth2Login().authorizationEndpoint().baseUri("/oauth2/authorization")
+			.authorizationRequestRepository(oAuth2AuthorizationRequestBasedOnCookieRepository)
+			.and()
+			.redirectionEndpoint().baseUri("/*/oauth2/code/*")
+			.and()
+			.userInfoEndpoint().userService(customOAuth2UserService)
+			.and()
+			.successHandler(oAuth2AuthenticationSuccessHandler)
+			.failureHandler(oAuth2AuthenticationFailureHandler);
 		return http.build();
 	}
 
-	/*
-	 * auth 매니저 설정
-	 * */
-	@Bean
-	AuthenticationManager authenticationManager() throws Exception {
-		return authenticationConfiguration.getAuthenticationManager();
-	}
-/*
-	@Bean
-	public OAuth2UserService<OAuth2UserRequest, OAuth2User> githubUserService() {
-		return new GithubOAuth2UserService();
-	}
-*/
-
 	@Bean
 	public PasswordEncoder passwordEncoder() {
-
 		return new BCryptPasswordEncoder();
+	}
+
+	/*
+	 * Cors 설정
+	 * */
+	@Bean
+	public UrlBasedCorsConfigurationSource corsConfigurationSource() {
+		UrlBasedCorsConfigurationSource corsConfigSource = new UrlBasedCorsConfigurationSource();
+
+		CorsConfiguration corsConfig = new CorsConfiguration();
+		corsConfig.setAllowedHeaders(Arrays.asList(applicationProperties.getCors().getAllowedHeaders().split(",")));
+		corsConfig.setAllowedMethods(Arrays.asList(applicationProperties.getCors().getAllowedMethods().split(",")));
+		corsConfig.setAllowedOrigins(Arrays.asList(applicationProperties.getCors().getAllowedOrigins().split(",")));
+		corsConfig.setAllowCredentials(true);
+		corsConfig.setMaxAge(corsConfig.getMaxAge());
+
+		corsConfigSource.registerCorsConfiguration("/**", corsConfig);
+		return corsConfigSource;
 	}
 
 	/*@Bean
@@ -95,5 +121,4 @@ public class SecurityConfiguration {
 			.build();
 		return new InMemoryUserDetailsManager(user1, admin);
 	}*/
-
 }

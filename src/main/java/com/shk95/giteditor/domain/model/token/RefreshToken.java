@@ -1,7 +1,6 @@
 package com.shk95.giteditor.domain.model.token;
 
 import com.shk95.giteditor.config.ExpireTime;
-import com.shk95.giteditor.domain.model.roles.Role;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -21,11 +20,9 @@ import java.util.Collection;
 public class RefreshToken {
 
 	@Id
-	private String id;//userId
+	private String userId;
 
 	private String ip;
-
-	private Role role;
 
 	private Collection<? extends GrantedAuthority> authorities;
 

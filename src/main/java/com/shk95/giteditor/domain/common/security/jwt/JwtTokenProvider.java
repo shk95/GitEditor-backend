@@ -13,7 +13,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -52,12 +51,11 @@ public class JwtTokenProvider {
 
 	//name, authorities 를 가지고 AccessToken, RefreshToken 을 생성하는 메서드
 	public TokenResolverCommand.TokenInfo generateToken(String userId, Collection<? extends GrantedAuthority> inputAuthorities) {
+		Date now = new Date();
 		//권한 가져오기
 		String authorities = inputAuthorities.stream()
 			.map(GrantedAuthority::getAuthority)
 			.collect(Collectors.joining(","));
-
-		Date now = new Date();
 
 		//Generate AccessToken
 		String accessToken = Jwts.builder()
@@ -84,15 +82,12 @@ public class JwtTokenProvider {
 			.build();
 	}
 
-	//JWT 토큰을 복호화하여 토큰에 들어있는 정보를 꺼내는 메서드
+	// 사용자 인증을 위한 내부 인증용 토큰을 생성
 	public Authentication getAuthentication(String accessToken) {
-		//토큰 복호화
 		Claims claims = getClaims(accessToken);
-
 		if (claims.get(AUTHORITIES_KEY) == null) {
 			throw new TokenValidFailedException("권한 정보가 없는 토큰입니다.");
 		}
-
 		//클레임에서 권한 정보 가져오기
 		Collection<? extends GrantedAuthority> authorities =
 			Arrays.stream(claims.get(AUTHORITIES_KEY).toString().split(","))
@@ -100,14 +95,14 @@ public class JwtTokenProvider {
 				.collect(Collectors.toList());
 
 		//UserDetails 객체를 만들어서 Authentication 리턴
-		UserDetails principal = UserDetailsImpl.builder()
+		UserDetailsImpl principal = UserDetailsImpl.builder()// TODO : jwt 로그인 보완하기
 			.userId(claims.getSubject())
 			.password("")
 			.authorities(authorities).build();
 		return new UsernamePasswordAuthenticationToken(principal, accessToken, authorities);
 	}
 
-	//토큰 정보를 검증하는 메서드
+	//토큰 유효성 검증
 	public boolean validateToken(String token) {
 		try {
 			Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
@@ -128,39 +123,38 @@ public class JwtTokenProvider {
 		try {
 			return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(accessToken).getBody();
 		} catch (ExpiredJwtException e) {
-			// 만료된 토큰일경우에도
+			// 만료된 토큰일경우
 			return e.getClaims();
+		} catch (JwtException e) {
+			// 올바르지 않은 토큰
+			// TODO : 올바르지 않은 access token 에 대한 처리
+			return null;
 		}
 	}
 
 	public boolean isRefreshToken(String token) {
-		String type = (String) Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody().get("type");
+		String type = (String) Jwts.parserBuilder().setSigningKey(key).build()
+			.parseClaimsJws(token).getBody().get("type");
 		return type.equals(TYPE_REFRESH);
 	}
 
 	public Long getExpiration(String accessToken) {
 		//accessToken 남은 유효시간
-		Date expiration = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(accessToken).getBody().getExpiration();
+		Date expiration = Jwts.parserBuilder().setSigningKey(key).build()
+			.parseClaimsJws(accessToken).getBody().getExpiration();
 		return (expiration.getTime() - System.currentTimeMillis());
 	}
 
 	// bearer 토큰 타입 확인후 토큰값 리턴
 	public String resolveAccessToken(HttpServletRequest request) {
-		String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
-		if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(BEARER_TYPE)) {
-			return bearerToken.substring(7);
-		}
-		return null;
+		String tokenCollectedFromHeader = request.getHeader(AUTHORIZATION_HEADER);
+		return StringUtils.hasText(tokenCollectedFromHeader) && tokenCollectedFromHeader.startsWith(BEARER_TYPE)
+			? tokenCollectedFromHeader.substring(7) : "";
 	}
 
 	public String resolveRefreshToken(HttpServletRequest request) {
 		Cookie[] cookies = request.getCookies();
-		String refreshToken = null;
-		for (Cookie cookie : cookies) {
-			if (TYPE_REFRESH.equals(cookie.getName())) {
-				refreshToken = cookie.getValue();
-			}
-		}
-		return refreshToken;
+		return Arrays.stream(cookies).filter(cookie -> cookie.getName().equals(TYPE_REFRESH))
+			.map(Cookie::getValue).findFirst().orElse("");
 	}
 }

@@ -15,6 +15,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.Collections;
 import java.util.Map;
 
+@Deprecated
 public class GithubOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
 
 	private final RestTemplate restTemplate;

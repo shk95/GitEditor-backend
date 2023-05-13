@@ -21,12 +21,12 @@ import java.util.Map;
 @Builder
 @Getter
 public class UserDetailsImpl implements UserDetails, OAuth2User, OidcUser {
-	private final Collection<? extends GrantedAuthority> authorities;
+	private Collection<? extends GrantedAuthority> authorities;
 	private String userId;
 	private String defaultEmail;
+	private String providerEmail;
 	private String password;
 	private String username;
-	private String accessToken;
 	private Role role;
 	private Map<String, Object> attributes;
 
@@ -36,18 +36,14 @@ public class UserDetailsImpl implements UserDetails, OAuth2User, OidcUser {
 			.password(user.getPassword())
 			.username(user.getUsername())
 			.defaultEmail(user.getDefaultEmail())
-			.role(user.getRole())
-			.authorities(Collections.singletonList(new SimpleGrantedAuthority(user.getRole().getCode())));
+			.role(Role.USER)
+			.authorities(Collections.singletonList(new SimpleGrantedAuthority(Role.USER.getCode())));
 	}
 
 	public static UserDetailsImplBuilder createUserDetailsBuilder(User user, Map<String, Object> attributes) {
-		UserDetailsImplBuilder userDetails = createUserDetailsBuilder(user);
+		UserDetailsImplBuilder userDetails = UserDetailsImpl.createUserDetailsBuilder(user);
 		userDetails.attributes(attributes);
 		return userDetails;
-	}
-
-	public void setAccessToken(String accessToken) {
-		this.accessToken = accessToken;
 	}
 
 	@Override

@@ -22,8 +22,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -34,17 +34,17 @@ import org.springframework.util.Assert;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.Objects;
 import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class UserServiceImpl implements UserService {
+
+	private final AuthenticationManagerBuilder authenticationManagerBuilder;
 	private final UserRepository userRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final JwtTokenProvider jwtTokenProvider;
-	private final AuthenticationManager authenticationManager;
 	private final RefreshTokenRepository refreshTokenRepository;
 	private final BlacklistTokenRepository blacklistTokenRepository;
 	private final SecurityUtil securityUtil;
@@ -71,8 +71,8 @@ public class UserServiceImpl implements UserService {
 		}
 		userRepository.save(User.builder()
 			.userId(signUp.getUserId())
-			.defaultEmail(signUp.getDefaultEmail())
 			.password(passwordEncoder.encode(signUp.getPassword()))
+			.defaultEmail(signUp.getDefaultEmail())
 			.username(signUp.getUsername())
 			.build());
 //		sendWelcomeMessage(user);
@@ -80,24 +80,25 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public ResponseEntity<?> defaultLogin(UserRequestDto.Login login, HttpServletRequest request
-		, HttpServletResponse response) {
+	public ResponseEntity<?> defaultLogin(HttpServletRequest request, HttpServletResponse response
+		, UserRequestDto.Login login) {
+		// 로그인 인증정보 가져옴.
 		UserDetailsImpl userDetails = (UserDetailsImpl) this.loadUserByUsername(login.getUserId());//TODO: 예외처리
+		// 인증용 토큰 생성
 		UsernamePasswordAuthenticationToken authenticationToken
 			= new UsernamePasswordAuthenticationToken(
 			userDetails
 			, login.getPassword()
 			, userDetails.getAuthorities());
-		Authentication authentication = authenticationManager.authenticate(authenticationToken);// 인증
-		//SecurityContextHolder.getContext().setAuthentication(authentication); // not necessary
-
+		// 인증
+		Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
+		log.debug("### {} authentication.getName(must be user's id) : [{}]", this.getClass().getName(), authentication.getName());
 		// 인증 정보를 기반으로 JWT 토큰 생성
 		TokenResolverCommand.TokenInfo tokenInfo = jwtTokenProvider.generateToken(authentication);
 
-		log.debug("in default login method. authentication's name : [{}]", authentication.getName());
-		// 4. Redis RefreshToken 저장
-		refreshTokenRepository.save(RefreshToken.builder()
-			.id(authentication.getName())
+		// Redis RefreshToken 저장
+		refreshTokenRepository.save(RefreshToken.builder()// TODO : redis transaction 설정
+			.userId(authentication.getName())
 			.ip(Helper.getClientIp(request))
 			.authorities(authentication.getAuthorities())
 			.refreshToken(tokenInfo.getRefreshToken())
@@ -107,26 +108,30 @@ public class UserServiceImpl implements UserService {
 
 	@Override
 	public ResponseEntity<?> reissue(HttpServletRequest request, HttpServletResponse response) {
-		String accessToken = jwtTokenProvider.resolveAccessToken(request);
-		//TODO accessToken 검증
-		//refreshToken 헤더에서 가져옴
-		String refreshToken = jwtTokenProvider.resolveRefreshToken(request);
-		// 예외처리
-		Claims accessTokenClaims = jwtTokenProvider.getClaims(accessToken);
-
-		String resolvedUserId = accessTokenClaims.getSubject();
-		String currentIpAddress = Helper.getClientIp(request);
-
+		final String accessToken = jwtTokenProvider.resolveAccessToken(request); //TODO: reissue: accessToken 검증
+		final String refreshToken = jwtTokenProvider.resolveRefreshToken(request); //TODO: reissue: refreshToken cookie 예외처리
 		Assert.notNull(accessToken, "access token may not be null");
 		Assert.notNull(refreshToken, "refresh token may not be null");
-		Assert.notNull(resolvedUserId, "parseUsername may not be null");
+
+		final Claims accessTokenClaims = jwtTokenProvider.getClaims(accessToken);
+
+		final String resolvedUserId = accessTokenClaims.getSubject();
+		final String currentIpAddress = Helper.getClientIp(request);
+		Assert.notNull(resolvedUserId, "user id may not be null");
 
 		/*
-		 *	검증목록
-		 *	1. access token claim key, type, subject, expiration
-		 *	2. refresh token expiration, type
+		 * 검증목록
+		 * 1. access token claim key, type, subject, expiration
+		 * 2. refresh token expiration, type
+		 *
+		 * refresh token 검증
+		 * access token 에서 subject(user id) 로 refresh token repository 에서 검색
+		 * 현재 ip 와 refresh token repository 의 ip 일치 확인
+		 *
+		 * access token 에 유지되야할 목록 : subject(user id), claim(authorities)
 		 */
 
+		// TODO : refresh token 예외에따른 response 리턴 방식 변경
 		// Refresh Token 검증. 실패시 로그아웃 상태이다.
 		if (!jwtTokenProvider.validateToken(refreshToken)) {
 			return Response.fail("Refresh Token 정보가 유효하지 않습니다.", HttpStatus.NOT_ACCEPTABLE);
@@ -135,55 +140,54 @@ public class UserServiceImpl implements UserService {
 			return Response.fail("Refresh Token 이 아닙니다.", HttpStatus.NOT_ACCEPTABLE);
 		}
 
-		// Refresh token
-		RefreshToken bySavedRefreshToken = refreshTokenRepository.findByRefreshToken(refreshToken);
-		if (!Objects.equals(bySavedRefreshToken.getId(), resolvedUserId)) {
+		// Refresh token 정보 가져오기.
+		Optional<RefreshToken> savedRefreshToken = refreshTokenRepository.findById(resolvedUserId);
+		if (!savedRefreshToken.isPresent()) {
 			return Response.fail("Refresh Token 정보와 Access Token 정보가 일치하지 않습니다.", HttpStatus.NOT_ACCEPTABLE);
 		}
-		// 최초 로그인한 ip 와 같은지 확인 (처리 방식에 따라 재발급을 하지 않거나 메일 등의 알림을 주는 방법이 있음)
-		if (!bySavedRefreshToken.getIp().equals(currentIpAddress)) {
+		// 최초 로그인한 ip 와 같은지 확인. (처리 방식에 따라 재발급을 하지 않거나 메일 등의 알림을 주는 방법이 있음)
+		if (!savedRefreshToken.get().getIp().equals(currentIpAddress)) {
+			refreshTokenRepository.delete(savedRefreshToken.get());
 			return Response.fail("IP 주소가 다릅니다.", HttpStatus.NOT_ACCEPTABLE);
 		}
 
-		Authentication authentication = jwtTokenProvider.getAuthentication(accessToken);
-
-		// Redis 에 저장된 RefreshToken 정보를 기반으로 JWT Token 생성
-		TokenResolverCommand.TokenInfo renewedRefreshToken = jwtTokenProvider.generateToken(authentication);
+		TokenResolverCommand.TokenInfo renewedTokenInfo
+			= jwtTokenProvider.generateToken(resolvedUserId, savedRefreshToken.get().getAuthorities());// TODO: reissue: 토큰 재 생성방식
 
 		// Redis RefreshToken update
 		refreshTokenRepository.save(RefreshToken.builder()
-			.id(resolvedUserId)
+			.userId(resolvedUserId)
 			.ip(currentIpAddress)
-			.refreshToken(renewedRefreshToken.getRefreshToken())
+			.authorities(savedRefreshToken.get().getAuthorities())
+			.refreshToken(renewedTokenInfo.getRefreshToken())
 			.build());
 
-		return Response.success(renewedRefreshToken, "Token has been updated.", HttpStatus.OK);
+		return Response.success(renewedTokenInfo, "Token has been updated.", HttpStatus.OK);
 	}
 
 	@Override
 	public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
-		String accessToken = jwtTokenProvider.resolveAccessToken(request);
-		//TODO accessToken 검증
-
-		//refreshToken 헤더에서 가져옴
-		String refreshToken = jwtTokenProvider.resolveRefreshToken(request);
-		//TODO 널 처리
+		final String accessToken = jwtTokenProvider.resolveAccessToken(request); //TODO: logout: accessToken 검증
+		final String refreshToken = jwtTokenProvider.resolveRefreshToken(request); //TODO: logout: 예외처리
+		Assert.notNull(accessToken, "access token may not be null");
+		Assert.notNull(refreshToken, "refresh token may not be null");
+		final String currentIpAddress = Helper.getClientIp(request);
 
 		/*
 		 *	검증목록 : access token 과 refresh token 의 소유자 일치, 동일 ip
 		 *
 		 */
-		// Access Token 에서 User id 를 가져옵니다.
-		Authentication authentication = jwtTokenProvider.getAuthentication(accessToken);
-		String userId = authentication.getName();
-		log.debug("in logout method. userId from authentication : [{}]", userId);
 
+		// Access Token 에서 User id 를 가져옴.
+		String userId = jwtTokenProvider.getAuthentication(accessToken).getName();
+		log.debug("### {} user id from authentication : [{}]", this.getClass().getName(), userId);
+
+		// user id 로 refresh token repository 검색
 		Optional<RefreshToken> refreshTokenInfo = refreshTokenRepository.findById(userId);
-		if (!(refreshTokenInfo.isPresent() && userId.equals(refreshTokenInfo.get().getId()))) {
+		if (!refreshTokenInfo.isPresent()) {
 			return Response.fail("잘못된 요청입니다.", HttpStatus.UNAUTHORIZED);
 		}
-		// Redis 에서 해당 User id 로 저장된 Refresh Token 이 있는지 여부를 확인 후 있을 경우 삭제합니다.
-		refreshTokenRepository.deleteRefreshTokenByRefreshToken(refreshToken);
+		refreshTokenRepository.delete(refreshTokenInfo.get());
 
 		// 해당 Access Token 유효시간 가지고 와서 BlackList 로 저장하기
 		Long expiration = jwtTokenProvider.getExpiration(accessToken);

@@ -10,7 +10,7 @@ import javax.servlet.http.HttpServletResponse;
 public interface UserService extends UserDetailsService {
 	ResponseEntity<?> defaultSignUp(UserRequestDto.SignUp signUp);
 
-	ResponseEntity<?> defaultLogin(UserRequestDto.Login login, HttpServletRequest request, HttpServletResponse response);
+	ResponseEntity<?> defaultLogin(HttpServletRequest request, HttpServletResponse response, UserRequestDto.Login login);
 
 	ResponseEntity<?> reissue(HttpServletRequest request, HttpServletResponse response);
 

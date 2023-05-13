@@ -27,10 +27,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 		throws ServletException, IOException {
 		// 1. Request Header 에서 JWT 토큰 추출
-		String token = jwtTokenProvider.resolveAccessToken(request);
+		final String token = jwtTokenProvider.resolveAccessToken(request);
 
 		// 2. validateToken 으로 토큰 유효성 검사
-		if (token != null && jwtTokenProvider.validateToken(token)) {
+		if (!token.isEmpty() && jwtTokenProvider.validateToken(token)) {
 			// Redis 에 해당 accessToken logout 여부 확인
 			if (!blacklistTokenRepository.findById(token).isPresent()) {
 				// 토큰이 유효할 경우 토큰에서 Authentication 객체를 가지고 와서 SecurityContext 에 저장

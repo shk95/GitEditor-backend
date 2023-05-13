@@ -54,10 +54,6 @@ public class User extends BaseTimeEntity {
 	@Column(name = "USER_PRF_IMG_URL", length = 512)
 	private String profileImageUrl;
 
-	{
-		this.role = Role.USER;
-	}
-
 	public static UserBuilder createUserBuilder(UserDetailsImpl userDetails) {
 		return User.builder()
 			.userId(userDetails.getUsername())
@@ -66,7 +62,15 @@ public class User extends BaseTimeEntity {
 			.username(userDetails.getUsername());
 	}
 
-	//TODO: equals hashcode, toString overriding
+	public void updateUserName(String username) {
+		this.username = username;
+	}
+
+	public void updateProfileImageUrl(String profileImageUrl) {
+		this.profileImageUrl = profileImageUrl;
+	}
+
+	//TODO: equals hashcode, toString 오버라이딩 수정
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) return true;
