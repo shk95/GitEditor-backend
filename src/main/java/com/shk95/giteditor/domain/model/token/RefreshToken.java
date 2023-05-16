@@ -1,6 +1,6 @@
 package com.shk95.giteditor.domain.model.token;
 
-import com.shk95.giteditor.config.ExpireTime;
+import com.shk95.giteditor.config.ConstantFields;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -16,16 +16,16 @@ import java.util.Collection;
 @NoArgsConstructor
 @Builder
 @Getter
-@RedisHash(value = "refresh", timeToLive = ExpireTime.REFRESH_TOKEN_EXPIRE_TIME_FOR_REDIS)
+@RedisHash(value = "refresh", timeToLive = ConstantFields.ExpireTime.REFRESH_TOKEN_EXPIRE_TIME_FOR_REDIS)
 public class RefreshToken {
 
 	@Id
 	private String userId;
 
+	@Indexed
+	private String refreshToken;
+
 	private String ip;
 
 	private Collection<? extends GrantedAuthority> authorities;
-
-	@Indexed
-	private String refreshToken;
 }

@@ -1,6 +1,6 @@
 package com.shk95.giteditor.domain.common.security;
 
-import com.shk95.giteditor.domain.model.roles.Role;
+import com.shk95.giteditor.domain.common.constants.Role;
 import com.shk95.giteditor.domain.model.user.User;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,7 +20,7 @@ import java.util.Map;
 @AllArgsConstructor
 @Builder
 @Getter
-public class UserDetailsImpl implements UserDetails, OAuth2User, OidcUser {
+public class CustomUserDetails implements UserDetails, OAuth2User, OidcUser {
 	private Collection<? extends GrantedAuthority> authorities;
 	private String userId;
 	private String defaultEmail;
@@ -30,18 +30,18 @@ public class UserDetailsImpl implements UserDetails, OAuth2User, OidcUser {
 	private Role role;
 	private Map<String, Object> attributes;
 
-	public static UserDetailsImplBuilder createUserDetailsBuilder(User user) {
-		return UserDetailsImpl.builder()
+	public static CustomUserDetailsBuilder createUserDetailsBuilder(User user) {
+		return CustomUserDetails.builder()
 			.userId(user.getUserId())
 			.password(user.getPassword())
 			.username(user.getUsername())
 			.defaultEmail(user.getDefaultEmail())
-			.role(Role.USER)
-			.authorities(Collections.singletonList(new SimpleGrantedAuthority(Role.USER.getCode())));
+			.role(user.getRole())
+			.authorities(Collections.singletonList(new SimpleGrantedAuthority(user.getRole().getCode())));
 	}
 
-	public static UserDetailsImplBuilder createUserDetailsBuilder(User user, Map<String, Object> attributes) {
-		UserDetailsImplBuilder userDetails = UserDetailsImpl.createUserDetailsBuilder(user);
+	public static CustomUserDetailsBuilder createUserDetailsBuilder(User user, Map<String, Object> attributes) {
+		CustomUserDetailsBuilder userDetails = CustomUserDetails.createUserDetailsBuilder(user);
 		userDetails.attributes(attributes);
 		return userDetails;
 	}

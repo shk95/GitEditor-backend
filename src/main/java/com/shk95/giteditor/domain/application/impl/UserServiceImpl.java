@@ -1,9 +1,11 @@
 package com.shk95.giteditor.domain.application.impl;
 
 import com.shk95.giteditor.domain.application.UserService;
+import com.shk95.giteditor.domain.application.commands.TokenResolverCommand;
+import com.shk95.giteditor.domain.common.constants.Role;
 import com.shk95.giteditor.domain.common.mail.MailManager;
 import com.shk95.giteditor.domain.common.mail.MessageVariable;
-import com.shk95.giteditor.domain.common.security.UserDetailsImpl;
+import com.shk95.giteditor.domain.common.security.CustomUserDetails;
 import com.shk95.giteditor.domain.common.security.jwt.JwtTokenProvider;
 import com.shk95.giteditor.domain.model.token.BlacklistToken;
 import com.shk95.giteditor.domain.model.token.BlacklistTokenRepository;
@@ -15,8 +17,7 @@ import com.shk95.giteditor.domain.model.user.UserRepository;
 import com.shk95.giteditor.utils.Helper;
 import com.shk95.giteditor.utils.Response;
 import com.shk95.giteditor.utils.SecurityUtil;
-import com.shk95.giteditor.web.payload.request.UserRequestDto;
-import com.shk95.giteditor.web.payload.response.TokenResolverCommand;
+import com.shk95.giteditor.web.apis.request.UserRequestDto;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -53,11 +54,12 @@ public class UserServiceImpl implements UserService {
 
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+		log.info("### login user : [{}]", username);
 		User user = userFinder.find(username).orElse(null);
 		if (user == null) {
 			throw new UsernameNotFoundException("Cannot find user. user : [" + username + "]");
 		}
-		return UserDetailsImpl.createUserDetailsBuilder(user).build();
+		return CustomUserDetails.createUserDetailsBuilder(user).build();
 	}
 
 	@Override
@@ -73,6 +75,7 @@ public class UserServiceImpl implements UserService {
 			.userId(signUp.getUserId())
 			.password(passwordEncoder.encode(signUp.getPassword()))
 			.defaultEmail(signUp.getDefaultEmail())
+			.role(Role.USER)
 			.username(signUp.getUsername())
 			.build());
 //		sendWelcomeMessage(user);
@@ -83,11 +86,11 @@ public class UserServiceImpl implements UserService {
 	public ResponseEntity<?> defaultLogin(HttpServletRequest request, HttpServletResponse response
 		, UserRequestDto.Login login) {
 		// 로그인 인증정보 가져옴.
-		UserDetailsImpl userDetails = (UserDetailsImpl) this.loadUserByUsername(login.getUserId());//TODO: 예외처리
+		CustomUserDetails userDetails = (CustomUserDetails) this.loadUserByUsername(login.getUserId());//TODO: 예외처리
 		// 인증용 토큰 생성
 		UsernamePasswordAuthenticationToken authenticationToken
 			= new UsernamePasswordAuthenticationToken(
-			userDetails
+			userDetails.getUserId()
 			, login.getPassword()
 			, userDetails.getAuthorities());
 		// 인증
@@ -194,7 +197,6 @@ public class UserServiceImpl implements UserService {
 		if (expiration > 0) {
 			blacklistTokenRepository.save(BlacklistToken.builder()
 				.accessToken(accessToken)
-				.isLogout(true)
 				.expiration(expiration).build());
 		}
 		return Response.success("로그아웃 되었습니다.");

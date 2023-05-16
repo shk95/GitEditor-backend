@@ -7,29 +7,29 @@ import java.util.Map;
 
 @Deprecated
 public class FacebookOAuth2UserInfo extends OAuth2UserInfo {
-    public FacebookOAuth2UserInfo(Map<String, Object> attributes) {
-        super(attributes);
-    }
+	public FacebookOAuth2UserInfo(Map<String, Object> attributes, Map<String, String> additionalAttributes) {
+		super(attributes, additionalAttributes);
+	}
 
-    @Override
-    public String getId() {
-        return (String) attributes.get("id");
-    }
+	@Override
+	public String getId() {
+		return (String) attributes.get("id");
+	}
 
-    @Override
-    public String getName() {
-        return (String) attributes.get("name");
-    }
+	@Override
+	public String getName() {
+		return (String) attributes.get("name");
+	}
 
-    @Override
-    public String getEmail() {
-        return (String) attributes.get("email");
-    }
+	@Override
+	public String getEmail() {
+		return (String) attributes.get("email");
+	}
 
-    @Override
-    public String getImageUrl() {
-        return (String) attributes.get("imageUrl");
-    }
+	@Override
+	public String getImageUrl() {
+		return (String) attributes.get("imageUrl");
+	}
 
     /*
     @Override

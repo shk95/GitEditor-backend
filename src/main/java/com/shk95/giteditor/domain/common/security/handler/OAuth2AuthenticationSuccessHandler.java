@@ -1,13 +1,13 @@
 package com.shk95.giteditor.domain.common.security.handler;
 
-import com.shk95.giteditor.config.ExpireTime;
+import com.shk95.giteditor.config.ConstantFields;
+import com.shk95.giteditor.domain.application.commands.TokenResolverCommand;
 import com.shk95.giteditor.domain.common.security.jwt.JwtTokenProvider;
 import com.shk95.giteditor.domain.common.security.repository.OAuth2AuthorizationRequestBasedOnCookieRepository;
 import com.shk95.giteditor.domain.model.token.RefreshToken;
 import com.shk95.giteditor.domain.model.token.RefreshTokenRepository;
 import com.shk95.giteditor.utils.CookieUtil;
 import com.shk95.giteditor.utils.Helper;
-import com.shk95.giteditor.web.payload.response.TokenResolverCommand;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -25,14 +25,12 @@ import java.net.URI;
 import java.util.Collection;
 import java.util.Optional;
 
-import static com.shk95.giteditor.domain.common.security.repository.OAuth2AuthorizationRequestBasedOnCookieRepository.REDIRECT_URI_PARAM_COOKIE_NAME;
-import static com.shk95.giteditor.domain.common.security.repository.OAuth2AuthorizationRequestBasedOnCookieRepository.REFRESH_TOKEN;
+import static com.shk95.giteditor.config.ConstantFields.OAuthRepo.*;
 
 @Slf4j
 @RequiredArgsConstructor
 @Component
 public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
-	public static final String OAUTH_DEFAULT_REDIRECT = "http://localhost:4000/oauth/redirect";//TODO: oauth default redirect url 관리
 
 	private final JwtTokenProvider tokenProvider;
 	private final RefreshTokenRepository refreshTokenRepository;
@@ -74,7 +72,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 			.build());
 
 		CookieUtil.deleteCookie(request, response, REFRESH_TOKEN);
-		CookieUtil.addCookie(response, REFRESH_TOKEN, tokenInfo.getRefreshToken(), (int) (ExpireTime.REFRESH_TOKEN_EXPIRE_TIME / 1000));// TODO: onOAuthSuccess: login 쿠키설정
+		CookieUtil.addCookie(response, REFRESH_TOKEN, tokenInfo.getRefreshToken(), (int) (ConstantFields.ExpireTime.REFRESH_TOKEN_EXPIRE_TIME / 1000));// TODO: onOAuthSuccess: login 쿠키설정
 
 		return UriComponentsBuilder.fromUriString(TARGET_URL)
 			.queryParam("token", tokenInfo.getAccessToken())

@@ -1,6 +1,6 @@
 package com.shk95.giteditor.domain.model.token;
 
-import com.shk95.giteditor.config.ExpireTime;
+import com.shk95.giteditor.config.ConstantFields;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -15,13 +15,11 @@ import java.util.concurrent.TimeUnit;
 @Builder
 @NoArgsConstructor
 @Getter
-@RedisHash(value = "logout", timeToLive = ExpireTime.ACCESS_TOKEN_EXPIRE_TIME)
+@RedisHash(value = "logout", timeToLive = ConstantFields.ExpireTime.ACCESS_TOKEN_EXPIRE_TIME)
 public class BlacklistToken {
 
 	@Id
 	private String accessToken;
-
-	private boolean isLogout;
 
 	@TimeToLive(unit = TimeUnit.MILLISECONDS)
 	private Long expiration;

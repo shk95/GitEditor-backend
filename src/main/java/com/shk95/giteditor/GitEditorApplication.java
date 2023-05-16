@@ -14,5 +14,4 @@ public class GitEditorApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(GitEditorApplication.class, args);
 	}
-
 }

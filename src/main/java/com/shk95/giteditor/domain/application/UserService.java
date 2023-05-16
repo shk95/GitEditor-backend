@@ -1,6 +1,6 @@
 package com.shk95.giteditor.domain.application;
 
-import com.shk95.giteditor.web.payload.request.UserRequestDto;
+import com.shk95.giteditor.web.apis.request.UserRequestDto;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetailsService;
 

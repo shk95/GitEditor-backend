@@ -14,14 +14,27 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 @Slf4j
 @RequiredArgsConstructor
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+	//TODO: 필터 제외목록 점검. 필요한지?
+	private static final List<String> EXCLUDE_URL = Collections.unmodifiableList(Arrays.asList(
+		"/static/**",
+		"/auth/signup"
+	));
 	private final JwtTokenProvider jwtTokenProvider;
 	private final BlacklistTokenRepository blacklistTokenRepository;
+
+	@Override
+	protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+		return EXCLUDE_URL.stream().anyMatch(exclude -> exclude.equalsIgnoreCase(request.getServletPath()));
+	}
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)

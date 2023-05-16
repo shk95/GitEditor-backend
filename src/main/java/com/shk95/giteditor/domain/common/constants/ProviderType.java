@@ -1,4 +1,4 @@
-package com.shk95.giteditor.domain.common.security.oauth;
+package com.shk95.giteditor.domain.common.constants;
 
 import lombok.Getter;
 
@@ -8,6 +8,5 @@ public enum ProviderType {
 	FACEBOOK,
 	NAVER,
 	KAKAO,
-	GITHUB,
-	LOCAL;
+	GITHUB
 }

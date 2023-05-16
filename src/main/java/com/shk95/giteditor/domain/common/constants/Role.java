@@ -1,4 +1,4 @@
-package com.shk95.giteditor.domain.model.roles;
+package com.shk95.giteditor.domain.common.constants;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

@@ -1,4 +1,4 @@
-package com.shk95.giteditor.web.payload.request;
+package com.shk95.giteditor.web.apis.request;
 
 import lombok.Getter;
 import lombok.Setter;

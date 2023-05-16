@@ -1,9 +1,9 @@
 package com.shk95.giteditor.domain.application.impl;
 
-import com.shk95.giteditor.domain.model.roles.Role;
+import com.shk95.giteditor.domain.common.constants.Role;
 import com.shk95.giteditor.domain.model.user.User;
 import com.shk95.giteditor.domain.model.user.UserRepository;
-import com.shk95.giteditor.web.payload.request.UserRequestDto;
+import com.shk95.giteditor.web.apis.request.UserRequestDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -14,7 +14,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

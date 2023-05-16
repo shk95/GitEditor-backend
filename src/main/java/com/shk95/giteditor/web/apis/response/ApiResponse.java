@@ -1,4 +1,4 @@
-package com.shk95.giteditor.web.payload.response;
+package com.shk95.giteditor.web.apis.response;
 
 import lombok.*;
 import org.springframework.data.domain.Pageable;

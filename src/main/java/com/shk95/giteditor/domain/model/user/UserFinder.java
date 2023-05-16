@@ -5,8 +5,8 @@ import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
-@Component
 @RequiredArgsConstructor
+@Component
 public class UserFinder {
 
 	private final UserRepository userRepository;

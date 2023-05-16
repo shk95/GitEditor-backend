@@ -2,11 +2,11 @@ package com.shk95.giteditor.domain.common.security.exception;
 
 public class TokenValidFailedException extends RuntimeException {
 
-    public TokenValidFailedException() {
-        super("Failed to generate Token. ");
-    }
+	public TokenValidFailedException() {
+		super("Failed to generate Token. ");
+	}
 
-    private TokenValidFailedException(String message) {
-        super(message);
-    }
+	public TokenValidFailedException(String message) {
+		super(message);
+	}
 }

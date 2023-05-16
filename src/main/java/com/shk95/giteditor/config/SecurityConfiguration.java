@@ -18,10 +18,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
-import java.util.Arrays;
+import org.springframework.web.cors.CorsUtils;
 
 @EnableWebSecurity
 /*
@@ -40,8 +37,6 @@ prePostEnabled 속성을 true로 설정하면 이 어노테이션은 Spring의 �
 	prePostEnabled = true)
 @RequiredArgsConstructor
 public class SecurityConfiguration {
-
-	private final ApplicationProperties applicationProperties;
 
 	private final AuthEntryPointImpl authEntryPoint;
 	private final LogoutSuccessHandlerImpl logoutSuccessHandler;
@@ -68,7 +63,8 @@ public class SecurityConfiguration {
 			.and()
 			.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
 			.authorizeRequests()
-			.antMatchers("/auth/*").permitAll()
+			.requestMatchers(CorsUtils::isPreFlightRequest).permitAll()
+			.antMatchers("/auth/*", "/login/**").permitAll()
 			.antMatchers("/api/**").hasRole("USER")
 			.antMatchers("/admin/**").hasRole("ADMIN")
 			.anyRequest().authenticated()
@@ -88,24 +84,6 @@ public class SecurityConfiguration {
 	@Bean
 	public PasswordEncoder passwordEncoder() {
 		return new BCryptPasswordEncoder();
-	}
-
-	/*
-	 * Cors 설정
-	 * */
-	@Bean
-	public UrlBasedCorsConfigurationSource corsConfigurationSource() {
-		UrlBasedCorsConfigurationSource corsConfigSource = new UrlBasedCorsConfigurationSource();
-
-		CorsConfiguration corsConfig = new CorsConfiguration();
-		corsConfig.setAllowedHeaders(Arrays.asList(applicationProperties.getCors().getAllowedHeaders().split(",")));
-		corsConfig.setAllowedMethods(Arrays.asList(applicationProperties.getCors().getAllowedMethods().split(",")));
-		corsConfig.setAllowedOrigins(Arrays.asList(applicationProperties.getCors().getAllowedOrigins().split(",")));
-		corsConfig.setAllowCredentials(true);
-		corsConfig.setMaxAge(corsConfig.getMaxAge());
-
-		corsConfigSource.registerCorsConfiguration("/**", corsConfig);
-		return corsConfigSource;
 	}
 
 	/*@Bean

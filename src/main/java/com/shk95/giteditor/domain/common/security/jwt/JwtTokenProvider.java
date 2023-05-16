@@ -1,9 +1,9 @@
 package com.shk95.giteditor.domain.common.security.jwt;
 
-import com.shk95.giteditor.config.ExpireTime;
-import com.shk95.giteditor.domain.common.exception.TokenValidFailedException;
-import com.shk95.giteditor.domain.common.security.UserDetailsImpl;
-import com.shk95.giteditor.web.payload.response.TokenResolverCommand;
+import com.shk95.giteditor.config.ConstantFields;
+import com.shk95.giteditor.domain.application.commands.TokenResolverCommand;
+import com.shk95.giteditor.domain.common.security.CustomUserDetails;
+import com.shk95.giteditor.domain.common.security.exception.TokenValidFailedException;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -24,15 +24,11 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.stream.Collectors;
 
+import static com.shk95.giteditor.config.ConstantFields.Jwt.*;
+
 @Slf4j
 @Component
 public class JwtTokenProvider {
-
-	private static final String AUTHORIZATION_HEADER = "Authorization";
-	private static final String AUTHORITIES_KEY = "auth";
-	private static final String BEARER_TYPE = "Bearer";
-	private static final String TYPE_ACCESS = "access";
-	private static final String TYPE_REFRESH = "refresh";
 
 	private final Key key;
 
@@ -42,6 +38,7 @@ public class JwtTokenProvider {
 	private JwtTokenProvider(@Value("${app.token-secret-key}") String secretKey) {
 		byte[] keyBytes = Decoders.BASE64.decode(secretKey);
 		this.key = Keys.hmacShaKeyFor(keyBytes);
+		log.debug("jwt secret key : [{}]", secretKey);
 	}
 
 	//Authentication 을 가지고 AccessToken, RefreshToken 을 생성하는 메서드
@@ -63,7 +60,7 @@ public class JwtTokenProvider {
 			.claim(AUTHORITIES_KEY, authorities)
 			.claim("type", TYPE_ACCESS)
 			.setIssuedAt(now)   //토큰 발행 시간 정보
-			.setExpiration(new Date(now.getTime() + ExpireTime.ACCESS_TOKEN_EXPIRE_TIME))  //토큰 만료 시간 설정
+			.setExpiration(new Date(now.getTime() + ConstantFields.ExpireTime.ACCESS_TOKEN_EXPIRE_TIME))  //토큰 만료 시간 설정
 			.signWith(key, SignatureAlgorithm.HS256)
 			.compact();
 
@@ -71,7 +68,7 @@ public class JwtTokenProvider {
 		String refreshToken = Jwts.builder()
 			.claim("type", TYPE_REFRESH)
 			.setIssuedAt(now)   //토큰 발행 시간 정보
-			.setExpiration(new Date(now.getTime() + ExpireTime.REFRESH_TOKEN_EXPIRE_TIME)) //토큰 만료 시간 설정
+			.setExpiration(new Date(now.getTime() + ConstantFields.ExpireTime.REFRESH_TOKEN_EXPIRE_TIME)) //토큰 만료 시간 설정
 			.signWith(key, SignatureAlgorithm.HS256)
 			.compact();
 
@@ -95,7 +92,7 @@ public class JwtTokenProvider {
 				.collect(Collectors.toList());
 
 		//UserDetails 객체를 만들어서 Authentication 리턴
-		UserDetailsImpl principal = UserDetailsImpl.builder()// TODO : jwt 로그인 보완하기
+		CustomUserDetails principal = CustomUserDetails.builder()// TODO : jwt 로그인 보완하기
 			.userId(claims.getSubject())
 			.password("")
 			.authorities(authorities).build();

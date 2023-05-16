@@ -21,7 +21,7 @@ public class GlobalApiExceptionHandler extends ResponseEntityExceptionHandler {
 	@ExceptionHandler({Exception.class})
 	protected ResponseEntity<?> handle(RuntimeException ex, HttpServletResponse httpServletResponse) {
 
-		log.error("Unhandled Runtime exception error. cause : [" + ex.getCause() + "]" + "\nError message : [" + ex.getMessage() + "]");
+		log.error("Unhandled Runtime exception occurred. cause : [" + ex.getCause() + "]" + "\nError message : [" + ex.getMessage() + "]");
 		return Response.fail(ex.getMessage(), "Sorry, there is an error on the server side.", HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 

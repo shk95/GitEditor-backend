@@ -16,6 +16,7 @@ import java.io.IOException;
 @Slf4j
 @RequiredArgsConstructor
 public class LogoutSuccessHandlerImpl implements LogoutSuccessHandler {
+
 	private final JwtTokenProvider tokenProvider;
 
 	@Override

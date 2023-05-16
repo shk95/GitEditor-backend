@@ -1,11 +1,16 @@
 package com.shk95.giteditor.domain.application.commands;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
-@Getter
-@Builder
 public class TokenResolverCommand {
-	private String accessToken;
-	private String refreshToken;
+	@Builder
+	@Getter
+	@AllArgsConstructor
+	public static class TokenInfo {
+		private String grantType;
+		private String accessToken;
+		private String refreshToken;
+	}
 }
