@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Collection;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static com.shk95.giteditor.config.ConstantFields.OAuthRepo.*;
 
@@ -63,16 +64,18 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
 		TokenResolverCommand.TokenInfo tokenInfo = tokenProvider.generateToken(authentication);
 
+		log.info("{}. client ip : {}", getClass(), Helper.getClientIp(request));
+		log.info("{}. request.getRemote() : {}", getClass(), request.getRemoteAddr());
 		// Redis RefreshToken 저장
 		refreshTokenRepository.save(RefreshToken.builder()// TODO: onOAuthSuccess: redis transaction 설정
 			.userId(authentication.getName())
 			.ip(Helper.getClientIp(request))
-			.authorities(authentication.getAuthorities())
+			.authorities(authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.joining(",")))
 			.refreshToken(tokenInfo.getRefreshToken())
 			.build());
 
 		CookieUtil.deleteCookie(request, response, REFRESH_TOKEN);
-		CookieUtil.addCookie(response, REFRESH_TOKEN, tokenInfo.getRefreshToken(), (int) (ConstantFields.ExpireTime.REFRESH_TOKEN_EXPIRE_TIME / 1000));// TODO: onOAuthSuccess: login 쿠키설정
+		CookieUtil.addCookie(response, REFRESH_TOKEN, tokenInfo.getRefreshToken(), (int) (ConstantFields.Jwt.ExpireTime.REFRESH_TOKEN_EXPIRE_TIME / 1000));// TODO: onOAuthSuccess: login 쿠키설정
 
 		return UriComponentsBuilder.fromUriString(TARGET_URL)
 			.queryParam("token", tokenInfo.getAccessToken())

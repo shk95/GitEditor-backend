@@ -1,6 +1,6 @@
 package com.shk95.giteditor.domain.common.security;
 
-import com.shk95.giteditor.domain.common.constants.Role;
+import com.shk95.giteditor.domain.common.constant.ProviderType;
 import com.shk95.giteditor.domain.model.user.User;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -27,23 +27,28 @@ public class CustomUserDetails implements UserDetails, OAuth2User, OidcUser {
 	private String providerEmail;
 	private String password;
 	private String username;
+	private ProviderType providerType;
 	private Role role;
 	private Map<String, Object> attributes;
 
-	public static CustomUserDetailsBuilder createUserDetailsBuilder(User user) {
+	public static CustomUserDetailsBuilder createUserDetailsOf(User user) {
 		return CustomUserDetails.builder()
 			.userId(user.getUserId())
 			.password(user.getPassword())
 			.username(user.getUsername())
 			.defaultEmail(user.getDefaultEmail())
+			.providerType(user.getProviderType())
 			.role(user.getRole())
 			.authorities(Collections.singletonList(new SimpleGrantedAuthority(user.getRole().getCode())));
 	}
 
-	public static CustomUserDetailsBuilder createUserDetailsBuilder(User user, Map<String, Object> attributes) {
-		CustomUserDetailsBuilder userDetails = CustomUserDetails.createUserDetailsBuilder(user);
-		userDetails.attributes(attributes);
-		return userDetails;
+	public static CustomUserDetailsBuilder createUserDetailsOfOAuthUser(User user, Map<String, Object> attributes) {
+		return CustomUserDetails.builder()
+			.userId(user.getUserId())
+			.role(user.getRole())
+			.providerType(user.getProviderType())
+			.attributes(attributes)
+			.authorities(Collections.singletonList(new SimpleGrantedAuthority(user.getRole().getCode())));
 	}
 
 	@Override

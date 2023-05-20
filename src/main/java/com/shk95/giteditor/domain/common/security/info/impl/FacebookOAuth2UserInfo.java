@@ -1,34 +1,45 @@
 package com.shk95.giteditor.domain.common.security.info.impl;
 
 
+import com.shk95.giteditor.domain.common.constant.ProviderType;
 import com.shk95.giteditor.domain.common.security.info.OAuth2UserInfo;
 
 import java.util.Map;
 
 @Deprecated
 public class FacebookOAuth2UserInfo extends OAuth2UserInfo {
-	public FacebookOAuth2UserInfo(Map<String, Object> attributes, Map<String, String> additionalAttributes) {
-		super(attributes, additionalAttributes);
+	public FacebookOAuth2UserInfo(Map<String, Object> attributes, Map<String, String> additionalAttributes, ProviderType providerType) {
+		super(attributes, additionalAttributes, providerType);
 	}
 
 	@Override
 	public String getId() {
-		return (String) attributes.get("id");
+		return (String) super.getAttributes().get("id");
+	}
+
+	@Override
+	public String getLoginId() {
+		return null;
 	}
 
 	@Override
 	public String getName() {
-		return (String) attributes.get("name");
+		return (String) super.getAttributes().get("name");
 	}
 
 	@Override
 	public String getEmail() {
-		return (String) attributes.get("email");
+		return (String) super.getAttributes().get("email");
 	}
 
 	@Override
 	public String getImageUrl() {
-		return (String) attributes.get("imageUrl");
+		return (String) super.getAttributes().get("imageUrl");
+	}
+
+	@Override
+	public String getAccessToken() {
+		return null;
 	}
 
     /*

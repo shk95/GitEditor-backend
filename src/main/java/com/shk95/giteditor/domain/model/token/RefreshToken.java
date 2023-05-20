@@ -8,15 +8,12 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.redis.core.index.Indexed;
-import org.springframework.security.core.GrantedAuthority;
-
-import java.util.Collection;
 
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 @Getter
-@RedisHash(value = "refresh", timeToLive = ConstantFields.ExpireTime.REFRESH_TOKEN_EXPIRE_TIME_FOR_REDIS)
+@RedisHash(value = "refresh", timeToLive = ConstantFields.Jwt.ExpireTime.REFRESH_TOKEN_EXPIRE_TIME_FOR_REDIS)
 public class RefreshToken {
 
 	@Id
@@ -27,5 +24,5 @@ public class RefreshToken {
 
 	private String ip;
 
-	private Collection<? extends GrantedAuthority> authorities;
+	private String authorities;// 값 변환 필요. String <--> Collection<? extends GrantedAuthority>
 }

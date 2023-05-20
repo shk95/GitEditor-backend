@@ -10,7 +10,7 @@ import java.lang.annotation.*;
  *
  * <p>
  * Reference:
- * https://docs.spring.io/spring-security/site/docs/current/reference/html/mvc.html#mvc-authentication-principal
+ * <a href="https://docs.spring.io/spring-security/site/docs/current/reference/html/mvc.html#mvc-authentication-principal">...</a>
  * </p>
  */
 @Target({ElementType.PARAMETER, ElementType.TYPE})

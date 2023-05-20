@@ -1,9 +1,10 @@
 package com.shk95.giteditor.domain.application.impl;
 
-import com.shk95.giteditor.domain.common.constants.Role;
+import com.shk95.giteditor.domain.common.constant.ProviderType;
+import com.shk95.giteditor.domain.common.security.Role;
 import com.shk95.giteditor.domain.model.user.User;
 import com.shk95.giteditor.domain.model.user.UserRepository;
-import com.shk95.giteditor.web.apis.request.UserRequestDto;
+import com.shk95.giteditor.web.apis.request.AuthRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -32,16 +33,16 @@ class UserServiceImplTest {
 	@Mock
 	private UserRepository userRepository;
 
-	static UserRequestDto.SignUp createSignupRequestDto() {
-		UserRequestDto.SignUp signUp = new UserRequestDto.SignUp();
+	static AuthRequest.Signup.Default createSignupRequestDto() {
+		AuthRequest.Signup.Default signUp = new AuthRequest.Signup.Default();
 		signUp.setUserId("test1234");
 		signUp.setPassword("QWEqwe123!");
 		signUp.setDefaultEmail("test@test.com");
 		return signUp;
 	}
 
-	static UserRequestDto.Login createLoginRequestDto() {
-		UserRequestDto.Login login = new UserRequestDto.Login();
+	static AuthRequest.Login createLoginRequestDto() {
+		AuthRequest.Login login = new AuthRequest.Login();
 		login.setUserId("test1234");
 		login.setPassword("QWEqwe123!");
 		return login;
@@ -58,7 +59,7 @@ class UserServiceImplTest {
 
 	@Test
 	void signUp_willSuccess() {
-		System.out.println("#####" + userService.defaultSignUp(createSignupRequestDto())
+		System.out.println("#####" + userService.signupDefault(createSignupRequestDto()));
 
 	}
 
@@ -85,10 +86,10 @@ class UserServiceImplTest {
 			.password("testpassword")
 			.role(Role.USER)
 			.build();
-		when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
+		when(userRepository.findByUserIdAndProviderType("testuser", ProviderType.LOCAL)).thenReturn(Optional.of(user));
 		assertEquals(user.getUserId(), userService.loadUserByUsername("testuser").getUsername());
 		assertEquals(user.getPassword(), userService.loadUserByUsername("testuser").getPassword());
-		assertEquals(user.getRoles(), userService.loadUserByUsername("testuser").getAuthorities());
+		assertEquals(user.getRole(), userService.loadUserByUsername("testuser").getAuthorities());
 	}
 
 	@Test

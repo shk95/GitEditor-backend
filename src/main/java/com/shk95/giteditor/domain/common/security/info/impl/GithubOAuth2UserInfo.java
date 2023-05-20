@@ -1,10 +1,12 @@
 package com.shk95.giteditor.domain.common.security.info.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.shk95.giteditor.domain.common.constant.ProviderType;
 import com.shk95.giteditor.domain.common.security.info.OAuth2UserInfo;
+import io.jsonwebtoken.lang.Assert;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.json.JsonParseException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.RequestEntity;
@@ -13,19 +15,18 @@ import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
 import java.util.Map;
+import java.util.stream.StreamSupport;
 
 import static com.shk95.giteditor.config.ConstantFields.OAuthService.PROVIDER_ACCESS_TOKEN;
 
 @Slf4j
 public class GithubOAuth2UserInfo extends OAuth2UserInfo {
 
-	private final String accessToken = super.getAdditionalAttributes().get(PROVIDER_ACCESS_TOKEN);
-
-	public GithubOAuth2UserInfo(Map<String, Object> attributes, Map<String, String> additionalAttributes) {
-		super(attributes, additionalAttributes);
+	public GithubOAuth2UserInfo(Map<String, Object> attributes, Map<String, String> additionalAttributes, ProviderType providerType) {
+		super(attributes, additionalAttributes, providerType);
 	}
 
-	private String restWrapper(String url, HttpHeaders headers) {
+	private static String restWrapper(String url, HttpHeaders headers) {
 		RequestEntity<Void> requestEntity = new RequestEntity<>(headers, HttpMethod.GET, URI.create(url));
 
 		RestTemplate restTemplate = new RestTemplate();
@@ -42,12 +43,18 @@ public class GithubOAuth2UserInfo extends OAuth2UserInfo {
 
 	@Override
 	public String getId() {
-		return (String) super.attributes.get("login");
+		return super.getAttributes().get("id").toString();
+	}
+
+	@Override
+	public String getLoginId() {
+		return (String) super.getAttributes().get("login");
 	}
 
 	@Override
 	public String getName() {
-		return null;
+		String name = (String) super.getAttributes().get("name");
+		return name == null ? "" : name;
 	}
 
 	@Override
@@ -55,30 +62,35 @@ public class GithubOAuth2UserInfo extends OAuth2UserInfo {
 		String url = "https://api.github.com/user/emails";
 		HttpHeaders headers = new HttpHeaders();
 		headers.set("Accept", "application/vnd.github+json");
-		headers.set("Authorization", "Bearer " + accessToken);
+		headers.set("Authorization", "Bearer " + super.getAdditionalAttributes().get(PROVIDER_ACCESS_TOKEN));
 		headers.set("X-GitHub-Api-Version", "2022-11-28");
-		String response = this.restWrapper(url, headers);
 
-		String email = "";
+		String response = GithubOAuth2UserInfo.restWrapper(url, headers);
+
 		ObjectMapper objectMapper = new ObjectMapper();
+		JsonNode rootNode;
+		String email;
 		try {
-			JsonNode rootNode = objectMapper.readTree(response);
-			for (JsonNode emailNode : rootNode) {
-				boolean primary = emailNode.get("primary").asBoolean();
-				if (primary) {
-					email = emailNode.get("email").asText();
-					break;
-				}
-			}
-		} catch (JsonProcessingException e) {
+			rootNode = objectMapper.readTree(response);
+			email = StreamSupport.stream(rootNode.spliterator(), false)
+				.filter(emailNode -> emailNode.get("primary").asBoolean())
+				.findFirst()
+				.map(emailNode -> emailNode.get("email").asText()).orElseThrow(JsonParseException::new);
+		} catch (Exception e) {
 			throw new RuntimeException(e);// TODO: gitOauthUserinfo: 유저 정보 가져오기 json 파싱 중 나타날수있는 예외처리
 		}
+		Assert.notNull(email, "The value of `email` may not be null");
 		log.debug("@@@@ {}. email value : [{}]", this.getClass().getName(), email);
 		return email;
 	}
 
 	@Override
 	public String getImageUrl() {
-		return (String) super.attributes.get("avatar_url");
+		return (String) super.getAttributes().get("avatar_url");
+	}
+
+	@Override
+	public String getAccessToken() {
+		return super.getAdditionalAttributes().get(PROVIDER_ACCESS_TOKEN);
 	}
 }

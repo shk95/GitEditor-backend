@@ -1,4 +1,4 @@
-package com.shk95.giteditor.domain.common.constants;
+package com.shk95.giteditor.domain.common.security;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

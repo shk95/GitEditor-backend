@@ -1,5 +1,6 @@
 package com.shk95.giteditor.domain.model.user;
 
+import com.shk95.giteditor.domain.common.constant.ProviderType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -16,7 +17,7 @@ public class UserFinder {
 		if (userIdOrEmailAddress.contains("@")) {
 			user = userRepository.findByDefaultEmail(userIdOrEmailAddress);
 		} else {
-			user = userRepository.findByUserId(userIdOrEmailAddress);
+			user = userRepository.findByUserIdAndProviderType(userIdOrEmailAddress, ProviderType.LOCAL);
 		}
 		return user;
 	}

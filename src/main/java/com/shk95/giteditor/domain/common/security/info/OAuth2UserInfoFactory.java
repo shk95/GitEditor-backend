@@ -1,7 +1,7 @@
 package com.shk95.giteditor.domain.common.security.info;
 
 import com.shk95.giteditor.domain.common.security.info.impl.*;
-import com.shk95.giteditor.domain.common.constants.ProviderType;
+import com.shk95.giteditor.domain.common.constant.ProviderType;
 
 import java.util.Map;
 import java.util.Objects;
@@ -18,7 +18,7 @@ public class OAuth2UserInfoFactory {
 			case KAKAO:
 				return new KakaoOAuth2UserInfo(attributes,additionalAttributes);*/
 		if (Objects.requireNonNull(providerType) == ProviderType.GITHUB) {
-			return new GithubOAuth2UserInfo(attributes, additionalAttributes);
+			return new GithubOAuth2UserInfo(attributes, additionalAttributes, providerType);
 		}
 		throw new IllegalArgumentException("Invalid Provider Type.");
 	}

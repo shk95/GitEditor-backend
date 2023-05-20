@@ -1,14 +1,13 @@
 package com.shk95.giteditor.domain.common.security.service;
 
-import com.shk95.giteditor.domain.common.constants.ProviderType;
-import com.shk95.giteditor.domain.common.constants.Role;
+import com.shk95.giteditor.domain.common.constant.ProviderType;
 import com.shk95.giteditor.domain.common.security.CustomUserDetails;
+import com.shk95.giteditor.domain.common.security.exception.OAuthUserNotRegisteredException;
 import com.shk95.giteditor.domain.common.security.info.OAuth2UserInfo;
 import com.shk95.giteditor.domain.common.security.info.OAuth2UserInfoFactory;
 import com.shk95.giteditor.domain.model.provider.Provider;
+import com.shk95.giteditor.domain.model.provider.ProviderId;
 import com.shk95.giteditor.domain.model.provider.ProviderRepository;
-import com.shk95.giteditor.domain.model.user.User;
-import com.shk95.giteditor.domain.model.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
@@ -22,7 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 import static com.shk95.giteditor.config.ConstantFields.OAuthService.PROVIDER_ACCESS_TOKEN;
 
@@ -32,7 +30,6 @@ import static com.shk95.giteditor.config.ConstantFields.OAuthService.PROVIDER_AC
 @Service
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
-	private final UserRepository userRepository;
 	private final ProviderRepository providerRepository;
 
 	@Override
@@ -51,52 +48,31 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 	private OAuth2User authProcess(OAuth2UserRequest oAuth2UserRequest, OAuth2User oAuth2User) {
 		ProviderType providerType
 			= ProviderType.valueOf(oAuth2UserRequest.getClientRegistration().getRegistrationId().toUpperCase());
-		//TODO: oauthProcess: 리펙토링
 		String retrievedAccessToken = oAuth2UserRequest.getAccessToken().getTokenValue();
+		Map<String, String> additionalAttributes = new HashMap<>();
+		additionalAttributes.put(PROVIDER_ACCESS_TOKEN, retrievedAccessToken);
 		log.debug("#### oAuth2userInfo accessToken : [{}]", retrievedAccessToken);
 		log.debug("#### oAuth2userInfo getAttributes : [{}]\n", oAuth2User.getAttributes());
 		log.debug("#### oAuth2userInfo clientRegistration : [{}]\n", oAuth2UserRequest.getClientRegistration());
 
-		Map<String, String> additionalAttributes = new HashMap<>();
-		additionalAttributes.put(PROVIDER_ACCESS_TOKEN, retrievedAccessToken);
-
 		// OAuth 서비스를 통해 로그인성공후 가져온 사용자의 정보를 가져옴.
-		OAuth2UserInfo userInfo = OAuth2UserInfoFactory
+		OAuth2UserInfo retrievedUserInfo = OAuth2UserInfoFactory
 			.getOAuth2UserInfo(providerType, oAuth2User.getAttributes(), additionalAttributes);
 
+		// oAuth 가입정보의 pk(provider type, provider id)
+		ProviderId providerId = new ProviderId(providerType, retrievedUserInfo.getId());
+		Provider oAuthUser = providerRepository.findById(providerId).orElseThrow(
+			() -> new OAuthUserNotRegisteredException("서비스에 가입되지 않은 oAuth2 로그인 유저. 가입 필요.", null, retrievedUserInfo));
 
-		Optional<Provider> oAuthUser = providerRepository.findByProviderEmail(userInfo.getEmail());
-
-		if (!oAuthUser.isPresent()) {
-			this.createUser(userInfo, providerType);
-		} /*else {//TODO: oAuth: authProcess: 검토
-			if (providerType != oAuthUser.get().getProviderType()) {
-				throw new OAuthProviderMissMatchException(
-					"Looks like you're signed up with " + providerType +
-						" account. Please use your " + oAuthUser.get().getProviderType() + " account to login."
-				);
-			}
-			updateUser(oAuthUser.get(), userInfo);
-		}*/
-		return CustomUserDetails.createUserDetailsBuilder(oAuthUser.get(), oAuth2User.getAttributes()).build();
+		updateUserInfo(oAuthUser, retrievedUserInfo);// jpa 변경감지 이용 업데이트
+		return CustomUserDetails.createUserDetailsOfOAuthUser(oAuthUser.getUser(), oAuth2User.getAttributes()).build();
 	}
 
-	private void createUser(OAuth2UserInfo userInfo, ProviderType providerType) {
-		userRepository.saveAndFlush(User.builder()
-			.userId(userInfo.getId())// TODO: oauth: createUser: userId 중복성 문제
-			.username(userInfo.getName())
-			.defaultEmail(userInfo.getEmail())
-			.providerType(providerType)
-			.role(Role.USER)
-			.build());
-	}
-
-	private void updateUserInfo(User user, OAuth2UserInfo userInfo) {
-		if (userInfo.getName() != null && !user.getUsername().equals(userInfo.getName())) {
-			user.updateUserName(userInfo.getName());
-		}
-		if (userInfo.getImageUrl() != null && !user.getProfileImageUrl().equals(userInfo.getImageUrl())) {
-			user.updateProfileImageUrl(userInfo.getImageUrl());
-		}
+	/**
+	 * @param providerUser entity
+	 * @param userInfo     오버라이딩된 oAuth user info
+	 */
+	private void updateUserInfo(Provider providerUser, OAuth2UserInfo userInfo) {
+		Provider.update(providerUser, userInfo);
 	}
 }

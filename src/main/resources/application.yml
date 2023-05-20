@@ -12,7 +12,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
     open-in-view: false
     properties:
       hibernate:
@@ -56,12 +56,8 @@ spring:
         smtp:
           auth: false
   config:
-    #    import: application-secret.yml, application-dev.yml
     import: application-secret.yml
   profiles:
-#    group:
-#      dev:
-#        application-dev
     include:
       - application-secret
 
@@ -86,9 +82,16 @@ app:
     url: <S3 root URL>
 
   cors:
-    allowed-origins: 'http://localhost:4000'
-    allowed-methods: GET,POST,PUT,DELETE,OPTIONS
-    allowed-headers: '*'
+    add-mapping: '/**'
+    allowed-origins: '*'
+    allowed-methods:
+      - 'GET'
+      - 'POST'
+      - 'PUT'
+      - 'DELETE'
+      - 'OPTIONS'
+    allowed-headers:
+      - '*'
     max-age: 3600
 
 logging:

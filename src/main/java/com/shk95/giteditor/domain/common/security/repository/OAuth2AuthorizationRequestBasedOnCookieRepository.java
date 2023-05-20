@@ -12,7 +12,8 @@ import javax.servlet.http.HttpServletResponse;
 import static com.shk95.giteditor.config.ConstantFields.OAuthRepo.*;
 
 @Component
-public class OAuth2AuthorizationRequestBasedOnCookieRepository implements AuthorizationRequestRepository<OAuth2AuthorizationRequest> {
+public class OAuth2AuthorizationRequestBasedOnCookieRepository
+	implements AuthorizationRequestRepository<OAuth2AuthorizationRequest> {
 
 	@Override
 	public OAuth2AuthorizationRequest loadAuthorizationRequest(HttpServletRequest request) {
@@ -22,7 +23,9 @@ public class OAuth2AuthorizationRequestBasedOnCookieRepository implements Author
 	}
 
 	@Override
-	public void saveAuthorizationRequest(OAuth2AuthorizationRequest authorizationRequest, HttpServletRequest request, HttpServletResponse response) {
+	public void saveAuthorizationRequest(OAuth2AuthorizationRequest authorizationRequest, HttpServletRequest request
+		, HttpServletResponse response) {
+
 		if (authorizationRequest == null) {
 			CookieUtil.deleteCookie(request, response, OAUTH2_AUTHORIZATION_REQUEST_COOKIE_NAME);
 			CookieUtil.deleteCookie(request, response, REDIRECT_URI_PARAM_COOKIE_NAME);
@@ -30,7 +33,8 @@ public class OAuth2AuthorizationRequestBasedOnCookieRepository implements Author
 			return;
 		}
 
-		CookieUtil.addCookie(response, OAUTH2_AUTHORIZATION_REQUEST_COOKIE_NAME, CookieUtil.serialize(authorizationRequest), COOKIE_EXPIRE_SECONDS);
+		CookieUtil.addCookie(response, OAUTH2_AUTHORIZATION_REQUEST_COOKIE_NAME
+			, CookieUtil.serialize(authorizationRequest), COOKIE_EXPIRE_SECONDS);
 		String redirectUriAfterLogin = request.getParameter(REDIRECT_URI_PARAM_COOKIE_NAME);
 		if (StringUtils.isNotBlank(redirectUriAfterLogin)) {
 			CookieUtil.addCookie(response, REDIRECT_URI_PARAM_COOKIE_NAME, redirectUriAfterLogin, COOKIE_EXPIRE_SECONDS);
@@ -43,7 +47,8 @@ public class OAuth2AuthorizationRequestBasedOnCookieRepository implements Author
 	}
 
 	@Override
-	public OAuth2AuthorizationRequest removeAuthorizationRequest(HttpServletRequest request, HttpServletResponse response) {
+	public OAuth2AuthorizationRequest removeAuthorizationRequest(HttpServletRequest request
+		, HttpServletResponse response) {
 		return this.loadAuthorizationRequest(request);
 	}
 

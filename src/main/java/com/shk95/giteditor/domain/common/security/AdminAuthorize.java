@@ -1,4 +1,4 @@
-package com.shk95.giteditor.config;
+package com.shk95.giteditor.domain.common.security;
 
 import org.springframework.security.access.prepost.PreAuthorize;
 
@@ -9,6 +9,6 @@ import java.lang.annotation.Target;
 
 @Target({ ElementType.METHOD, ElementType.TYPE })
 @Retention(RetentionPolicy.RUNTIME)
-@PreAuthorize("hasAnyRole('USER')")
-public @interface UserAuthorize {
+@PreAuthorize("hasAnyRole('ADMIN')")
+public @interface AdminAuthorize {
 }

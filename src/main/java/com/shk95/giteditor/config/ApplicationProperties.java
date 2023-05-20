@@ -8,6 +8,7 @@ import org.springframework.validation.annotation.Validated;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import java.util.List;
 
 @Setter
 @Getter
@@ -60,11 +61,11 @@ public final class ApplicationProperties {
 	@Getter
 	public static class Cors {
 		@NotBlank
+		private String addMapping;
+		@NotBlank
 		private String allowedOrigins;
-		@NotBlank
-		private String allowedMethods;
-		@NotBlank
-		private String allowedHeaders;
+		private List<String> allowedMethods;
+		private List<String> allowedHeaders;
 		@NotNull
 		private Long maxAge;
 	}

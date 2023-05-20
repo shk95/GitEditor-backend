@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
 @Builder
 @NoArgsConstructor
 @Getter
-@RedisHash(value = "logout", timeToLive = ConstantFields.ExpireTime.ACCESS_TOKEN_EXPIRE_TIME)
+@RedisHash(value = "logout", timeToLive = ConstantFields.Jwt.ExpireTime.ACCESS_TOKEN_EXPIRE_TIME)
 public class BlacklistToken {
 
 	@Id

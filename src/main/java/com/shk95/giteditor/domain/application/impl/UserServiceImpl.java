@@ -1,12 +1,17 @@
 package com.shk95.giteditor.domain.application.impl;
 
 import com.shk95.giteditor.domain.application.UserService;
+import com.shk95.giteditor.domain.application.commands.SignupOAuthCommand;
 import com.shk95.giteditor.domain.application.commands.TokenResolverCommand;
-import com.shk95.giteditor.domain.common.constants.Role;
+import com.shk95.giteditor.domain.common.constant.ProviderType;
+import com.shk95.giteditor.domain.common.security.Role;
 import com.shk95.giteditor.domain.common.mail.MailManager;
 import com.shk95.giteditor.domain.common.mail.MessageVariable;
 import com.shk95.giteditor.domain.common.security.CustomUserDetails;
 import com.shk95.giteditor.domain.common.security.jwt.JwtTokenProvider;
+import com.shk95.giteditor.domain.model.provider.Provider;
+import com.shk95.giteditor.domain.model.provider.ProviderId;
+import com.shk95.giteditor.domain.model.provider.ProviderRepository;
 import com.shk95.giteditor.domain.model.token.BlacklistToken;
 import com.shk95.giteditor.domain.model.token.BlacklistTokenRepository;
 import com.shk95.giteditor.domain.model.token.RefreshToken;
@@ -17,7 +22,7 @@ import com.shk95.giteditor.domain.model.user.UserRepository;
 import com.shk95.giteditor.utils.Helper;
 import com.shk95.giteditor.utils.Response;
 import com.shk95.giteditor.utils.SecurityUtil;
-import com.shk95.giteditor.web.apis.request.UserRequestDto;
+import com.shk95.giteditor.web.apis.request.AuthRequest;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +31,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -35,7 +42,10 @@ import org.springframework.util.Assert;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -44,6 +54,7 @@ public class UserServiceImpl implements UserService {
 
 	private final AuthenticationManagerBuilder authenticationManagerBuilder;
 	private final UserRepository userRepository;
+	private final ProviderRepository providerRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final JwtTokenProvider jwtTokenProvider;
 	private final RefreshTokenRepository refreshTokenRepository;
@@ -59,22 +70,23 @@ public class UserServiceImpl implements UserService {
 		if (user == null) {
 			throw new UsernameNotFoundException("Cannot find user. user : [" + username + "]");
 		}
-		return CustomUserDetails.createUserDetailsBuilder(user).build();
+		return CustomUserDetails.createUserDetailsOf(user).build();
 	}
 
 	@Override
 	@Transactional
-	public ResponseEntity<?> defaultSignUp(UserRequestDto.SignUp signUp) {
+	public ResponseEntity<?> signupDefault(AuthRequest.Signup.Default signUp) {
 		if (userRepository.existsByDefaultEmail(signUp.getDefaultEmail())) {
 			return Response.fail("이미 회원가입된 이메일 입니다.", HttpStatus.BAD_REQUEST);
 		}
-		if (userRepository.existsByUserId(signUp.getUserId())) {
+		if (userRepository.existsByUserIdAndProviderType(signUp.getUserId(), ProviderType.LOCAL)) {
 			return Response.fail("이미 회원가입된 아이디 입니다.", HttpStatus.BAD_REQUEST);
 		}
 		userRepository.save(User.builder()
 			.userId(signUp.getUserId())
 			.password(passwordEncoder.encode(signUp.getPassword()))
 			.defaultEmail(signUp.getDefaultEmail())
+			.providerType(ProviderType.LOCAL)
 			.role(Role.USER)
 			.username(signUp.getUsername())
 			.build());
@@ -83,8 +95,30 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
+	public Provider saveOAuthUser(SignupOAuthCommand command) {
+		User user = User.builder().
+			userId(command.getDefaultUserId())
+			.username(command.getDefaultUsername())
+			.isUserEmailVerified(false)
+			.isUserEnabled(true)
+			.role(Role.USER)
+			.providerType(command.getOAuthUserProviderType())
+			.build();
+		User savedUser = userRepository.saveAndFlush(user);
+		ProviderId providerId = new ProviderId(command.getOAuthUserProviderType(), command.getOAuthUserId());
+		Provider providerUser = Provider.builder()
+			.providerId(providerId)
+			.providerUserName(command.getOAuthUserName())
+			.providerEmail(command.getOAuthUserEmail())
+			.providerLoginId(command.getOAuthUserLoginId())
+			.user(savedUser)
+			.build();
+		return providerRepository.save(providerUser);
+	}
+
+	@Override
 	public ResponseEntity<?> defaultLogin(HttpServletRequest request, HttpServletResponse response
-		, UserRequestDto.Login login) {
+		, AuthRequest.Login login) {
 		// 로그인 인증정보 가져옴.
 		CustomUserDetails userDetails = (CustomUserDetails) this.loadUserByUsername(login.getUserId());//TODO: 예외처리
 		// 인증용 토큰 생성
@@ -103,7 +137,8 @@ public class UserServiceImpl implements UserService {
 		refreshTokenRepository.save(RefreshToken.builder()// TODO : redis transaction 설정
 			.userId(authentication.getName())
 			.ip(Helper.getClientIp(request))
-			.authorities(authentication.getAuthorities())
+			.authorities(authentication.getAuthorities().stream()
+				.map(GrantedAuthority::getAuthority).collect(Collectors.joining(",")))
 			.refreshToken(tokenInfo.getRefreshToken())
 			.build());
 		return Response.success(tokenInfo, "로그인에 성공했습니다.", HttpStatus.OK);
@@ -153,9 +188,9 @@ public class UserServiceImpl implements UserService {
 			refreshTokenRepository.delete(savedRefreshToken.get());
 			return Response.fail("IP 주소가 다릅니다.", HttpStatus.NOT_ACCEPTABLE);
 		}
-
-		TokenResolverCommand.TokenInfo renewedTokenInfo
-			= jwtTokenProvider.generateToken(resolvedUserId, savedRefreshToken.get().getAuthorities());// TODO: reissue: 토큰 재 생성방식
+		Collection<? extends GrantedAuthority> authorities = Arrays.stream(savedRefreshToken.get().getAuthorities()
+			.split(",")).map(SimpleGrantedAuthority::new).collect(Collectors.toList());
+		TokenResolverCommand.TokenInfo renewedTokenInfo = jwtTokenProvider.generateToken(resolvedUserId, authorities);// TODO: reissue: 토큰 재 생성방식
 
 		// Redis RefreshToken update
 		refreshTokenRepository.save(RefreshToken.builder()

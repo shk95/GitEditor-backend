@@ -1,4 +1,4 @@
-package com.shk95.giteditor.domain.common.constants;
+package com.shk95.giteditor.domain.common.constant;
 
 import io.jsonwebtoken.Claims;
 
