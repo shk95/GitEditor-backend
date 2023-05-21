@@ -66,7 +66,7 @@ public class User extends BaseTimeEntity {
 			.userId(userDetails.getUsername())
 			.password(userDetails.getPassword())
 			.defaultEmail(userDetails.getDefaultEmail())
-			.username(userDetails.getUsername());
+			.username(userDetails.getDefaultUsername());
 	}
 
 	public void updateUserName(String username) {

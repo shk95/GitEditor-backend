@@ -1,4 +1,4 @@
-package com.shk95.giteditor.web.apis.exception;
+package com.shk95.giteditor.web.apis.handler;
 
 import com.shk95.giteditor.utils.Response;
 import lombok.RequiredArgsConstructor;
@@ -13,9 +13,9 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 import javax.servlet.http.HttpServletResponse;
 
-@RestControllerAdvice
 @Slf4j
 @RequiredArgsConstructor
+@RestControllerAdvice
 public class GlobalApiExceptionHandler extends ResponseEntityExceptionHandler {
 
 	@ExceptionHandler({Exception.class})
