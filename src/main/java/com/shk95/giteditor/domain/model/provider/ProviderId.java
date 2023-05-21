@@ -2,6 +2,7 @@ package com.shk95.giteditor.domain.model.provider;
 
 import com.shk95.giteditor.domain.common.constant.ProviderType;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
@@ -10,6 +11,7 @@ import javax.persistence.Enumerated;
 import java.io.Serializable;
 import java.util.Objects;
 
+@Getter
 @AllArgsConstructor
 @Embeddable
 public class ProviderId implements Serializable {

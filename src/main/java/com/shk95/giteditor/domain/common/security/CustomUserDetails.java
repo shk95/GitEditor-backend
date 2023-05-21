@@ -1,6 +1,8 @@
 package com.shk95.giteditor.domain.common.security;
 
 import com.shk95.giteditor.domain.common.constant.ProviderType;
+import com.shk95.giteditor.domain.common.security.exception.DefaultOAuthAccountNotFoundException;
+import com.shk95.giteditor.domain.model.provider.Provider;
 import com.shk95.giteditor.domain.model.user.User;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,32 +25,62 @@ import java.util.Map;
 public class CustomUserDetails implements UserDetails, OAuth2User, OidcUser {
 	private Collection<? extends GrantedAuthority> authorities;
 	private String userId;
-	private String defaultEmail;
-	private String providerEmail;
 	private String password;
-	private String username;
-	private ProviderType providerType;
 	private Role role;
+	private ProviderType providerType;
+	private String defaultEmail;
+	private String defaultUsername;
+	private String defaultImgUrl;//default profile image
+	private String providerEmail;
+	private String providerLoginId;
+	private String providerUsername;
+	private String providerImgUrl;
 	private Map<String, Object> attributes;
 
+	/**
+	 * 일반가입 사용자
+	 *
+	 * @param user 기본 사용자 정보
+	 * @return userDetailsBuilder : 인증된 사용자의 정보
+	 */
 	public static CustomUserDetailsBuilder createUserDetailsOf(User user) {
 		return CustomUserDetails.builder()
 			.userId(user.getUserId())
 			.password(user.getPassword())
-			.username(user.getUsername())
-			.defaultEmail(user.getDefaultEmail())
-			.providerType(user.getProviderType())
 			.role(user.getRole())
-			.authorities(Collections.singletonList(new SimpleGrantedAuthority(user.getRole().getCode())));
+			.authorities(Collections.singletonList(new SimpleGrantedAuthority(user.getRole().getCode())))
+			.providerType(user.getProviderType())
+			.defaultUsername(user.getUsername())
+			.defaultEmail(user.getDefaultEmail())
+			.defaultImgUrl(user.getProfileImageUrl());
 	}
 
+	/**
+	 * oAuth2 로 가입한 사용자
+	 *
+	 * @param user       기본 사용자 정보
+	 * @param attributes oAuth2 제공 속성
+	 * @return userDetailsBuilder : 인증된 사용자의 정보
+	 */
 	public static CustomUserDetailsBuilder createUserDetailsOfOAuthUser(User user, Map<String, Object> attributes) {
+		// oAuth2 로 가입시의 기본 ProviderType 을 통해 찾은 정보
+		Provider providerInfo = user.getProviders().stream()
+			.filter(entity -> entity.getProviderId().getProviderType() == user.getProviderType())
+			.findFirst().orElseThrow(DefaultOAuthAccountNotFoundException::new);
+
 		return CustomUserDetails.builder()
 			.userId(user.getUserId())
 			.role(user.getRole())
+			.authorities(Collections.singletonList(new SimpleGrantedAuthority(user.getRole().getCode())))
 			.providerType(user.getProviderType())
-			.attributes(attributes)
-			.authorities(Collections.singletonList(new SimpleGrantedAuthority(user.getRole().getCode())));
+			.defaultUsername(user.getUsername())
+			.defaultEmail(user.getDefaultEmail())
+			.defaultImgUrl(user.getProfileImageUrl())
+			.providerUsername(providerInfo.getProviderUserName())
+			.providerImgUrl(providerInfo.getProviderImgUrl())
+			.providerLoginId(providerInfo.getProviderLoginId())
+			.providerEmail(providerInfo.getProviderEmail())
+			.attributes(attributes);
 	}
 
 	@Override
@@ -71,12 +103,12 @@ public class CustomUserDetails implements UserDetails, OAuth2User, OidcUser {
 	}
 
 	@Override
-	public String getUsername() {
+	public String getUsername() {// UserDetails 에서 사용하는 사용자 ID
 		return userId;
 	}
 
 	@Override
-	public String getName() {
+	public String getName() {// UserDetails 에서 사용하는 사용자 ID
 		return userId;
 	}
 
