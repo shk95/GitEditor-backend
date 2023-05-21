@@ -124,10 +124,10 @@ public class Response {
 	@Builder
 	private static class Body {
 
-		private int status;
-		private String result;
-		private String message;
-		private Object data;
-		private Object error;
+		private final int status;
+		private final String result;
+		private final String message;
+		private final Object data;
+		private final Object error;
 	}
 }

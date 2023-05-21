@@ -23,4 +23,5 @@ public class ProviderLoginInfo implements Serializable {
 	private String loginId;
 	private String email;
 	private String name;
+	private String imgUrl;
 }
