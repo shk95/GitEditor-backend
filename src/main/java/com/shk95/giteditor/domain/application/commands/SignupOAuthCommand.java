@@ -19,6 +19,7 @@ public class SignupOAuthCommand {
 	private String oAuthUserLoginId;
 	private String oAuthUserEmail;
 	private String oAuthUserName;
+	private String oAuthUserImgUrl;
 
 	public SignupOAuthCommand set(AuthRequest.Signup.OAuth userInfo) {
 		this.setDefaultUserId(userInfo.getUserId());
@@ -32,6 +33,7 @@ public class SignupOAuthCommand {
 		this.setOAuthUserName(userInfo.getName());
 		this.setOAuthUserEmail(userInfo.getEmail());
 		this.setOAuthUserProviderType(ProviderType.valueOf(userInfo.getProviderType()));
+		this.setOAuthUserImgUrl(userInfo.getImgUrl());
 		return this;
 	}
 }

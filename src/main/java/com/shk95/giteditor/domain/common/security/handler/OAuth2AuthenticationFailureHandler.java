@@ -51,11 +51,12 @@ public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationF
 			String id = userInfo.getId();
 			String loginId = userInfo.getLoginId();
 			String email = userInfo.getEmail();
-			String name = userInfo.getName();//FIXME: OAuthFailHandler: 빈 문자열인경우 처리
+			String name = userInfo.getName();
+			String imgUrl = userInfo.getImageUrl();
 
 			redirectUrl = REDIRECT_SIGNUP_OAUTH_PATH;
 
-			ProviderLoginInfo loginInfo = new ProviderLoginInfo(id, providerType, loginId, email, name);
+			ProviderLoginInfo loginInfo = new ProviderLoginInfo(id, providerType, loginId, email, name, imgUrl);
 			providerLoginInfoRepository.save(loginInfo);
 
 			CookieUtil.addCookie(

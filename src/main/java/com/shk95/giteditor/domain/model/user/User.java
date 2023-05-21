@@ -63,7 +63,7 @@ public class User extends BaseTimeEntity {
 
 	public static UserBuilder createUserBuilder(CustomUserDetails userDetails) {
 		return User.builder()
-			.userId(userDetails.getUsername())
+			.userId(userDetails.getDefaultUsername())
 			.password(userDetails.getPassword())
 			.defaultEmail(userDetails.getDefaultEmail())
 			.username(userDetails.getDefaultUsername());
