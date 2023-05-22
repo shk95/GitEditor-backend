@@ -1,8 +1,8 @@
 package com.shk95.giteditor.domain.common.security.jwt;
 
-import com.shk95.giteditor.domain.application.commands.TokenResolverCommand;
-import com.shk95.giteditor.domain.common.security.CustomUserDetails;
-import com.shk95.giteditor.domain.common.security.exception.TokenValidFailedException;
+import com.shk95.giteditor.domain.common.constant.ProviderType;
+import com.shk95.giteditor.domain.model.user.CustomUserDetails;
+import com.shk95.giteditor.domain.common.exception.TokenValidFailedException;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -41,21 +41,24 @@ public class JwtTokenProvider {
 	}
 
 	//Authentication 을 가지고 AccessToken, RefreshToken 을 생성하는 메서드
-	public TokenResolverCommand.TokenInfo generateToken(Authentication authentication) {
-		return this.generateToken(authentication.getName(), authentication.getAuthorities());
+	public GeneratedJwtToken generateToken(Authentication authentication) {
+
+		return this.generateToken(((CustomUserDetails) authentication.getPrincipal()).getProviderType(), authentication.getName(), authentication.getAuthorities());
 	}
 
 	//name, authorities 를 가지고 AccessToken, RefreshToken 을 생성하는 메서드
-	public TokenResolverCommand.TokenInfo generateToken(String userId, Collection<? extends GrantedAuthority> inputAuthorities) {
+	public GeneratedJwtToken generateToken(ProviderType providerType, String userId, Collection<? extends GrantedAuthority> inputAuthorities) {
 		Date now = new Date();
 		//권한 가져오기
 		String authorities = inputAuthorities.stream()
 			.map(GrantedAuthority::getAuthority)
 			.collect(Collectors.joining(","));
 
+		String subject = providerType.name() + ',' + userId;
+
 		//Generate AccessToken
 		String accessToken = Jwts.builder()
-			.setSubject(userId)
+			.setSubject(subject)
 			.claim(AUTHORITIES_KEY, authorities)
 			.claim("type", TYPE_ACCESS)
 			.setIssuedAt(now)   //토큰 발행 시간 정보
@@ -71,7 +74,7 @@ public class JwtTokenProvider {
 			.signWith(key, SignatureAlgorithm.HS256)
 			.compact();
 
-		return TokenResolverCommand.TokenInfo.builder()
+		return GeneratedJwtToken.builder()
 			.grantType(BEARER_TYPE)
 			.accessToken(accessToken)
 			.refreshToken(refreshToken)
@@ -90,9 +93,11 @@ public class JwtTokenProvider {
 				.map(SimpleGrantedAuthority::new)
 				.collect(Collectors.toList());
 
+		String[] subject = claims.getSubject().split(",");
 		//UserDetails 객체를 만들어서 Authentication 리턴
 		CustomUserDetails principal = CustomUserDetails.builder()// TODO : jwt 로그인 보완하기
-			.userId(claims.getSubject())
+			.userId(subject[1])
+			.providerType(ProviderType.valueOf(subject[0]))
 			.password("")
 			.authorities(authorities).build();
 		return new UsernamePasswordAuthenticationToken(principal, accessToken, authorities);

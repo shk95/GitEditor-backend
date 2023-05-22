@@ -1,7 +1,6 @@
 package com.shk95.giteditor.domain.common.security.handler;
 
-import com.shk95.giteditor.config.ConstantFields;
-import com.shk95.giteditor.domain.application.commands.TokenResolverCommand;
+import com.shk95.giteditor.domain.common.security.jwt.GeneratedJwtToken;
 import com.shk95.giteditor.domain.common.security.jwt.JwtTokenProvider;
 import com.shk95.giteditor.domain.common.security.repository.OAuth2AuthorizationRequestBasedOnCookieRepository;
 import com.shk95.giteditor.domain.model.token.RefreshToken;
@@ -26,6 +25,7 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static com.shk95.giteditor.config.ConstantFields.Jwt.ExpireTime.REFRESH_TOKEN_EXPIRE_TIME;
 import static com.shk95.giteditor.config.ConstantFields.OAuthRepo.*;
 
 @Slf4j
@@ -62,20 +62,20 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
 		final String TARGET_URL = redirectUri.orElse(getDefaultTargetUrl());
 
-		TokenResolverCommand.TokenInfo tokenInfo = tokenProvider.generateToken(authentication);
+		GeneratedJwtToken tokenInfo = tokenProvider.generateToken(authentication);
 
 		log.info("{}. client ip : {}", getClass(), Helper.getClientIp(request));
 		log.info("{}. request.getRemote() : {}", getClass(), request.getRemoteAddr());
 		// Redis RefreshToken 저장
 		refreshTokenRepository.save(RefreshToken.builder()// TODO: onOAuthSuccess: redis transaction 설정
-			.userId(authentication.getName())
+			.subject(authentication.getName())
 			.ip(Helper.getClientIp(request))
 			.authorities(authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.joining(",")))
 			.refreshToken(tokenInfo.getRefreshToken())
 			.build());
 
 		CookieUtil.deleteCookie(request, response, REFRESH_TOKEN);
-		CookieUtil.addCookie(response, REFRESH_TOKEN, tokenInfo.getRefreshToken(), (int) (ConstantFields.Jwt.ExpireTime.REFRESH_TOKEN_EXPIRE_TIME / 1000));// TODO: onOAuthSuccess: login 쿠키설정
+		CookieUtil.addCookie(response, REFRESH_TOKEN, tokenInfo.getRefreshToken(), (int) (REFRESH_TOKEN_EXPIRE_TIME / 1000));
 
 		return UriComponentsBuilder.fromUriString(TARGET_URL)
 			.queryParam("token", tokenInfo.getAccessToken())

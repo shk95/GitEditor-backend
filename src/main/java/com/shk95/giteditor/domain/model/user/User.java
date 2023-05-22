@@ -1,7 +1,6 @@
 package com.shk95.giteditor.domain.model.user;
 
-import com.shk95.giteditor.domain.common.model.BaseTimeEntity;
-import com.shk95.giteditor.domain.common.security.CustomUserDetails;
+import com.shk95.giteditor.domain.common.model.AbstractBaseTimeEntity;
 import com.shk95.giteditor.domain.common.constant.ProviderType;
 import com.shk95.giteditor.domain.model.provider.Provider;
 import com.shk95.giteditor.domain.common.security.Role;
@@ -21,7 +20,7 @@ import java.util.Objects;
 @Getter
 @Table(name = "service_user")
 @Entity
-public class User extends BaseTimeEntity {
+public class User extends AbstractBaseTimeEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -63,10 +62,10 @@ public class User extends BaseTimeEntity {
 
 	public static UserBuilder createUserBuilder(CustomUserDetails userDetails) {
 		return User.builder()
-			.userId(userDetails.getUsername())
+			.userId(userDetails.getDefaultUsername())
 			.password(userDetails.getPassword())
 			.defaultEmail(userDetails.getDefaultEmail())
-			.username(userDetails.getUsername());
+			.username(userDetails.getDefaultUsername());
 	}
 
 	public void updateUserName(String username) {

@@ -1,5 +1,7 @@
 package com.shk95.giteditor.domain.application;
 
+import com.shk95.giteditor.domain.application.commands.LoginCommand;
+import com.shk95.giteditor.domain.common.security.jwt.GeneratedJwtToken;
 import com.shk95.giteditor.domain.application.commands.SignupOAuthCommand;
 import com.shk95.giteditor.domain.model.provider.Provider;
 import com.shk95.giteditor.web.apis.request.AuthRequest;
@@ -14,7 +16,7 @@ public interface UserService extends UserDetailsService {
 
 	Provider saveOAuthUser(SignupOAuthCommand command);
 
-	ResponseEntity<?> defaultLogin(HttpServletRequest request, HttpServletResponse response, AuthRequest.Login login);
+	GeneratedJwtToken defaultLogin(LoginCommand login, String ip);
 
 	ResponseEntity<?> reissue(HttpServletRequest request, HttpServletResponse response);
 

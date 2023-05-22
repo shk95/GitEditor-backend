@@ -1,13 +1,14 @@
 package com.shk95.giteditor.domain.application.impl;
 
 import com.shk95.giteditor.domain.application.UserService;
+import com.shk95.giteditor.domain.application.commands.LoginCommand;
 import com.shk95.giteditor.domain.application.commands.SignupOAuthCommand;
-import com.shk95.giteditor.domain.application.commands.TokenResolverCommand;
 import com.shk95.giteditor.domain.common.constant.ProviderType;
-import com.shk95.giteditor.domain.common.security.Role;
 import com.shk95.giteditor.domain.common.mail.MailManager;
 import com.shk95.giteditor.domain.common.mail.MessageVariable;
-import com.shk95.giteditor.domain.common.security.CustomUserDetails;
+import com.shk95.giteditor.domain.model.user.CustomUserDetails;
+import com.shk95.giteditor.domain.common.security.Role;
+import com.shk95.giteditor.domain.common.security.jwt.GeneratedJwtToken;
 import com.shk95.giteditor.domain.common.security.jwt.JwtTokenProvider;
 import com.shk95.giteditor.domain.model.provider.Provider;
 import com.shk95.giteditor.domain.model.provider.ProviderId;
@@ -46,6 +47,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import static com.shk95.giteditor.config.ConstantFields.Jwt.AUTHORITIES_KEY;
 
 @Service
 @RequiredArgsConstructor
@@ -95,6 +98,7 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
+	@Transactional
 	public Provider saveOAuthUser(SignupOAuthCommand command) {
 		User user = User.builder().
 			userId(command.getDefaultUserId())
@@ -103,6 +107,7 @@ public class UserServiceImpl implements UserService {
 			.isUserEnabled(true)
 			.role(Role.USER)
 			.providerType(command.getOAuthUserProviderType())
+			.profileImageUrl(command.getOAuthUserImgUrl())
 			.build();
 		User savedUser = userRepository.saveAndFlush(user);
 		ProviderId providerId = new ProviderId(command.getOAuthUserProviderType(), command.getOAuthUserId());
@@ -111,37 +116,38 @@ public class UserServiceImpl implements UserService {
 			.providerUserName(command.getOAuthUserName())
 			.providerEmail(command.getOAuthUserEmail())
 			.providerLoginId(command.getOAuthUserLoginId())
+			.providerImgUrl(command.getOAuthUserImgUrl())
 			.user(savedUser)
 			.build();
 		return providerRepository.save(providerUser);
 	}
 
 	@Override
-	public ResponseEntity<?> defaultLogin(HttpServletRequest request, HttpServletResponse response
-		, AuthRequest.Login login) {
+	public GeneratedJwtToken defaultLogin(LoginCommand login, String ip) {
 		// 로그인 인증정보 가져옴.
 		CustomUserDetails userDetails = (CustomUserDetails) this.loadUserByUsername(login.getUserId());//TODO: 예외처리
 		// 인증용 토큰 생성
 		UsernamePasswordAuthenticationToken authenticationToken
 			= new UsernamePasswordAuthenticationToken(
-			userDetails.getUserId()
+			userDetails
 			, login.getPassword()
 			, userDetails.getAuthorities());
 		// 인증
 		Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
 		log.debug("### {} authentication.getName(must be user's id) : [{}]", this.getClass().getName(), authentication.getName());
+
 		// 인증 정보를 기반으로 JWT 토큰 생성
-		TokenResolverCommand.TokenInfo tokenInfo = jwtTokenProvider.generateToken(authentication);
+		GeneratedJwtToken tokenInfo = jwtTokenProvider.generateToken(authentication);
 
 		// Redis RefreshToken 저장
 		refreshTokenRepository.save(RefreshToken.builder()// TODO : redis transaction 설정
-			.userId(authentication.getName())
-			.ip(Helper.getClientIp(request))
+			.subject(jwtTokenProvider.getClaims(tokenInfo.getAccessToken()).getSubject())
+			.ip(ip)
 			.authorities(authentication.getAuthorities().stream()
 				.map(GrantedAuthority::getAuthority).collect(Collectors.joining(",")))
 			.refreshToken(tokenInfo.getRefreshToken())
 			.build());
-		return Response.success(tokenInfo, "로그인에 성공했습니다.", HttpStatus.OK);
+		return tokenInfo;
 	}
 
 	@Override
@@ -151,12 +157,11 @@ public class UserServiceImpl implements UserService {
 		Assert.notNull(accessToken, "access token may not be null");
 		Assert.notNull(refreshToken, "refresh token may not be null");
 
-		final Claims accessTokenClaims = jwtTokenProvider.getClaims(accessToken);
+		final Claims claims = jwtTokenProvider.getClaims(accessToken);
+		final String subject = claims.getSubject();
+		Assert.notNull(subject, "Claim`s subject may not be null");
 
-		final String resolvedUserId = accessTokenClaims.getSubject();
 		final String currentIpAddress = Helper.getClientIp(request);
-		Assert.notNull(resolvedUserId, "user id may not be null");
-
 		/*
 		 * 검증목록
 		 * 1. access token claim key, type, subject, expiration
@@ -179,7 +184,7 @@ public class UserServiceImpl implements UserService {
 		}
 
 		// Refresh token 정보 가져오기.
-		Optional<RefreshToken> savedRefreshToken = refreshTokenRepository.findById(resolvedUserId);
+		Optional<RefreshToken> savedRefreshToken = refreshTokenRepository.findById(subject);
 		if (!savedRefreshToken.isPresent()) {
 			return Response.fail("Refresh Token 정보와 Access Token 정보가 일치하지 않습니다.", HttpStatus.NOT_ACCEPTABLE);
 		}
@@ -188,13 +193,15 @@ public class UserServiceImpl implements UserService {
 			refreshTokenRepository.delete(savedRefreshToken.get());
 			return Response.fail("IP 주소가 다릅니다.", HttpStatus.NOT_ACCEPTABLE);
 		}
-		Collection<? extends GrantedAuthority> authorities = Arrays.stream(savedRefreshToken.get().getAuthorities()
-			.split(",")).map(SimpleGrantedAuthority::new).collect(Collectors.toList());
-		TokenResolverCommand.TokenInfo renewedTokenInfo = jwtTokenProvider.generateToken(resolvedUserId, authorities);// TODO: reissue: 토큰 재 생성방식
+
+		Collection<? extends GrantedAuthority> authorities = Arrays.stream(claims.get(AUTHORITIES_KEY).toString().split(","))
+			.map(SimpleGrantedAuthority::new).collect(Collectors.toList());
+		GeneratedJwtToken renewedTokenInfo = jwtTokenProvider
+			.generateToken(ProviderType.valueOf(subject.split(",")[0]), subject.split(",")[1], authorities);// TODO: reissue: 토큰 재 생성방식
 
 		// Redis RefreshToken update
 		refreshTokenRepository.save(RefreshToken.builder()
-			.userId(resolvedUserId)
+			.subject(subject)
 			.ip(currentIpAddress)
 			.authorities(savedRefreshToken.get().getAuthorities())
 			.refreshToken(renewedTokenInfo.getRefreshToken())

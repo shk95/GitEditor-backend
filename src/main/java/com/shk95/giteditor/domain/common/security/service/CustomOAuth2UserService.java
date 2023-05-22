@@ -1,10 +1,10 @@
 package com.shk95.giteditor.domain.common.security.service;
 
 import com.shk95.giteditor.domain.common.constant.ProviderType;
-import com.shk95.giteditor.domain.common.security.CustomUserDetails;
-import com.shk95.giteditor.domain.common.security.exception.OAuthUserNotRegisteredException;
-import com.shk95.giteditor.domain.common.security.info.OAuth2UserInfo;
-import com.shk95.giteditor.domain.common.security.info.OAuth2UserInfoFactory;
+import com.shk95.giteditor.domain.model.user.CustomUserDetails;
+import com.shk95.giteditor.domain.common.exception.OAuthUserNotRegisteredException;
+import com.shk95.giteditor.domain.common.model.AbstractOAuth2UserInfo;
+import com.shk95.giteditor.domain.model.oauth.OAuth2UserInfoFactory;
 import com.shk95.giteditor.domain.model.provider.Provider;
 import com.shk95.giteditor.domain.model.provider.ProviderId;
 import com.shk95.giteditor.domain.model.provider.ProviderRepository;
@@ -56,7 +56,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 		log.debug("#### oAuth2userInfo clientRegistration : [{}]\n", oAuth2UserRequest.getClientRegistration());
 
 		// OAuth 서비스를 통해 로그인성공후 가져온 사용자의 정보를 가져옴.
-		OAuth2UserInfo retrievedUserInfo = OAuth2UserInfoFactory
+		AbstractOAuth2UserInfo retrievedUserInfo = OAuth2UserInfoFactory
 			.getOAuth2UserInfo(providerType, oAuth2User.getAttributes(), additionalAttributes);
 
 		// oAuth 가입정보의 pk(provider type, provider id)
@@ -72,7 +72,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 	 * @param providerUser entity
 	 * @param userInfo     오버라이딩된 oAuth user info
 	 */
-	private void updateUserInfo(Provider providerUser, OAuth2UserInfo userInfo) {
+	private void updateUserInfo(Provider providerUser, AbstractOAuth2UserInfo userInfo) {
 		Provider.update(providerUser, userInfo);
 	}
 }

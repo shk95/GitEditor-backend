@@ -1,7 +1,7 @@
 package com.shk95.giteditor.domain.common.security.handler;
 
-import com.shk95.giteditor.domain.common.security.exception.OAuthUserNotRegisteredException;
-import com.shk95.giteditor.domain.common.security.info.OAuth2UserInfo;
+import com.shk95.giteditor.domain.common.exception.OAuthUserNotRegisteredException;
+import com.shk95.giteditor.domain.common.model.AbstractOAuth2UserInfo;
 import com.shk95.giteditor.domain.common.security.repository.OAuth2AuthorizationRequestBasedOnCookieRepository;
 import com.shk95.giteditor.domain.model.provider.ProviderLoginInfo;
 import com.shk95.giteditor.domain.model.provider.ProviderLoginInfoRepository;
@@ -46,16 +46,17 @@ public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationF
 		// 회원가입이 필요할경우
 		if (exception instanceof OAuthUserNotRegisteredException) {
 			log.info("oAuth 인증 사용자 회원가입 페이지로 리디렉션");
-			OAuth2UserInfo userInfo = ((OAuthUserNotRegisteredException) exception).getOAuth2UserInfo();
+			AbstractOAuth2UserInfo userInfo = ((OAuthUserNotRegisteredException) exception).getOAuth2UserInfo();
 			String providerType = userInfo.getProviderType().name();
 			String id = userInfo.getId();
 			String loginId = userInfo.getLoginId();
 			String email = userInfo.getEmail();
-			String name = userInfo.getName();//FIXME: OAuthFailHandler: 빈 문자열인경우 처리
+			String name = userInfo.getName();
+			String imgUrl = userInfo.getImageUrl();
 
 			redirectUrl = REDIRECT_SIGNUP_OAUTH_PATH;
 
-			ProviderLoginInfo loginInfo = new ProviderLoginInfo(id, providerType, loginId, email, name);
+			ProviderLoginInfo loginInfo = new ProviderLoginInfo(id, providerType, loginId, email, name, imgUrl);
 			providerLoginInfoRepository.save(loginInfo);
 
 			CookieUtil.addCookie(
