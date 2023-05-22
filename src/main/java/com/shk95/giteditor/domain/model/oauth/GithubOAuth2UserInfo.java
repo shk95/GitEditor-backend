@@ -1,9 +1,9 @@
-package com.shk95.giteditor.domain.common.security.info.impl;
+package com.shk95.giteditor.domain.model.oauth;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.shk95.giteditor.domain.common.constant.ProviderType;
-import com.shk95.giteditor.domain.common.security.info.OAuth2UserInfo;
+import com.shk95.giteditor.domain.common.model.AbstractOAuth2UserInfo;
 import io.jsonwebtoken.lang.Assert;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.json.JsonParseException;
@@ -20,7 +20,7 @@ import java.util.stream.StreamSupport;
 import static com.shk95.giteditor.config.ConstantFields.OAuthService.PROVIDER_ACCESS_TOKEN;
 
 @Slf4j
-public class GithubOAuth2UserInfo extends OAuth2UserInfo {
+public class GithubOAuth2UserInfo extends AbstractOAuth2UserInfo {
 
 	public GithubOAuth2UserInfo(Map<String, Object> attributes, Map<String, String> additionalAttributes, ProviderType providerType) {
 		super(attributes, additionalAttributes, providerType);

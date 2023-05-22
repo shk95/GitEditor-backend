@@ -1,4 +1,4 @@
-package com.shk95.giteditor.domain.common.security.context;
+package com.shk95.giteditor.web.apis.authenticate;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -19,11 +19,11 @@ import static com.shk95.giteditor.config.ConstantFields.REDIRECT_LOGIN_PATH;
 public class AuthEntryPointImpl extends DefaultRedirectStrategy implements AuthenticationEntryPoint {
 
 	@Override
-	public void commence(HttpServletRequest request, HttpServletResponse response,
-						 AuthenticationException authException)
+	public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException)
 		throws IOException, ServletException {
 
-		log.info("Unauthorized request. message : [{}] uri : [{}] request : [{}]", authException.getMessage(), request.getRequestURI(), request.getServletPath());
+		log.info("Unauthorized request. message : [{}] uri : [{}] request : [{}]"
+			, authException.getMessage(), request.getRequestURI(), request.getServletPath());
 		response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 		response.setCharacterEncoding("utf-8");
 

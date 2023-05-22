@@ -1,12 +1,15 @@
 package com.shk95.giteditor.web.apis;
 
 import com.shk95.giteditor.domain.application.UserService;
+import com.shk95.giteditor.domain.application.commands.LoginCommand;
 import com.shk95.giteditor.domain.application.commands.SignupOAuthCommand;
 import com.shk95.giteditor.domain.common.constant.ProviderType;
+import com.shk95.giteditor.domain.common.security.jwt.GeneratedJwtToken;
 import com.shk95.giteditor.domain.model.provider.Provider;
 import com.shk95.giteditor.domain.model.provider.ProviderLoginInfo;
 import com.shk95.giteditor.domain.model.provider.ProviderLoginInfoRepository;
 import com.shk95.giteditor.utils.CookieUtil;
+import com.shk95.giteditor.utils.Helper;
 import com.shk95.giteditor.utils.Resolver;
 import com.shk95.giteditor.utils.Response;
 import com.shk95.giteditor.web.apis.request.AuthRequest;
@@ -29,6 +32,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import java.util.Optional;
 
+import static com.shk95.giteditor.config.ConstantFields.Jwt.ExpireTime.REFRESH_TOKEN_EXPIRE_TIME;
+import static com.shk95.giteditor.config.ConstantFields.Jwt.TYPE_REFRESH;
 import static com.shk95.giteditor.config.ConstantFields.REDIRECT_SIGNUP_OAUTH_ID;
 
 @Slf4j
@@ -43,14 +48,20 @@ public class AuthController {
 	private final UserIdValidator userIdValidator;
 
 	@PostMapping("/login")
-	public ResponseEntity<?> login(@Validated @RequestBody AuthRequest.Login loginDto, Errors errors
+	public ResponseEntity<?> login(@Validated @RequestBody AuthRequest.Login login, Errors errors
 		, HttpServletRequest request, HttpServletResponse response) {
 		// validation check
 		if (errors.hasErrors()) {
 			return Response.invalidFields(Resolver.error.inputFields(errors));
 		}
-		return userService.defaultLogin(request, response, loginDto);
+		String clientIp = Helper.getClientIp(request);
+
+		GeneratedJwtToken tokenInfo = userService.defaultLogin(LoginCommand.of(login), clientIp);
+		CookieUtil.addCookie(response, TYPE_REFRESH, tokenInfo.getRefreshToken(), (int) (REFRESH_TOKEN_EXPIRE_TIME / 1000));
+
+		return Response.success(tokenInfo, "로그인에 성공했습니다.", HttpStatus.OK);
 	}
+
 
 	@PostMapping("/signup")
 	public ResponseEntity<?> signup(@Validated @RequestBody AuthRequest.Signup.Default signup, Errors errors) {

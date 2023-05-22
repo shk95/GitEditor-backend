@@ -1,13 +1,13 @@
-package com.shk95.giteditor.domain.common.security.info.impl;
+package com.shk95.giteditor.domain.model.oauth;
 
 
 import com.shk95.giteditor.domain.common.constant.ProviderType;
-import com.shk95.giteditor.domain.common.security.info.OAuth2UserInfo;
+import com.shk95.giteditor.domain.common.model.AbstractOAuth2UserInfo;
 
 import java.util.Map;
 
 @Deprecated
-public class KakaoOAuth2UserInfo extends OAuth2UserInfo {
+public class KakaoOAuth2UserInfo extends AbstractOAuth2UserInfo {
 
 	public KakaoOAuth2UserInfo(Map<String, Object> attributes, Map<String, String> additionalAttributes, ProviderType providerType) {
 		super(attributes, additionalAttributes, providerType);

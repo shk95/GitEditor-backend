@@ -1,9 +1,9 @@
-package com.shk95.giteditor.domain.common.security;
+package com.shk95.giteditor.domain.model.user;
 
 import com.shk95.giteditor.domain.common.constant.ProviderType;
-import com.shk95.giteditor.domain.common.security.exception.DefaultOAuthAccountNotFoundException;
+import com.shk95.giteditor.domain.common.exception.DefaultOAuthAccountNotFoundException;
+import com.shk95.giteditor.domain.common.security.Role;
 import com.shk95.giteditor.domain.model.provider.Provider;
-import com.shk95.giteditor.domain.model.user.User;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

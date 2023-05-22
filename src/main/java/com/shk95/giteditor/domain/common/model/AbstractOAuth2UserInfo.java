@@ -1,15 +1,15 @@
-package com.shk95.giteditor.domain.common.security.info;
+package com.shk95.giteditor.domain.common.model;
 
 import com.shk95.giteditor.domain.common.constant.ProviderType;
 
 import java.util.Map;
 
-public abstract class OAuth2UserInfo {
+public abstract class AbstractOAuth2UserInfo {
 	private final Map<String, Object> attributes;
 	private final Map<String, String> additionalAttributes;
 	private final ProviderType providerType;
 
-	public OAuth2UserInfo(Map<String, Object> attributes, Map<String, String> additionalAttributes, ProviderType providerType) {
+	public AbstractOAuth2UserInfo(Map<String, Object> attributes, Map<String, String> additionalAttributes, ProviderType providerType) {
 		this.attributes = attributes;
 		this.additionalAttributes = additionalAttributes;
 		this.providerType = providerType;
