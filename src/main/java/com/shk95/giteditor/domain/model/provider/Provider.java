@@ -1,7 +1,7 @@
 package com.shk95.giteditor.domain.model.provider;
 
-import com.shk95.giteditor.domain.common.model.BaseTimeEntity;
-import com.shk95.giteditor.domain.common.security.info.OAuth2UserInfo;
+import com.shk95.giteditor.domain.common.model.AbstractBaseTimeEntity;
+import com.shk95.giteditor.domain.common.model.AbstractOAuth2UserInfo;
 import com.shk95.giteditor.domain.model.user.User;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,7 +16,7 @@ import javax.persistence.*;
 @Builder
 @Table(name = "provider_user")
 @Entity
-public class Provider extends BaseTimeEntity {
+public class Provider extends AbstractBaseTimeEntity {
 
 	@EmbeddedId
 	private ProviderId providerId;
@@ -40,7 +40,7 @@ public class Provider extends BaseTimeEntity {
 	@JoinColumn(name = "user_seq")
 	private User user;
 
-	public static void update(Provider provider, OAuth2UserInfo retrievedUserInfo) {
+	public static void update(Provider provider, AbstractOAuth2UserInfo retrievedUserInfo) {
 		provider.accessToken = retrievedUserInfo.getAccessToken();
 		provider.providerEmail = retrievedUserInfo.getEmail();
 		provider.providerLoginId = retrievedUserInfo.getLoginId();

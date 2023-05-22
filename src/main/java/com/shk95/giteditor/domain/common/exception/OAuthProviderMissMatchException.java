@@ -1,4 +1,4 @@
-package com.shk95.giteditor.domain.common.security.exception;
+package com.shk95.giteditor.domain.common.exception;
 
 public class OAuthProviderMissMatchException extends RuntimeException {
 

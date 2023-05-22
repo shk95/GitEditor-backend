@@ -1,6 +1,6 @@
 package com.shk95.giteditor.config;
 
-import com.shk95.giteditor.domain.common.security.context.AuthEntryPointImpl;
+import com.shk95.giteditor.web.apis.authenticate.AuthEntryPointImpl;
 import com.shk95.giteditor.domain.common.security.filter.JwtAuthenticationFilter;
 import com.shk95.giteditor.domain.common.security.handler.LogoutSuccessHandlerImpl;
 import com.shk95.giteditor.domain.common.security.handler.OAuth2AuthenticationFailureHandler;

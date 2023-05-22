@@ -20,7 +20,7 @@ public class ProviderId implements Serializable {
 	@Column(name = "prv_type")
 	private ProviderType providerType;
 
-	@Column(name = "prv_user_id", length = 30)
+	@Column(name = "prv_user_id", length = 100)
 	private String providerUserId;// 고유값으로 제공되는 아이디. Provider.providerLoginId 와 같기도함.
 
 	protected ProviderId() {

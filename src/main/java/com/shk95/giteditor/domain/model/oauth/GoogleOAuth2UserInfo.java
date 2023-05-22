@@ -1,13 +1,14 @@
-package com.shk95.giteditor.domain.common.security.info.impl;
+package com.shk95.giteditor.domain.model.oauth;
 
 
 import com.shk95.giteditor.domain.common.constant.ProviderType;
-import com.shk95.giteditor.domain.common.security.info.OAuth2UserInfo;
+import com.shk95.giteditor.domain.common.model.AbstractOAuth2UserInfo;
 
 import java.util.Map;
 
-@Deprecated
-public class GoogleOAuth2UserInfo extends OAuth2UserInfo {
+import static com.shk95.giteditor.config.ConstantFields.OAuthService.PROVIDER_ACCESS_TOKEN;
+
+public class GoogleOAuth2UserInfo extends AbstractOAuth2UserInfo {
 
 	public GoogleOAuth2UserInfo(Map<String, Object> attributes, Map<String, String> additionalAttributes, ProviderType providerType) {
 		super(attributes, additionalAttributes, providerType);
@@ -40,6 +41,6 @@ public class GoogleOAuth2UserInfo extends OAuth2UserInfo {
 
 	@Override
 	public String getAccessToken() {
-		return null;
+		return super.getAdditionalAttributes().get(PROVIDER_ACCESS_TOKEN);
 	}
 }

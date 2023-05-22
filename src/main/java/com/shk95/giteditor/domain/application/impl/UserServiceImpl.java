@@ -1,13 +1,14 @@
 package com.shk95.giteditor.domain.application.impl;
 
 import com.shk95.giteditor.domain.application.UserService;
+import com.shk95.giteditor.domain.application.commands.LoginCommand;
 import com.shk95.giteditor.domain.application.commands.SignupOAuthCommand;
-import com.shk95.giteditor.domain.application.commands.TokenResolverCommand;
 import com.shk95.giteditor.domain.common.constant.ProviderType;
 import com.shk95.giteditor.domain.common.mail.MailManager;
 import com.shk95.giteditor.domain.common.mail.MessageVariable;
-import com.shk95.giteditor.domain.common.security.CustomUserDetails;
+import com.shk95.giteditor.domain.model.user.CustomUserDetails;
 import com.shk95.giteditor.domain.common.security.Role;
+import com.shk95.giteditor.domain.common.security.jwt.GeneratedJwtToken;
 import com.shk95.giteditor.domain.common.security.jwt.JwtTokenProvider;
 import com.shk95.giteditor.domain.model.provider.Provider;
 import com.shk95.giteditor.domain.model.provider.ProviderId;
@@ -97,6 +98,7 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
+	@Transactional
 	public Provider saveOAuthUser(SignupOAuthCommand command) {
 		User user = User.builder().
 			userId(command.getDefaultUserId())
@@ -121,8 +123,7 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public ResponseEntity<?> defaultLogin(HttpServletRequest request, HttpServletResponse response
-		, AuthRequest.Login login) {
+	public GeneratedJwtToken defaultLogin(LoginCommand login, String ip) {
 		// 로그인 인증정보 가져옴.
 		CustomUserDetails userDetails = (CustomUserDetails) this.loadUserByUsername(login.getUserId());//TODO: 예외처리
 		// 인증용 토큰 생성
@@ -134,18 +135,19 @@ public class UserServiceImpl implements UserService {
 		// 인증
 		Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
 		log.debug("### {} authentication.getName(must be user's id) : [{}]", this.getClass().getName(), authentication.getName());
+
 		// 인증 정보를 기반으로 JWT 토큰 생성
-		TokenResolverCommand.TokenInfo tokenInfo = jwtTokenProvider.generateToken(authentication);
+		GeneratedJwtToken tokenInfo = jwtTokenProvider.generateToken(authentication);
 
 		// Redis RefreshToken 저장
 		refreshTokenRepository.save(RefreshToken.builder()// TODO : redis transaction 설정
 			.subject(jwtTokenProvider.getClaims(tokenInfo.getAccessToken()).getSubject())
-			.ip(Helper.getClientIp(request))
+			.ip(ip)
 			.authorities(authentication.getAuthorities().stream()
 				.map(GrantedAuthority::getAuthority).collect(Collectors.joining(",")))
 			.refreshToken(tokenInfo.getRefreshToken())
 			.build());
-		return Response.success(tokenInfo, "로그인에 성공했습니다.", HttpStatus.OK);
+		return tokenInfo;
 	}
 
 	@Override
@@ -194,7 +196,7 @@ public class UserServiceImpl implements UserService {
 
 		Collection<? extends GrantedAuthority> authorities = Arrays.stream(claims.get(AUTHORITIES_KEY).toString().split(","))
 			.map(SimpleGrantedAuthority::new).collect(Collectors.toList());
-		TokenResolverCommand.TokenInfo renewedTokenInfo = jwtTokenProvider
+		GeneratedJwtToken renewedTokenInfo = jwtTokenProvider
 			.generateToken(ProviderType.valueOf(subject.split(",")[0]), subject.split(",")[1], authorities);// TODO: reissue: 토큰 재 생성방식
 
 		// Redis RefreshToken update

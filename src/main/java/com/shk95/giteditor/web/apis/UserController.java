@@ -1,7 +1,7 @@
 package com.shk95.giteditor.web.apis;
 
 import com.shk95.giteditor.domain.common.security.CurrentUser;
-import com.shk95.giteditor.domain.common.security.CustomUserDetails;
+import com.shk95.giteditor.domain.model.user.CustomUserDetails;
 import com.shk95.giteditor.domain.common.security.UserAuthorize;
 import com.shk95.giteditor.domain.model.provider.Provider;
 import com.shk95.giteditor.domain.model.user.User;
@@ -16,6 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Optional;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -32,22 +34,22 @@ public class UserController {
 	public ResponseEntity<?> getUser(@CurrentUser CustomUserDetails userDetails) {
 		User user = userRepository.findByUserIdAndProviderType(userDetails.getUserId(), userDetails.getProviderType())
 			.orElseThrow(RuntimeException::new);
-		Provider provider = user.getProviders().stream()
+		Optional<Provider> provider = user.getProviders().stream()
 			.filter(entity -> entity.getProviderId().getProviderType() == userDetails.getProviderType())
-			.findFirst().orElseThrow(RuntimeException::new);
+			.findFirst();
 
-		UserResponse.Me me = UserResponse.Me.builder()
+		UserResponse.Me.MeBuilder me = UserResponse.Me.builder()
 			.userId(user.getUserId())
 			.role(user.getRole())
 			.providerType(user.getProviderType())
 			.defaultEmail(user.getDefaultEmail())
 			.defaultUsername(user.getUsername())
-			.defaultImgUrl(user.getProfileImageUrl())
-			.providerEmail(provider.getProviderEmail())
-			.providerLoginId(provider.getProviderLoginId())
-			.providerUsername(provider.getProviderUserName())
-			.providerImgUrl(provider.getProviderImgUrl())
-			.build();
-		return Response.success(me, "회원정보를 성공적으로 가져왔습니다.", HttpStatus.OK);
+			.defaultImgUrl(user.getProfileImageUrl());
+		provider.ifPresent(value -> me
+			.providerEmail(value.getProviderEmail())
+			.providerLoginId(value.getProviderLoginId())
+			.providerUsername(value.getProviderUserName())
+			.providerImgUrl(value.getProviderImgUrl()));
+		return Response.success(me.build(), "회원정보를 성공적으로 가져왔습니다.", HttpStatus.OK);
 	}
 }
