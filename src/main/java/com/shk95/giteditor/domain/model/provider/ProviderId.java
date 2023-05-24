@@ -17,13 +17,25 @@ import java.util.Objects;
 public class ProviderId implements Serializable {
 
 	@Enumerated(EnumType.STRING)
-	@Column(name = "prv_type")
+	@Column(name = "prv_type", nullable = false)
 	private ProviderType providerType;
 
-	@Column(name = "prv_user_id", length = 100)
+	@Column(name = "prv_user_id", nullable = false, length = 100)
 	private String providerUserId;// 고유값으로 제공되는 아이디. Provider.providerLoginId 와 같기도함.
 
 	protected ProviderId() {
+	}
+
+	public String get() {
+		return this.providerType.name() + ',' + this.providerUserId;
+	}
+
+	@Override
+	public String toString() {
+		return "ProviderId{" +
+			"providerType=" + providerType +
+			", providerUserId='" + providerUserId + '\'' +
+			'}';
 	}
 
 	@Override

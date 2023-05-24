@@ -9,6 +9,7 @@ import lombok.Getter;
 public class LoginCommand {
 	private final String userId;
 	private final String password;
+	private final String ip;
 
 	public static LoginCommand of(AuthRequest.Login login) {
 		return LoginCommand.builder().userId(login.getUserId()).password(login.getPassword()).build();

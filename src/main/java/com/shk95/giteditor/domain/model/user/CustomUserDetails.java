@@ -41,18 +41,26 @@ public class CustomUserDetails implements UserDetails, OAuth2User, OidcUser {
 	 * 일반가입 사용자
 	 *
 	 * @param user 기본 사용자 정보
-	 * @return userDetailsBuilder : 인증된 사용자의 정보
+	 * @return userDetails : 인증된 사용자의 정보
 	 */
-	public static CustomUserDetailsBuilder createUserDetailsOf(User user) {
-		return CustomUserDetails.builder()
-			.userId(user.getUserId())
+	public static CustomUserDetails of(User user) {
+		CustomUserDetailsBuilder userDetailsBuilder = CustomUserDetails.builder()
+			.userId(user.getUserId().getUserLoginId())
 			.password(user.getPassword())
 			.role(user.getRole())
 			.authorities(Collections.singletonList(new SimpleGrantedAuthority(user.getRole().getCode())))
-			.providerType(user.getProviderType())
+			.providerType(user.getUserId().getProviderType())
 			.defaultUsername(user.getUsername())
 			.defaultEmail(user.getDefaultEmail())
 			.defaultImgUrl(user.getProfileImageUrl());
+		if (user.getProviders() != null) {
+			userDetailsBuilder
+				.providerEmail(user.getProviders().get(0).getProviderEmail())
+				.providerUsername(user.getProviders().get(0).getProviderUserName())
+				.providerImgUrl(user.getProviders().get(0).getProviderImgUrl())
+				.providerLoginId(user.getProviders().get(0).getProviderLoginId());
+		}
+		return userDetailsBuilder.build();
 	}
 
 	/**
@@ -65,14 +73,14 @@ public class CustomUserDetails implements UserDetails, OAuth2User, OidcUser {
 	public static CustomUserDetailsBuilder createUserDetailsOfOAuthUser(User user, Map<String, Object> attributes) {
 		// oAuth2 로 가입시의 기본 ProviderType 을 통해 찾은 정보
 		Provider providerInfo = user.getProviders().stream()
-			.filter(entity -> entity.getProviderId().getProviderType() == user.getProviderType())
+			.filter(entity -> entity.getProviderId().getProviderType() == user.getUserId().getProviderType())
 			.findFirst().orElseThrow(DefaultOAuthAccountNotFoundException::new);
 
 		return CustomUserDetails.builder()
-			.userId(user.getUserId())
+			.userId(user.getUserId().getUserLoginId())
 			.role(user.getRole())
 			.authorities(Collections.singletonList(new SimpleGrantedAuthority(user.getRole().getCode())))
-			.providerType(user.getProviderType())
+			.providerType(user.getUserId().getProviderType())
 			.defaultUsername(user.getUsername())
 			.defaultEmail(user.getDefaultEmail())
 			.defaultImgUrl(user.getProfileImageUrl())
@@ -86,10 +94,6 @@ public class CustomUserDetails implements UserDetails, OAuth2User, OidcUser {
 	@Override
 	public Map<String, Object> getAttributes() {
 		return attributes;
-	}
-
-	public void setAttributes(Map<String, Object> attributes) {
-		this.attributes = attributes;
 	}
 
 	@Override

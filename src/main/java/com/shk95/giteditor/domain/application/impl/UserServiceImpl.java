@@ -6,7 +6,6 @@ import com.shk95.giteditor.domain.application.commands.SignupOAuthCommand;
 import com.shk95.giteditor.domain.common.constant.ProviderType;
 import com.shk95.giteditor.domain.common.mail.MailManager;
 import com.shk95.giteditor.domain.common.mail.MessageVariable;
-import com.shk95.giteditor.domain.model.user.CustomUserDetails;
 import com.shk95.giteditor.domain.common.security.Role;
 import com.shk95.giteditor.domain.common.security.jwt.GeneratedJwtToken;
 import com.shk95.giteditor.domain.common.security.jwt.JwtTokenProvider;
@@ -17,12 +16,9 @@ import com.shk95.giteditor.domain.model.token.BlacklistToken;
 import com.shk95.giteditor.domain.model.token.BlacklistTokenRepository;
 import com.shk95.giteditor.domain.model.token.RefreshToken;
 import com.shk95.giteditor.domain.model.token.RefreshTokenRepository;
-import com.shk95.giteditor.domain.model.user.User;
-import com.shk95.giteditor.domain.model.user.UserFinder;
-import com.shk95.giteditor.domain.model.user.UserRepository;
+import com.shk95.giteditor.domain.model.user.*;
 import com.shk95.giteditor.utils.Helper;
 import com.shk95.giteditor.utils.Response;
-import com.shk95.giteditor.utils.SecurityUtil;
 import com.shk95.giteditor.web.apis.request.AuthRequest;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
@@ -34,8 +30,6 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -56,25 +50,15 @@ import static com.shk95.giteditor.config.ConstantFields.Jwt.AUTHORITIES_KEY;
 public class UserServiceImpl implements UserService {
 
 	private final AuthenticationManagerBuilder authenticationManagerBuilder;
+	private final GrantedUserInfo grantedUserInfo;
 	private final UserRepository userRepository;
 	private final ProviderRepository providerRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final JwtTokenProvider jwtTokenProvider;
 	private final RefreshTokenRepository refreshTokenRepository;
 	private final BlacklistTokenRepository blacklistTokenRepository;
-	private final SecurityUtil securityUtil;
 	private final MailManager mailManager;
-	private final UserFinder userFinder;
 
-	@Override
-	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-		log.info("### login user : [{}]", username);
-		User user = userFinder.find(username).orElse(null);
-		if (user == null) {
-			throw new UsernameNotFoundException("Cannot find user. user : [" + username + "]");
-		}
-		return CustomUserDetails.createUserDetailsOf(user).build();
-	}
 
 	@Override
 	@Transactional
@@ -82,14 +66,13 @@ public class UserServiceImpl implements UserService {
 		if (userRepository.existsByDefaultEmail(signUp.getDefaultEmail())) {
 			return Response.fail("이미 회원가입된 이메일 입니다.", HttpStatus.BAD_REQUEST);
 		}
-		if (userRepository.existsByUserIdAndProviderType(signUp.getUserId(), ProviderType.LOCAL)) {
+		if (userRepository.existsById(new UserId(ProviderType.LOCAL, signUp.getUserId()))) {
 			return Response.fail("이미 회원가입된 아이디 입니다.", HttpStatus.BAD_REQUEST);
 		}
 		userRepository.save(User.builder()
-			.userId(signUp.getUserId())
+			.userId(new UserId(ProviderType.LOCAL, signUp.getUserId()))
 			.password(passwordEncoder.encode(signUp.getPassword()))
 			.defaultEmail(signUp.getDefaultEmail())
-			.providerType(ProviderType.LOCAL)
 			.role(Role.USER)
 			.username(signUp.getUsername())
 			.build());
@@ -101,12 +84,11 @@ public class UserServiceImpl implements UserService {
 	@Transactional
 	public Provider saveOAuthUser(SignupOAuthCommand command) {
 		User user = User.builder().
-			userId(command.getDefaultUserId())
+			userId(new UserId(command.getOAuthUserProviderType(), command.getDefaultUserId()))
 			.username(command.getDefaultUsername())
 			.isUserEmailVerified(false)
 			.isUserEnabled(true)
 			.role(Role.USER)
-			.providerType(command.getOAuthUserProviderType())
 			.profileImageUrl(command.getOAuthUserImgUrl())
 			.build();
 		User savedUser = userRepository.saveAndFlush(user);
@@ -123,9 +105,9 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public GeneratedJwtToken defaultLogin(LoginCommand login, String ip) {
+	public GeneratedJwtToken loginDefault(LoginCommand login, String ip) {
 		// 로그인 인증정보 가져옴.
-		CustomUserDetails userDetails = (CustomUserDetails) this.loadUserByUsername(login.getUserId());//TODO: 예외처리
+		CustomUserDetails userDetails = (CustomUserDetails) grantedUserInfo.loadUserByUsername(login.getUserId());//TODO: 예외처리
 		// 인증용 토큰 생성
 		UsernamePasswordAuthenticationToken authenticationToken
 			= new UsernamePasswordAuthenticationToken(
@@ -244,13 +226,6 @@ public class UserServiceImpl implements UserService {
 		return Response.success("로그아웃 되었습니다.");
 	}
 
-	// test
-	public ResponseEntity<?> getAuthorities() {
-		// SecurityContext에 담겨 있는 authentication id 정보
-		String userId = securityUtil.getCurrentUser();
-		User currentUser = userFinder.find(userId).orElseThrow(() -> new UsernameNotFoundException("사용자의 인증정보 없음."));
-		return Response.success(currentUser.getRole().getCode(), "User role", HttpStatus.OK);
-	}
 
 	private void sendWelcomeMessage(User user) {
 		mailManager.send(
