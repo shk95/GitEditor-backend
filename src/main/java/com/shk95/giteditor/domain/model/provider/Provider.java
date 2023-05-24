@@ -37,7 +37,9 @@ public class Provider extends AbstractBaseTimeEntity {
 	private String providerImgUrl;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "user_seq")
+	@JoinColumns({
+		@JoinColumn(name = "user_prv_typ"),
+		@JoinColumn(name = "user_login_id")})
 	private User user;
 
 	public static void update(Provider provider, AbstractOAuth2UserInfo retrievedUserInfo) {

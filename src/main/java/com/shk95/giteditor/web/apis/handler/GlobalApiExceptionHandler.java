@@ -23,7 +23,7 @@ public class GlobalApiExceptionHandler extends ResponseEntityExceptionHandler {
 
 		log.error("Unhandled Runtime exception occurred. cause : [" + ex.getCause() + "]" + "\nError message : [" + ex.getMessage() + "]");
 		ex.printStackTrace();
-		return Response.fail(ex.getMessage(), "Sorry, there is an error on the server side.", HttpStatus.INTERNAL_SERVER_ERROR);
+		return Response.fail(ex.getMessage(), "Sorry, there was an error on the server side.", HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 
 	@ExceptionHandler({MaxUploadSizeExceededException.class})

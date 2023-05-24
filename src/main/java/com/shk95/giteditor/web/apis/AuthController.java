@@ -56,7 +56,7 @@ public class AuthController {
 		}
 		String clientIp = Helper.getClientIp(request);
 
-		GeneratedJwtToken tokenInfo = userService.defaultLogin(LoginCommand.of(login), clientIp);
+		GeneratedJwtToken tokenInfo = userService.loginDefault(LoginCommand.of(login), clientIp);
 		CookieUtil.addCookie(response, TYPE_REFRESH, tokenInfo.getRefreshToken(), (int) (REFRESH_TOKEN_EXPIRE_TIME / 1000));
 
 		return Response.success(tokenInfo, "로그인에 성공했습니다.", HttpStatus.OK);

@@ -1,13 +1,15 @@
 package com.shk95.giteditor.domain.common.security.jwt;
 
+import com.shk95.giteditor.config.ApplicationProperties;
 import com.shk95.giteditor.domain.common.constant.ProviderType;
-import com.shk95.giteditor.domain.model.user.CustomUserDetails;
 import com.shk95.giteditor.domain.common.exception.TokenValidFailedException;
+import com.shk95.giteditor.domain.model.user.CustomUserDetails;
+import com.shk95.giteditor.domain.model.user.GrantedUserInfo;
+import com.shk95.giteditor.domain.model.user.UserId;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -29,15 +31,17 @@ import static com.shk95.giteditor.config.ConstantFields.Jwt.*;
 @Component
 public class JwtTokenProvider {
 
+	private final GrantedUserInfo grantedUserInfo;
 	private final Key key;
 
 	//The specified key byte array is 248 bits which is not secure enough for any JWT HMAC-SHA algorithm.
 	// The JWT JWA Specification (RFC 7518, Section 3.2) states that keys used with HMAC-SHA algorithms MUST have a size >= 256 bits (the key size must be greater than or equal to the hash output size).
 	// Consider using the io.jsonwebtoken.security.Keys#secretKeyFor(SignatureAlgorithm) method to create a key guaranteed to be secure enough for your preferred HMAC-SHA algorithm.
-	private JwtTokenProvider(@Value("${app.token-secret-key}") String secretKey) {
-		byte[] keyBytes = Decoders.BASE64.decode(secretKey);
+	private JwtTokenProvider(ApplicationProperties properties, GrantedUserInfo grantedUserInfo) {
+		byte[] keyBytes = Decoders.BASE64.decode(properties.getTokenSecretKey());
 		this.key = Keys.hmacShaKeyFor(keyBytes);
-		log.debug("jwt secret key : [{}]", secretKey);
+		log.debug("jwt secret key : [{}]", properties.getTokenSecretKey());
+		this.grantedUserInfo = grantedUserInfo;
 	}
 
 	//Authentication 을 가지고 AccessToken, RefreshToken 을 생성하는 메서드
@@ -93,14 +97,13 @@ public class JwtTokenProvider {
 				.map(SimpleGrantedAuthority::new)
 				.collect(Collectors.toList());
 
-		String[] subject = claims.getSubject().split(",");
-		//UserDetails 객체를 만들어서 Authentication 리턴
-		CustomUserDetails principal = CustomUserDetails.builder()// TODO : jwt 로그인 보완하기
-			.userId(subject[1])
-			.providerType(ProviderType.valueOf(subject[0]))
-			.password("")
-			.authorities(authorities).build();
-		return new UsernamePasswordAuthenticationToken(principal, accessToken, authorities);
+		UserId userId = null;// providerType, userId
+		try {
+			userId = UserId.of(claims.getSubject());
+		} catch (Exception e) {
+			throw new TokenValidFailedException("권한 정보가 없는 토큰입니다.");
+		}
+		return new UsernamePasswordAuthenticationToken(grantedUserInfo.loadUserWithProvider(userId), accessToken, authorities);
 	}
 
 	//토큰 유효성 검증
