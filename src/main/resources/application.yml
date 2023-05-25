@@ -49,12 +49,15 @@ spring:
     template-loader-path: classpath:/mail-templates/
 
   mail:
-    host: <>
-    port: 1025
+    host: localhost
+    port: 0
     properties:
       mail:
         smtp:
           auth: false
+          starttls:
+            enable: false
+
   config:
     import: application-secret.yml
   profiles:
@@ -67,8 +70,8 @@ app:
   token-secret-key: test
 
   file-storage:
-    local-root-folder: /data/files
-    temp-folder: /data/temp
+    local-root-folder: /opt/data/files
+    temp-folder: /opt/data/temp
     active: s3FileStorage
     s3-access-key: <Your S3 Access Key>
     s3-secret-key: <Your S3 Secret Key>
@@ -76,7 +79,7 @@ app:
     s3-region: <Your S3 Region>
 
   image:
-    command-search-path: /usr/bin/
+    command-search-path: /opt/homebrew/bin/
 
   cdn:
     url: <S3 root URL>

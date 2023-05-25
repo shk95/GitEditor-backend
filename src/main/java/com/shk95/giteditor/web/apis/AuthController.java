@@ -33,7 +33,6 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
 import java.util.Optional;
 
 import static com.shk95.giteditor.config.ConstantFields.Jwt.ExpireTime.REFRESH_TOKEN_EXPIRE_TIME;
@@ -62,7 +61,7 @@ public class AuthController {
 		}
 		String clientIp = Helper.getClientIp(request);
 
-		GeneratedJwtToken tokenInfo = userService.loginDefault(LoginCommand.of(login), clientIp);
+		GeneratedJwtToken tokenInfo = userService.loginDefault(LoginCommand.of(login, clientIp));
 		CookieUtil.addCookie(response, JWT_TYPE_REFRESH, tokenInfo.getRefreshToken(), (int) (REFRESH_TOKEN_EXPIRE_TIME / 1000));
 
 		return Response.success(tokenInfo, "로그인에 성공했습니다.", HttpStatus.OK);
@@ -127,7 +126,7 @@ public class AuthController {
 		 */
 
 		// Refresh Token 검증. 실패시 로그아웃 상태이다.
-		if (!jwtTokenProvider.validateToken(refreshToken)) {
+		if (!jwtTokenProvider.isVerified(refreshToken)) {
 			return Response.fail("Refresh Token 정보가 유효하지 않습니다.", HttpStatus.NOT_ACCEPTABLE);
 		}
 		if (!jwtTokenProvider.isRefreshToken(refreshToken)) {

@@ -4,7 +4,7 @@ import com.shk95.giteditor.domain.common.constant.ProviderType;
 import com.shk95.giteditor.domain.model.user.CustomUserDetails;
 import com.shk95.giteditor.domain.common.exception.OAuthUserNotRegisteredException;
 import com.shk95.giteditor.domain.common.model.AbstractOAuth2UserInfo;
-import com.shk95.giteditor.domain.model.oauth.OAuth2UserInfoFactory;
+import com.shk95.giteditor.domain.model.user.oauth.OAuth2UserInfoFactory;
 import com.shk95.giteditor.domain.model.provider.Provider;
 import com.shk95.giteditor.domain.model.provider.ProviderId;
 import com.shk95.giteditor.domain.model.provider.ProviderRepository;

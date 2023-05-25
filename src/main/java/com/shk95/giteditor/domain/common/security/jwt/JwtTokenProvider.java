@@ -1,7 +1,6 @@
 package com.shk95.giteditor.domain.common.security.jwt;
 
 import com.shk95.giteditor.config.ApplicationProperties;
-import com.shk95.giteditor.domain.common.constant.ProviderType;
 import com.shk95.giteditor.domain.common.exception.TokenValidFailedException;
 import com.shk95.giteditor.domain.model.user.CustomUserDetails;
 import com.shk95.giteditor.domain.model.user.GrantedUserInfo;
@@ -46,19 +45,19 @@ public class JwtTokenProvider {
 
 	//Authentication 을 가지고 AccessToken, RefreshToken 을 생성하는 메서드
 	public GeneratedJwtToken generateToken(Authentication authentication) {
-
-		return this.generateToken(((CustomUserDetails) authentication.getPrincipal()).getProviderType(), authentication.getName(), authentication.getAuthorities());
+		return this.generateToken(((CustomUserDetails) authentication.getPrincipal()).getUserEntityId()
+			, authentication.getAuthorities());
 	}
 
 	//name, authorities 를 가지고 AccessToken, RefreshToken 을 생성하는 메서드
-	public GeneratedJwtToken generateToken(ProviderType providerType, String userId, Collection<? extends GrantedAuthority> inputAuthorities) {
+	public GeneratedJwtToken generateToken(UserId userId, Collection<? extends GrantedAuthority> inputAuthorities) {
 		Date now = new Date();
 		//권한 가져오기
 		String authorities = inputAuthorities.stream()
 			.map(GrantedAuthority::getAuthority)
 			.collect(Collectors.joining(","));
 
-		String subject = providerType.name() + ',' + userId;
+		final String subject = userId.get();
 
 		//Generate AccessToken
 		String accessToken = Jwts.builder()
@@ -107,7 +106,7 @@ public class JwtTokenProvider {
 	}
 
 	//토큰 유효성 검증
-	public boolean validateToken(String token) {
+	public boolean isVerified(String token) {
 		try {
 			Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
 			return true;

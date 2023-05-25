@@ -5,6 +5,8 @@ import com.shk95.giteditor.domain.application.commands.LoginCommand;
 import com.shk95.giteditor.domain.application.commands.ReissueCommand;
 import com.shk95.giteditor.domain.application.commands.SignupOAuthCommand;
 import com.shk95.giteditor.domain.common.constant.ProviderType;
+import com.shk95.giteditor.domain.common.exception.TokenValidFailedException;
+import com.shk95.giteditor.domain.common.file.FileStorageResolver;
 import com.shk95.giteditor.domain.common.mail.MailManager;
 import com.shk95.giteditor.domain.common.mail.MessageVariable;
 import com.shk95.giteditor.domain.common.security.Role;
@@ -59,7 +61,7 @@ public class UserServiceImpl implements UserService {
 	private final RefreshTokenRepository refreshTokenRepository;
 	private final BlacklistTokenRepository blacklistTokenRepository;
 	private final MailManager mailManager;
-
+	private final FileStorageResolver fileStorageResolver;
 
 	@Override
 	@Transactional
@@ -106,7 +108,7 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public GeneratedJwtToken loginDefault(LoginCommand login, String ip) {
+	public GeneratedJwtToken loginDefault(LoginCommand login) {
 		// 로그인 인증정보 가져옴.
 		CustomUserDetails userDetails = (CustomUserDetails) grantedUserInfo.loadUserByUsername(login.getUserId());//TODO: 예외처리
 		// 인증용 토큰 생성
@@ -125,7 +127,7 @@ public class UserServiceImpl implements UserService {
 		// Redis RefreshToken 저장
 		refreshTokenRepository.save(RefreshToken.builder()// TODO : redis transaction 설정
 			.subject(jwtTokenProvider.getClaims(tokenInfo.getAccessToken()).getSubject())
-			.ip(ip)
+			.ip(login.getIp())
 			.authorities(authentication.getAuthorities().stream()
 				.map(GrantedAuthority::getAuthority).collect(Collectors.joining(",")))
 			.refreshToken(tokenInfo.getRefreshToken())
@@ -147,8 +149,13 @@ public class UserServiceImpl implements UserService {
 
 		Collection<? extends GrantedAuthority> authorities = Arrays.stream(claims.get(AUTHORITIES_KEY).toString().split(","))
 			.map(SimpleGrantedAuthority::new).collect(Collectors.toList());
-		GeneratedJwtToken renewedTokenInfo = jwtTokenProvider
-			.generateToken(ProviderType.valueOf(subject.split(",")[0]), subject.split(",")[1], authorities);
+		GeneratedJwtToken renewedTokenInfo;// TODO: reissue: 토큰 재 생성방식
+		try {
+			renewedTokenInfo = jwtTokenProvider
+				.generateToken(UserId.of(subject), authorities);
+		} catch (Exception e) {
+			throw new TokenValidFailedException();
+		}
 
 		// Redis RefreshToken update
 		refreshTokenRepository.save(RefreshToken.builder()
@@ -167,7 +174,7 @@ public class UserServiceImpl implements UserService {
 		final String refreshToken = jwtTokenProvider.resolveRefreshToken(request); //TODO: logout: 예외처리
 		Assert.notNull(accessToken, "access token may not be null");
 		Assert.notNull(refreshToken, "refresh token may not be null");
-		final String currentIpAddress = Helper.getClientIp(request);
+//		final String currentIpAddress = Helper.getClientIp(request);
 
 		/*
 		 *	검증목록 : access token 과 refresh token 의 소유자 일치, 동일 ip

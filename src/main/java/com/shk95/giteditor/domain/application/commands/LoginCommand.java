@@ -11,7 +11,7 @@ public class LoginCommand {
 	private final String password;
 	private final String ip;
 
-	public static LoginCommand of(AuthRequest.Login login) {
-		return LoginCommand.builder().userId(login.getUserId()).password(login.getPassword()).build();
+	public static LoginCommand of(AuthRequest.Login login, String ip) {
+		return LoginCommand.builder().userId(login.getUserId()).password(login.getPassword()).ip(ip).build();
 	}
 }

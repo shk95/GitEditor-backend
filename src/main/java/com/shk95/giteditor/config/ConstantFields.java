@@ -1,14 +1,14 @@
 package com.shk95.giteditor.config;
 
-public final class ConstantFields {//TODO: 설정값 상수 관리
+import java.util.HashSet;
+import java.util.Set;
 
-	//TODO: oauthService: 상수 관리
+public final class ConstantFields {//TODO: 설정값 상수 관리
 
 	public static final String REDIRECT_LOGIN_PATH = "http://localhost:4000/login";
 	public static final String REDIRECT_SIGNUP_OAUTH_PATH = "http://localhost:4000/signup/oauth";
 	public static final String REDIRECT_SIGNUP_OAUTH_ID = "oauth2_signup";
 	public static final int REDIRECT_SIGNUP_OAUTH_EXPIRE = 10 * 60;// 10분
-
 
 	public static final class OAuthService {
 		public static final String PROVIDER_ACCESS_TOKEN = "PROVIDER_ACCESS_TOKEN";// 추가 제공
@@ -33,6 +33,18 @@ public final class ConstantFields {//TODO: 설정값 상수 관리
 			public static final long ACCESS_TOKEN_EXPIRE_TIME = 30 * 60 * 1000L;               //30분
 			public static final long REFRESH_TOKEN_EXPIRE_TIME = 3 * 24 * 60 * 60 * 1000L;     //3일
 			public static final long REFRESH_TOKEN_EXPIRE_TIME_FOR_REDIS = REFRESH_TOKEN_EXPIRE_TIME / 1000L;
+		}
+	}
+
+	public static final class Thumbnail {
+		public static final Set<String> SUPPORTED_EXTENSIONS = new HashSet<>();
+		public static final int MAX_WIDTH = 420;
+		public static final int MAX_HEIGHT = 420;
+
+		static {
+			SUPPORTED_EXTENSIONS.add("png");
+			SUPPORTED_EXTENSIONS.add("jpg");
+			SUPPORTED_EXTENSIONS.add("jpeg");
 		}
 	}
 }

@@ -1,18 +1,17 @@
 package com.shk95.giteditor.domain.common.file;
 
-import org.springframework.beans.factory.annotation.Value;
+import com.shk95.giteditor.config.ApplicationProperties;
 import org.springframework.stereotype.Component;
 
 @Component
 public class FileUrlCreator {
 
-	private boolean isLocalStorage;
-	private String cdnUrl;
+	private final boolean isLocalStorage;
+	private final String cdnUrl;
 
-	public FileUrlCreator(@Value("${app.file-storage.active}") String fileStorage,
-						  @Value("${app.cdn.url}") String cdnUrl) {
-		this.isLocalStorage = "localFileStorage".equals(fileStorage);
-		this.cdnUrl = cdnUrl;
+	public FileUrlCreator(ApplicationProperties properties) {
+		this.isLocalStorage = "localFileStorage".equals(properties.getFileStorage().getActive());
+		this.cdnUrl = properties.getCdn().getUrl();
 	}
 
 	public String url(String fileRelativePath) {

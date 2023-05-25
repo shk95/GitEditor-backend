@@ -16,7 +16,7 @@ public interface UserService {
 
 	Provider saveOAuthUser(SignupOAuthCommand command);
 
-	GeneratedJwtToken loginDefault(LoginCommand login, String ip);
+	GeneratedJwtToken loginDefault(LoginCommand login);
 
 	GeneratedJwtToken reissue(ReissueCommand command);
 

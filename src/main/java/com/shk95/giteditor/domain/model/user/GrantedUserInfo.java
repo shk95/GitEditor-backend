@@ -10,6 +10,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -20,16 +21,19 @@ public class GrantedUserInfo implements UserDetailsService {
 	private final SecurityUtil securityUtil;
 
 	@Override
+	@Transactional(readOnly = true)
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-		log.info("### login user : [{}]", username);
 		User user = userFinder.find(username)
 			.orElseThrow(() -> new UsernameNotFoundException("Cannot find user. user : [" + username + "]"));
+		log.info("### login user : [{}]", username);
 		return CustomUserDetails.of(user);
 	}
 
+	@Transactional(readOnly = true)
 	public CustomUserDetails loadUserWithProvider(UserId userId) {
 		User user = userFinder.find(userId)
 			.orElseThrow(() -> new UsernameNotFoundException("Cannot find user. [" + userId.toString() + "]"));
+		log.info("### login user : [{}]", userId.getUserLoginId());
 		return CustomUserDetails.of(user);
 	}
 

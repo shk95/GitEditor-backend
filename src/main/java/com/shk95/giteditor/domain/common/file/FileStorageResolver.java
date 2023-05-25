@@ -1,18 +1,17 @@
 package com.shk95.giteditor.domain.common.file;
 
-import org.springframework.beans.factory.annotation.Value;
+import com.shk95.giteditor.config.ApplicationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 @Component
 public class FileStorageResolver {
 
-	private String activeStorageName;
-	private ApplicationContext applicationContext;
+	private final String activeStorageName;
+	private final ApplicationContext applicationContext;
 
-	public FileStorageResolver(@Value("${app.file-storage.active}") String activeStorageName,
-							   ApplicationContext applicationContext) {
-		this.activeStorageName = activeStorageName;
+	public FileStorageResolver(ApplicationContext applicationContext, ApplicationProperties properties) {
+		this.activeStorageName = properties.getFileStorage().getActive();
 		this.applicationContext = applicationContext;
 	}
 
@@ -25,5 +24,4 @@ public class FileStorageResolver {
 	public FileStorage resolve() {
 		return applicationContext.getBean(activeStorageName, FileStorage.class);
 	}
-
 }

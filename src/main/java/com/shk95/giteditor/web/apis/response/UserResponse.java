@@ -48,4 +48,10 @@ public class UserResponse {
 			this.providerImgUrl = customUserDetails.getProviderImgUrl();
 		}
 	}
+
+	@Builder
+	@Getter
+	public static class Profile {
+		private String uploadedImageUrl;
+	}
 }
