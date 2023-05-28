@@ -64,7 +64,7 @@ public class JwtTokenProvider {
 		String accessToken = Jwts.builder()
 			.setSubject(subject)
 			.claim(AUTHORITIES_KEY, authorities)
-			.claim("type", TYPE_ACCESS)
+			.claim("type", JWT_TYPE_ACCESS)
 			.setIssuedAt(now)   //토큰 발행 시간 정보
 			.setExpiration(new Date(now.getTime() + ExpireTime.ACCESS_TOKEN_EXPIRE_TIME))  //토큰 만료 시간 설정
 			.signWith(key, SignatureAlgorithm.HS256)
@@ -72,7 +72,7 @@ public class JwtTokenProvider {
 
 		//Generate RefreshToken
 		String refreshToken = Jwts.builder()
-			.claim("type", TYPE_REFRESH)
+			.claim("type", JWT_TYPE_REFRESH)
 			.setIssuedAt(now)   //토큰 발행 시간 정보
 			.setExpiration(new Date(now.getTime() + ExpireTime.REFRESH_TOKEN_EXPIRE_TIME)) //토큰 만료 시간 설정
 			.signWith(key, SignatureAlgorithm.HS256)
@@ -139,7 +139,7 @@ public class JwtTokenProvider {
 	public boolean isRefreshToken(String token) {
 		String type = (String) Jwts.parserBuilder().setSigningKey(key).build()
 			.parseClaimsJws(token).getBody().get("type");
-		return type.equals(TYPE_REFRESH);
+		return type.equals(JWT_TYPE_REFRESH);
 	}
 
 	public Long getExpiration(String accessToken) {
@@ -158,7 +158,7 @@ public class JwtTokenProvider {
 
 	public String resolveRefreshToken(HttpServletRequest request) {
 		Cookie[] cookies = request.getCookies();
-		return Arrays.stream(cookies).filter(cookie -> cookie.getName().equals(TYPE_REFRESH))
+		return Arrays.stream(cookies).filter(cookie -> cookie.getName().equals(JWT_TYPE_REFRESH))
 			.map(Cookie::getValue).findFirst().orElse("");
 	}
 }

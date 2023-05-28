@@ -19,7 +19,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-import static com.shk95.giteditor.config.ConstantFields.OAuthRepo.REDIRECT_URI_PARAM_COOKIE_NAME;
+import static com.shk95.giteditor.config.ConstantFields.OAuthRepo.OAUTH_REDIRECT_URI_PARAM_COOKIE_NAME;
 import static com.shk95.giteditor.config.ConstantFields.*;
 
 @Slf4j
@@ -69,7 +69,7 @@ public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationF
 			response.setStatus(HttpServletResponse.SC_OK);
 		} else {
 			exception.printStackTrace();
-			redirectUrl = CookieUtil.getCookie(request, REDIRECT_URI_PARAM_COOKIE_NAME)
+			redirectUrl = CookieUtil.getCookie(request, OAUTH_REDIRECT_URI_PARAM_COOKIE_NAME)
 				.map(Cookie::getValue)
 				.orElse(("/"));
 			redirectUrl = UriComponentsBuilder.fromUriString(redirectUrl)

@@ -16,18 +16,18 @@ public final class ConstantFields {//TODO: 설정값 상수 관리
 
 	public static final class OAuthRepo {
 		public static final String OAUTH_DEFAULT_REDIRECT = "http://localhost:4000/oauth/redirect";//TODO: oauth default redirect url 관리
-		public static final String OAUTH2_AUTHORIZATION_REQUEST_COOKIE_NAME = "oauth2_auth_request";
-		public static final String REDIRECT_URI_PARAM_COOKIE_NAME = "redirect_uri";
-		public static final String REFRESH_TOKEN = "refresh_token";
-		public static final int COOKIE_EXPIRE_SECONDS = 180;
+		public static final String OAUTH_AUTHORIZATION_REQUEST_COOKIE_NAME = "oauth2_auth_request";
+		public static final String OAUTH_REDIRECT_URI_PARAM_COOKIE_NAME = "redirect_uri";
+		public static final String OAUTH_REFRESH_TOKEN = "refresh_token";
+		public static final int OAUTH_COOKIE_EXPIRE_SECONDS = 180;
 	}
 
 	public static final class Jwt {
 		public static final String AUTHORIZATION_HEADER = "Authorization";
 		public static final String AUTHORITIES_KEY = "auth";
 		public static final String BEARER_TYPE = "Bearer";
-		public static final String TYPE_ACCESS = "access";
-		public static final String TYPE_REFRESH = "refresh";
+		public static final String JWT_TYPE_ACCESS = "access";
+		public static final String JWT_TYPE_REFRESH = "refresh";
 
 		public static final class ExpireTime {
 			public static final long ACCESS_TOKEN_EXPIRE_TIME = 30 * 60 * 1000L;               //30분

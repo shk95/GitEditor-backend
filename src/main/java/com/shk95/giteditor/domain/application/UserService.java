@@ -1,6 +1,7 @@
 package com.shk95.giteditor.domain.application;
 
 import com.shk95.giteditor.domain.application.commands.LoginCommand;
+import com.shk95.giteditor.domain.application.commands.ReissueCommand;
 import com.shk95.giteditor.domain.application.commands.SignupOAuthCommand;
 import com.shk95.giteditor.domain.common.security.jwt.GeneratedJwtToken;
 import com.shk95.giteditor.domain.model.provider.Provider;
@@ -17,7 +18,7 @@ public interface UserService {
 
 	GeneratedJwtToken loginDefault(LoginCommand login, String ip);
 
-	ResponseEntity<?> reissue(HttpServletRequest request, HttpServletResponse response);
+	GeneratedJwtToken reissue(ReissueCommand command);
 
 	ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response);
 }
