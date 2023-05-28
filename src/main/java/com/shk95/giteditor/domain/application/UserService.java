@@ -1,15 +1,13 @@
 package com.shk95.giteditor.domain.application;
 
 import com.shk95.giteditor.domain.application.commands.LoginCommand;
+import com.shk95.giteditor.domain.application.commands.LogoutCommand;
 import com.shk95.giteditor.domain.application.commands.ReissueCommand;
 import com.shk95.giteditor.domain.application.commands.SignupOAuthCommand;
 import com.shk95.giteditor.domain.common.security.jwt.GeneratedJwtToken;
 import com.shk95.giteditor.domain.model.provider.Provider;
 import com.shk95.giteditor.web.apis.request.AuthRequest;
 import org.springframework.http.ResponseEntity;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 public interface UserService {
 	ResponseEntity<?> signupDefault(AuthRequest.Signup.Default signUp);
@@ -20,5 +18,5 @@ public interface UserService {
 
 	GeneratedJwtToken reissue(ReissueCommand command);
 
-	ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response);
+	void logout(LogoutCommand command);
 }

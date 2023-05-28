@@ -2,6 +2,7 @@ package com.shk95.giteditor.domain.application.impl;
 
 import com.shk95.giteditor.domain.application.UserService;
 import com.shk95.giteditor.domain.application.commands.LoginCommand;
+import com.shk95.giteditor.domain.application.commands.LogoutCommand;
 import com.shk95.giteditor.domain.application.commands.ReissueCommand;
 import com.shk95.giteditor.domain.application.commands.SignupOAuthCommand;
 import com.shk95.giteditor.domain.common.constant.ProviderType;
@@ -20,7 +21,6 @@ import com.shk95.giteditor.domain.model.token.BlacklistTokenRepository;
 import com.shk95.giteditor.domain.model.token.RefreshToken;
 import com.shk95.giteditor.domain.model.token.RefreshTokenRepository;
 import com.shk95.giteditor.domain.model.user.*;
-import com.shk95.giteditor.utils.Helper;
 import com.shk95.giteditor.utils.Response;
 import com.shk95.giteditor.web.apis.request.AuthRequest;
 import io.jsonwebtoken.Claims;
@@ -38,11 +38,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.shk95.giteditor.config.ConstantFields.Jwt.AUTHORITIES_KEY;
@@ -169,39 +166,19 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
-		final String accessToken = jwtTokenProvider.resolveAccessToken(request); //TODO: logout: accessToken 검증
-		final String refreshToken = jwtTokenProvider.resolveRefreshToken(request); //TODO: logout: 예외처리
-		Assert.notNull(accessToken, "access token may not be null");
-		Assert.notNull(refreshToken, "refresh token may not be null");
-//		final String currentIpAddress = Helper.getClientIp(request);
-
-		/*
-		 *	검증목록 : access token 과 refresh token 의 소유자 일치, 동일 ip
-		 *
-		 */
-
-		// Access Token 에서 User id 를 가져옴.
-		String userId = jwtTokenProvider.getAuthentication(accessToken).getName();
-		log.debug("### {} user id from authentication : [{}]", this.getClass().getName(), userId);
-
+	public void logout(LogoutCommand command) {
 		// user id 로 refresh token repository 검색
-		Optional<RefreshToken> refreshTokenInfo = refreshTokenRepository.findById(userId);
-		if (!refreshTokenInfo.isPresent()) {
-			return Response.fail("잘못된 요청입니다.", HttpStatus.UNAUTHORIZED);
-		}
-		refreshTokenRepository.delete(refreshTokenInfo.get());
-
+		refreshTokenRepository.findByRefreshToken(command.getRefreshToken())
+			.filter((e) -> e.getIp().equals(command.getIp()))
+			.ifPresent(refreshTokenRepository::delete);
 		// 해당 Access Token 유효시간 가지고 와서 BlackList 로 저장하기
-		Long expiration = jwtTokenProvider.getExpiration(accessToken);
+		Long expiration = jwtTokenProvider.getExpiration(command.getAccessToken());
 		if (expiration > 0) {
 			blacklistTokenRepository.save(BlacklistToken.builder()
-				.accessToken(accessToken)
+				.accessToken(command.getAccessToken())
 				.expiration(expiration).build());
 		}
-		return Response.success("로그아웃 되었습니다.");
 	}
-
 
 	private void sendWelcomeMessage(User user) {
 		mailManager.send(
