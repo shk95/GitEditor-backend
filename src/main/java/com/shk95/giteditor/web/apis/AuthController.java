@@ -2,12 +2,16 @@ package com.shk95.giteditor.web.apis;
 
 import com.shk95.giteditor.domain.application.UserService;
 import com.shk95.giteditor.domain.application.commands.LoginCommand;
+import com.shk95.giteditor.domain.application.commands.ReissueCommand;
 import com.shk95.giteditor.domain.application.commands.SignupOAuthCommand;
 import com.shk95.giteditor.domain.common.constant.ProviderType;
 import com.shk95.giteditor.domain.common.security.jwt.GeneratedJwtToken;
+import com.shk95.giteditor.domain.common.security.jwt.JwtTokenProvider;
 import com.shk95.giteditor.domain.model.provider.Provider;
 import com.shk95.giteditor.domain.model.provider.ProviderLoginInfo;
 import com.shk95.giteditor.domain.model.provider.ProviderLoginInfoRepository;
+import com.shk95.giteditor.domain.model.token.RefreshToken;
+import com.shk95.giteditor.domain.model.token.RefreshTokenRepository;
 import com.shk95.giteditor.utils.CookieUtil;
 import com.shk95.giteditor.utils.Helper;
 import com.shk95.giteditor.utils.Resolver;
@@ -33,7 +37,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.util.Optional;
 
 import static com.shk95.giteditor.config.ConstantFields.Jwt.ExpireTime.REFRESH_TOKEN_EXPIRE_TIME;
-import static com.shk95.giteditor.config.ConstantFields.Jwt.TYPE_REFRESH;
+import static com.shk95.giteditor.config.ConstantFields.Jwt.JWT_TYPE_REFRESH;
 import static com.shk95.giteditor.config.ConstantFields.REDIRECT_SIGNUP_OAUTH_ID;
 
 @Slf4j
@@ -46,6 +50,8 @@ public class AuthController {
 	private final ProviderLoginInfoRepository providerLoginInfoRepository;
 	private final EmailValidator emailValidator;
 	private final UserIdValidator userIdValidator;
+	private final JwtTokenProvider jwtTokenProvider;
+	private final RefreshTokenRepository refreshTokenRepository;
 
 	@PostMapping("/login")
 	public ResponseEntity<?> login(@Validated @RequestBody AuthRequest.Login login, Errors errors
@@ -57,7 +63,7 @@ public class AuthController {
 		String clientIp = Helper.getClientIp(request);
 
 		GeneratedJwtToken tokenInfo = userService.loginDefault(LoginCommand.of(login), clientIp);
-		CookieUtil.addCookie(response, TYPE_REFRESH, tokenInfo.getRefreshToken(), (int) (REFRESH_TOKEN_EXPIRE_TIME / 1000));
+		CookieUtil.addCookie(response, JWT_TYPE_REFRESH, tokenInfo.getRefreshToken(), (int) (REFRESH_TOKEN_EXPIRE_TIME / 1000));
 
 		return Response.success(tokenInfo, "로그인에 성공했습니다.", HttpStatus.OK);
 	}
@@ -103,11 +109,53 @@ public class AuthController {
 
 	@PostMapping("/reissue")
 	public ResponseEntity<?> reissue(HttpServletRequest request, HttpServletResponse response) {
-		return userService.reissue(request, response);
+		String accessToken = jwtTokenProvider.resolveAccessToken(request);
+		String refreshToken = jwtTokenProvider.resolveRefreshToken(request);
+		String currentIpAddress = Helper.getClientIp(request);
+
+		//FIXME: 리펙토링
+		/*
+		 * 검증목록
+		 * 1. access token claim key, type, subject, expiration
+		 * 2. refresh token expiration, type
+		 *
+		 * refresh token 검증
+		 * access token 에서 subject(user id) 로 refresh token repository 에서 검색
+		 * 현재 ip 와 refresh token repository 의 ip 일치 확인
+		 *
+		 * access token 에 유지되야할 목록 : subject(user id), claim(authorities)
+		 */
+
+		// Refresh Token 검증. 실패시 로그아웃 상태이다.
+		if (!jwtTokenProvider.validateToken(refreshToken)) {
+			return Response.fail("Refresh Token 정보가 유효하지 않습니다.", HttpStatus.NOT_ACCEPTABLE);
+		}
+		if (!jwtTokenProvider.isRefreshToken(refreshToken)) {
+			return Response.fail("Refresh Token 이 아닙니다.", HttpStatus.NOT_ACCEPTABLE);
+		}
+		// Refresh token 정보 가져오기.
+		Optional<RefreshToken> savedRefreshToken = refreshTokenRepository
+			.findById(jwtTokenProvider.getClaims(accessToken).getSubject());
+		if (!savedRefreshToken.isPresent()) {
+			return Response.fail("Refresh Token 정보와 Access Token 정보가 일치하지 않습니다.", HttpStatus.NOT_ACCEPTABLE);
+		}
+		// 최초 로그인한 ip 와 같은지 확인. (처리 방식에 따라 재발급을 하지 않거나 메일 등의 알림을 주는 방법이 있음)
+		if (!savedRefreshToken.get().getIp().equals(currentIpAddress)) {
+			refreshTokenRepository.delete(savedRefreshToken.get());
+			return Response.fail("IP 주소가 다릅니다.", HttpStatus.NOT_ACCEPTABLE);
+		}
+
+		GeneratedJwtToken tokenInfo = userService.reissue(
+			new ReissueCommand(accessToken, refreshToken, currentIpAddress));
+
+		CookieUtil.deleteCookie(request, response, JWT_TYPE_REFRESH);
+		CookieUtil.addCookie(response, JWT_TYPE_REFRESH, tokenInfo.getRefreshToken(), (int) (REFRESH_TOKEN_EXPIRE_TIME / 1000));
+		return Response.success(tokenInfo, "토큰이 갱신되었습니다.", HttpStatus.OK);
 	}
 
 	@PostMapping("/logout")
 	public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
+		CookieUtil.deleteCookie(request, response, JWT_TYPE_REFRESH);
 		return userService.logout(request, response);
 	}
 }

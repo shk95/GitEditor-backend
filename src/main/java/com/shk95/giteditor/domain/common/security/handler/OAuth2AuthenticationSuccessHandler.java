@@ -5,6 +5,7 @@ import com.shk95.giteditor.domain.common.security.jwt.JwtTokenProvider;
 import com.shk95.giteditor.domain.common.security.repository.OAuth2AuthorizationRequestBasedOnCookieRepository;
 import com.shk95.giteditor.domain.model.token.RefreshToken;
 import com.shk95.giteditor.domain.model.token.RefreshTokenRepository;
+import com.shk95.giteditor.domain.model.user.CustomUserDetails;
 import com.shk95.giteditor.utils.CookieUtil;
 import com.shk95.giteditor.utils.Helper;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.shk95.giteditor.config.ConstantFields.Jwt.ExpireTime.REFRESH_TOKEN_EXPIRE_TIME;
+import static com.shk95.giteditor.config.ConstantFields.Jwt.JWT_TYPE_REFRESH;
 import static com.shk95.giteditor.config.ConstantFields.OAuthRepo.*;
 
 @Slf4j
@@ -53,7 +55,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 	}
 
 	protected String determineTargetUrl(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
-		Optional<String> redirectUri = CookieUtil.getCookie(request, REDIRECT_URI_PARAM_COOKIE_NAME)
+		Optional<String> redirectUri = CookieUtil.getCookie(request, OAUTH_REDIRECT_URI_PARAM_COOKIE_NAME)
 			.map(Cookie::getValue);
 
 		if (redirectUri.isPresent() && !this.isAuthorizedRedirectUri(redirectUri.get())) {// oAuth 로그인 페이지에서 인증 성공후 반환된 리다이렉트
@@ -62,20 +64,21 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
 		final String TARGET_URL = redirectUri.orElse(getDefaultTargetUrl());
 
+		CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
 		GeneratedJwtToken tokenInfo = tokenProvider.generateToken(authentication);
 
 		log.info("{}. client ip : {}", getClass(), Helper.getClientIp(request));
 		log.info("{}. request.getRemote() : {}", getClass(), request.getRemoteAddr());
 		// Redis RefreshToken 저장
 		refreshTokenRepository.save(RefreshToken.builder()// TODO: onOAuthSuccess: redis transaction 설정
-			.subject(authentication.getName())
+			.subject(tokenProvider.getClaims(tokenInfo.getAccessToken()).getSubject())
 			.ip(Helper.getClientIp(request))
-			.authorities(authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.joining(",")))
+			.authorities(userDetails.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.joining(",")))
 			.refreshToken(tokenInfo.getRefreshToken())
 			.build());
 
-		CookieUtil.deleteCookie(request, response, REFRESH_TOKEN);
-		CookieUtil.addCookie(response, REFRESH_TOKEN, tokenInfo.getRefreshToken(), (int) (REFRESH_TOKEN_EXPIRE_TIME / 1000));
+		CookieUtil.deleteCookie(request, response, JWT_TYPE_REFRESH);
+		CookieUtil.addCookie(response, JWT_TYPE_REFRESH, tokenInfo.getRefreshToken(), (int) (REFRESH_TOKEN_EXPIRE_TIME / 1000));
 
 		return UriComponentsBuilder.fromUriString(TARGET_URL)
 			.queryParam("token", tokenInfo.getAccessToken())

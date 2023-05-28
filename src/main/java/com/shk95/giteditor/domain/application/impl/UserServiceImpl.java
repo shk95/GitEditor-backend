@@ -2,6 +2,7 @@ package com.shk95.giteditor.domain.application.impl;
 
 import com.shk95.giteditor.domain.application.UserService;
 import com.shk95.giteditor.domain.application.commands.LoginCommand;
+import com.shk95.giteditor.domain.application.commands.ReissueCommand;
 import com.shk95.giteditor.domain.application.commands.SignupOAuthCommand;
 import com.shk95.giteditor.domain.common.constant.ProviderType;
 import com.shk95.giteditor.domain.common.mail.MailManager;
@@ -133,9 +134,10 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public ResponseEntity<?> reissue(HttpServletRequest request, HttpServletResponse response) {
-		final String accessToken = jwtTokenProvider.resolveAccessToken(request); //TODO: reissue: accessToken 검증
-		final String refreshToken = jwtTokenProvider.resolveRefreshToken(request); //TODO: reissue: refreshToken cookie 예외처리
+	public GeneratedJwtToken reissue(ReissueCommand command) {
+		final String accessToken = command.getAccessToken();
+		final String refreshToken = command.getRefreshToken();
+		final String currentIpAddress = command.getIp();
 		Assert.notNull(accessToken, "access token may not be null");
 		Assert.notNull(refreshToken, "refresh token may not be null");
 
@@ -143,53 +145,20 @@ public class UserServiceImpl implements UserService {
 		final String subject = claims.getSubject();
 		Assert.notNull(subject, "Claim`s subject may not be null");
 
-		final String currentIpAddress = Helper.getClientIp(request);
-		/*
-		 * 검증목록
-		 * 1. access token claim key, type, subject, expiration
-		 * 2. refresh token expiration, type
-		 *
-		 * refresh token 검증
-		 * access token 에서 subject(user id) 로 refresh token repository 에서 검색
-		 * 현재 ip 와 refresh token repository 의 ip 일치 확인
-		 *
-		 * access token 에 유지되야할 목록 : subject(user id), claim(authorities)
-		 */
-
-		// TODO : refresh token 예외에따른 response 리턴 방식 변경
-		// Refresh Token 검증. 실패시 로그아웃 상태이다.
-		if (!jwtTokenProvider.validateToken(refreshToken)) {
-			return Response.fail("Refresh Token 정보가 유효하지 않습니다.", HttpStatus.NOT_ACCEPTABLE);
-		}
-		if (!jwtTokenProvider.isRefreshToken(refreshToken)) {
-			return Response.fail("Refresh Token 이 아닙니다.", HttpStatus.NOT_ACCEPTABLE);
-		}
-
-		// Refresh token 정보 가져오기.
-		Optional<RefreshToken> savedRefreshToken = refreshTokenRepository.findById(subject);
-		if (!savedRefreshToken.isPresent()) {
-			return Response.fail("Refresh Token 정보와 Access Token 정보가 일치하지 않습니다.", HttpStatus.NOT_ACCEPTABLE);
-		}
-		// 최초 로그인한 ip 와 같은지 확인. (처리 방식에 따라 재발급을 하지 않거나 메일 등의 알림을 주는 방법이 있음)
-		if (!savedRefreshToken.get().getIp().equals(currentIpAddress)) {
-			refreshTokenRepository.delete(savedRefreshToken.get());
-			return Response.fail("IP 주소가 다릅니다.", HttpStatus.NOT_ACCEPTABLE);
-		}
-
 		Collection<? extends GrantedAuthority> authorities = Arrays.stream(claims.get(AUTHORITIES_KEY).toString().split(","))
 			.map(SimpleGrantedAuthority::new).collect(Collectors.toList());
 		GeneratedJwtToken renewedTokenInfo = jwtTokenProvider
-			.generateToken(ProviderType.valueOf(subject.split(",")[0]), subject.split(",")[1], authorities);// TODO: reissue: 토큰 재 생성방식
+			.generateToken(ProviderType.valueOf(subject.split(",")[0]), subject.split(",")[1], authorities);
 
 		// Redis RefreshToken update
 		refreshTokenRepository.save(RefreshToken.builder()
 			.subject(subject)
 			.ip(currentIpAddress)
-			.authorities(savedRefreshToken.get().getAuthorities())
+			.authorities(claims.get(AUTHORITIES_KEY).toString())
 			.refreshToken(renewedTokenInfo.getRefreshToken())
 			.build());
 
-		return Response.success(renewedTokenInfo, "Token has been updated.", HttpStatus.OK);
+		return renewedTokenInfo;
 	}
 
 	@Override
