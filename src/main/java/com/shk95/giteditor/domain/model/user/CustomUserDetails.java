@@ -53,7 +53,7 @@ public class CustomUserDetails implements UserDetails, OAuth2User, OidcUser {
 			.defaultUsername(user.getUsername())
 			.defaultEmail(user.getDefaultEmail())
 			.defaultImgUrl(user.getProfileImageUrl());
-		if (user.getProviders() != null) {
+		if (!user.getProviders().isEmpty()) {
 			userDetailsBuilder
 				.providerEmail(user.getProviders().get(0).getProviderEmail())
 				.providerUsername(user.getProviders().get(0).getProviderUserName())
@@ -89,6 +89,10 @@ public class CustomUserDetails implements UserDetails, OAuth2User, OidcUser {
 			.providerLoginId(providerInfo.getProviderLoginId())
 			.providerEmail(providerInfo.getProviderEmail())
 			.attributes(attributes);
+	}
+
+	public UserId getUserEntityId() {
+		return new UserId(this.providerType, this.userId);
 	}
 
 	@Override

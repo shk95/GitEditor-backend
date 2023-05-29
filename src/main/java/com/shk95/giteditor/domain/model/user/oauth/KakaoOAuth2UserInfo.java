@@ -1,4 +1,4 @@
-package com.shk95.giteditor.domain.model.oauth;
+package com.shk95.giteditor.domain.model.user.oauth;
 
 
 import com.shk95.giteditor.domain.common.constant.ProviderType;
@@ -6,7 +6,8 @@ import com.shk95.giteditor.domain.common.model.AbstractOAuth2UserInfo;
 
 import java.util.Map;
 
-@Deprecated
+import static com.shk95.giteditor.config.ConstantFields.OAuthService.PROVIDER_ACCESS_TOKEN;
+
 public class KakaoOAuth2UserInfo extends AbstractOAuth2UserInfo {
 
 	public KakaoOAuth2UserInfo(Map<String, Object> attributes, Map<String, String> additionalAttributes, ProviderType providerType) {
@@ -20,7 +21,7 @@ public class KakaoOAuth2UserInfo extends AbstractOAuth2UserInfo {
 
 	@Override
 	public String getLoginId() {
-		return null;
+		return super.getAttributes().get("id").toString();
 	}
 
 	@Override
@@ -52,6 +53,6 @@ public class KakaoOAuth2UserInfo extends AbstractOAuth2UserInfo {
 
 	@Override
 	public String getAccessToken() {
-		return null;
+		return super.getAdditionalAttributes().get(PROVIDER_ACCESS_TOKEN);
 	}
 }

@@ -1,4 +1,4 @@
-package com.shk95.giteditor.domain.model.oauth;
+package com.shk95.giteditor.domain.model.user.oauth;
 
 
 import com.shk95.giteditor.domain.common.constant.ProviderType;
@@ -21,7 +21,7 @@ public class GoogleOAuth2UserInfo extends AbstractOAuth2UserInfo {
 
 	@Override
 	public String getLoginId() {
-		return null;
+		return (String) super.getAttributes().get("sub");
 	}
 
 	@Override

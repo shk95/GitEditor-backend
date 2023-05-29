@@ -46,6 +46,9 @@ public class User extends AbstractBaseTimeEntity {
 	@Column(name = "user_enabled")
 	private boolean isUserEnabled;//TODO: user 활성화 여부 체크 기능
 
+	@Column(name = "user_email_verification", unique = true, length = 100)
+	private String emailVerificationCode;
+
 	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL,
 		orphanRemoval = true, fetch = FetchType.LAZY)
 	private List<Provider> providers = new ArrayList<>();
@@ -54,12 +57,23 @@ public class User extends AbstractBaseTimeEntity {
 		this.username = username;
 	}
 
-	public void updateProfileImageUrl(String profileImageUrl) {
-		this.profileImageUrl = profileImageUrl;
+	public User updatePassword(String newPassword) {
+		this.password = newPassword;
+		return this;
 	}
 
-	public void findProvider(List<Provider> foundProvider) {
-		this.providers = foundProvider;
+	public void deleteEmailVerificationCode() {
+		this.emailVerificationCode = null;
+	}
+
+	public void updateUserStateEnable() {
+		this.isUserEmailVerified = true;
+		this.isUserEnabled = true;
+	}
+
+	public User updateProfileImageUrl(String profileImageUrl) {
+		this.profileImageUrl = profileImageUrl;
+		return this;
 	}
 
 	@Override

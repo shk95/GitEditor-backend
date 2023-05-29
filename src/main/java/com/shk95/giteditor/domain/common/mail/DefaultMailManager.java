@@ -1,9 +1,9 @@
 package com.shk95.giteditor.domain.common.mail;
 
+import com.shk95.giteditor.config.ApplicationProperties;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.ui.freemarker.FreeMarkerTemplateUtils;
 import org.springframework.util.Assert;
@@ -11,18 +11,18 @@ import org.springframework.util.Assert;
 import java.util.HashMap;
 import java.util.Map;
 
-@Component
 @Slf4j
+@Component
 public class DefaultMailManager implements MailManager {
 
-	private String mailFrom;
-	private Mailer mailer;
-	private Configuration configuration;
+	private final String mailFrom;
+	private final Mailer mailer;
+	private final Configuration configuration;
 
-	public DefaultMailManager(@Value("${app.mail-from}") String mailFrom,
+	public DefaultMailManager(ApplicationProperties properties,
 							  Mailer mailer,
 							  Configuration configuration) {
-		this.mailFrom = mailFrom;
+		this.mailFrom = properties.getMailFrom();
 		this.mailer = mailer;
 		this.configuration = configuration;
 	}
@@ -53,5 +53,4 @@ public class DefaultMailManager implements MailManager {
 			return null;
 		}
 	}
-
 }
