@@ -1,4 +1,4 @@
-package com.shk95.giteditor.domain.model.oauth;
+package com.shk95.giteditor.domain.model.user.oauth;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

@@ -1,4 +1,4 @@
-package com.shk95.giteditor.domain.model.oauth;
+package com.shk95.giteditor.domain.model.user.oauth;
 
 import com.shk95.giteditor.domain.common.constant.ProviderType;
 import com.shk95.giteditor.domain.common.model.AbstractOAuth2UserInfo;

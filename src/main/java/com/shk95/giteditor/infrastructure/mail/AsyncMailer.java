@@ -12,10 +12,11 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
-@Component
 @Slf4j
 @RequiredArgsConstructor
+@Component
 public class AsyncMailer implements Mailer {
+
 	private final JavaMailSender mailSender;
 
 	@Async
@@ -37,6 +38,7 @@ public class AsyncMailer implements Mailer {
 				mailMessage.setTo(message.getTo());
 			}
 			mailSender.send(mailMessage);
+			log.info("AsyncMailer -> mail sent");
 		} catch (MailException e) {
 			log.error("Failed to send mail message", e);
 		}

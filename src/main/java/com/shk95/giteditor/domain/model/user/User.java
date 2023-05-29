@@ -1,9 +1,8 @@
 package com.shk95.giteditor.domain.model.user;
 
 import com.shk95.giteditor.domain.common.model.AbstractBaseTimeEntity;
-import com.shk95.giteditor.domain.common.constant.ProviderType;
-import com.shk95.giteditor.domain.model.provider.Provider;
 import com.shk95.giteditor.domain.common.security.Role;
+import com.shk95.giteditor.domain.model.provider.Provider;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -22,20 +21,11 @@ import java.util.Objects;
 @Entity
 public class User extends AbstractBaseTimeEntity {
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "user_seq")
-	private Long userSeq;
+	@EmbeddedId
+	private UserId userId;
 
 	@Column(name = "user_email", unique = true, length = 100)
 	private String defaultEmail;// oAuth user 는 null 가능
-
-	@Column(name = "user_id", nullable = false, length = 50)
-	private String userId;// id 는 중복이 생길 가능성 있음. provider 끼리는 중복안됨.
-
-	@Enumerated(EnumType.STRING)
-	@Column(name = "user_prv_typ", nullable = false, length = 20)
-	private ProviderType providerType;
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "user_role", nullable = false, length = 20)
@@ -56,48 +46,71 @@ public class User extends AbstractBaseTimeEntity {
 	@Column(name = "user_enabled")
 	private boolean isUserEnabled;//TODO: user 활성화 여부 체크 기능
 
+	@Column(name = "user_email_verification", unique = true, length = 100)
+	private String emailVerificationCode;
+
 	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL,
 		orphanRemoval = true, fetch = FetchType.LAZY)
 	private List<Provider> providers = new ArrayList<>();
-
-	public static UserBuilder createUserBuilder(CustomUserDetails userDetails) {
-		return User.builder()
-			.userId(userDetails.getDefaultUsername())
-			.password(userDetails.getPassword())
-			.defaultEmail(userDetails.getDefaultEmail())
-			.username(userDetails.getDefaultUsername());
-	}
 
 	public void updateUserName(String username) {
 		this.username = username;
 	}
 
-	public void updateProfileImageUrl(String profileImageUrl) {
-		this.profileImageUrl = profileImageUrl;
+	public User updatePassword(String newPassword) {
+		this.password = newPassword;
+		return this;
 	}
 
-	//TODO: equals hashcode, toString 오버라이딩 수정
+	public void deleteEmailVerificationCode() {
+		this.emailVerificationCode = null;
+	}
+
+	public void updateUserStateEnable() {
+		this.isUserEmailVerified = true;
+		this.isUserEnabled = true;
+	}
+
+	public User updateProfileImageUrl(String profileImageUrl) {
+		this.profileImageUrl = profileImageUrl;
+		return this;
+	}
+
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) return true;
-		if (!(o instanceof User)) return false;
+		if (o == null || getClass() != o.getClass()) return false;
 		User user = (User) o;
-		return Objects.equals(userId, user.userId) &&
-			Objects.equals(defaultEmail, user.defaultEmail);
+		return isUserEmailVerified == user.isUserEmailVerified
+			&& isUserEnabled == user.isUserEnabled
+			&& Objects.equals(userId, user.userId)
+			&& Objects.equals(defaultEmail, user.defaultEmail)
+			&& role == user.role
+			&& Objects.equals(password, user.password)
+			&& Objects.equals(username, user.username)
+			&& Objects.equals(profileImageUrl, user.profileImageUrl)
+			&& Objects.equals(providers, user.providers);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(userId, defaultEmail);
+		return Objects.hash(userId, defaultEmail, role
+			, password, username, profileImageUrl
+			, isUserEmailVerified, isUserEnabled, providers);
 	}
 
 	@Override
 	public String toString() {
 		return "User{" +
-			"id=" + userSeq +
-			", username=`" + userId + "`" +
-			", default email=`" + defaultEmail + "`" +
-			", password=<Protected> " +
-			"}";
+			"userId=" + userId.get() +
+			", defaultEmail='" + defaultEmail + '\'' +
+			", role=" + role +
+			", password='" + password + '\'' +
+			", username='" + username + '\'' +
+			", profileImageUrl='" + profileImageUrl + '\'' +
+			", isUserEmailVerified=" + isUserEmailVerified +
+			", isUserEnabled=" + isUserEnabled +
+			", providers=" + providers +
+			'}';
 	}
 }

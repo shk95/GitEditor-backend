@@ -1,16 +1,20 @@
 package com.shk95.giteditor.domain.model.user;
 
-import com.shk95.giteditor.domain.common.constant.ProviderType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 
-public interface UserRepository extends JpaRepository<User, Long> {
-	Optional<User> findByUserIdAndProviderType(String userId, ProviderType providerType);
+public interface UserRepository extends JpaRepository<User, UserId> {
 
 	Optional<User> findByDefaultEmail(String email);
 
-	Boolean existsByUserIdAndProviderType(String userId, ProviderType providerType);
+	Optional<User> findByEmailVerificationCode(String code);
 
-	Boolean existsByDefaultEmail(String email);
+	boolean existsByDefaultEmail(String email);
+
+	@Query("SELECT u FROM User u JOIN FETCH u.providers p" +
+		" WHERE u.userId = :userId AND p.providerId.providerType = u.userId.providerType")
+	Optional<User> findByUserIdWithProvider(@Param("userId") UserId userId);
 }

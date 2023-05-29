@@ -1,6 +1,7 @@
 package com.shk95.giteditor.web.validator;
 
 import com.shk95.giteditor.domain.common.constant.ProviderType;
+import com.shk95.giteditor.domain.model.user.UserId;
 import com.shk95.giteditor.domain.model.user.UserRepository;
 import com.shk95.giteditor.web.apis.request.AuthRequest;
 import lombok.RequiredArgsConstructor;
@@ -11,7 +12,7 @@ import org.springframework.validation.Validator;
 @RequiredArgsConstructor
 @Component
 public class UserIdValidator implements Validator {
-	private final UserRepository repository;
+	private final UserRepository userRepository;
 	private ProviderType providerType = null;
 
 	public void setProviderType(ProviderType providerType) {
@@ -32,7 +33,7 @@ public class UserIdValidator implements Validator {
 		} else if (target instanceof AuthRequest.Signup.OAuth) {
 			userId = ((AuthRequest.Signup.OAuth) target).getUserId();
 		}
-		if (repository.existsByUserIdAndProviderType(userId, this.providerType)) {
+		if (userRepository.existsById(new UserId(this.providerType, userId))) {
 			errors.rejectValue("userId", "Duplicate.userId");
 		}
 	}

@@ -11,6 +11,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Date;
+import java.util.Objects;
 import java.util.UUID;
 
 @Slf4j
@@ -37,7 +38,7 @@ public abstract class AbstractBaseFileStorage implements FileStorage {
 	}
 
 	protected String generateFileName(MultipartFile multipartFile) {
-		String fileName = StringUtils.cleanPath(multipartFile.getOriginalFilename());
+		String fileName = StringUtils.cleanPath(Objects.requireNonNull(multipartFile.getOriginalFilename()));
 		if (fileName.contains("..")) {
 			throw new FileStorageException("Invalid file name `" + fileName + "`");
 		}
