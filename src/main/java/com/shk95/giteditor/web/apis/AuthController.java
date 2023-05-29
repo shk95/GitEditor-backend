@@ -2,9 +2,11 @@ package com.shk95.giteditor.web.apis;
 
 import com.shk95.giteditor.domain.application.UserService;
 import com.shk95.giteditor.domain.application.commands.LoginCommand;
+import com.shk95.giteditor.domain.application.commands.LogoutCommand;
 import com.shk95.giteditor.domain.application.commands.ReissueCommand;
 import com.shk95.giteditor.domain.application.commands.SignupOAuthCommand;
 import com.shk95.giteditor.domain.common.constant.ProviderType;
+import com.shk95.giteditor.domain.common.security.CurrentUser;
 import com.shk95.giteditor.domain.common.security.jwt.GeneratedJwtToken;
 import com.shk95.giteditor.domain.common.security.jwt.JwtTokenProvider;
 import com.shk95.giteditor.domain.model.provider.Provider;
@@ -12,6 +14,7 @@ import com.shk95.giteditor.domain.model.provider.ProviderLoginInfo;
 import com.shk95.giteditor.domain.model.provider.ProviderLoginInfoRepository;
 import com.shk95.giteditor.domain.model.token.RefreshToken;
 import com.shk95.giteditor.domain.model.token.RefreshTokenRepository;
+import com.shk95.giteditor.domain.model.user.CustomUserDetails;
 import com.shk95.giteditor.utils.CookieUtil;
 import com.shk95.giteditor.utils.Helper;
 import com.shk95.giteditor.utils.Resolver;
@@ -153,8 +156,16 @@ public class AuthController {
 	}
 
 	@PostMapping("/logout")
-	public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
+	public ResponseEntity<?> logout(@CurrentUser CustomUserDetails userDetails,
+									HttpServletRequest request, HttpServletResponse response) {
+		String accessToken = jwtTokenProvider.resolveAccessToken(request);
+		String refreshToken = jwtTokenProvider.resolveRefreshToken(request);
+		String currentIpAddress = Helper.getClientIp(request);
+
+		userService.logout(LogoutCommand.builder()
+			.accessToken(accessToken).refreshToken(refreshToken).ip(currentIpAddress).build());
 		CookieUtil.deleteCookie(request, response, JWT_TYPE_REFRESH);
-		return userService.logout(request, response);
+		log.info("User Logout. name: [{}]", userDetails.getUsername());
+		return Response.success("로그아웃되었습니다.");
 	}
 }

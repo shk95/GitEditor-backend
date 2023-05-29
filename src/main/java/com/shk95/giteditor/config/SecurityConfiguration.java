@@ -1,13 +1,12 @@
 package com.shk95.giteditor.config;
 
-import com.shk95.giteditor.web.apis.authenticate.AuthEntryPointImpl;
 import com.shk95.giteditor.domain.common.security.filter.JwtAuthenticationFilter;
-import com.shk95.giteditor.domain.common.security.handler.LogoutSuccessHandlerImpl;
 import com.shk95.giteditor.domain.common.security.handler.OAuth2AuthenticationFailureHandler;
 import com.shk95.giteditor.domain.common.security.handler.OAuth2AuthenticationSuccessHandler;
 import com.shk95.giteditor.domain.common.security.handler.TokenAccessDeniedHandler;
 import com.shk95.giteditor.domain.common.security.repository.OAuth2AuthorizationRequestBasedOnCookieRepository;
 import com.shk95.giteditor.domain.common.security.service.CustomOAuth2UserService;
+import com.shk95.giteditor.web.apis.authenticate.AuthEntryPointImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
@@ -30,7 +29,6 @@ public class SecurityConfiguration {
 
 	private final ApplicationProperties properties;
 	private final AuthEntryPointImpl authEntryPoint;
-	private final LogoutSuccessHandlerImpl logoutSuccessHandler;
 	private final JwtAuthenticationFilter jwtAuthenticationFilter;
 	private final CustomOAuth2UserService customOAuth2UserService;
 	private final TokenAccessDeniedHandler tokenAccessDeniedHandler;
@@ -49,8 +47,6 @@ public class SecurityConfiguration {
 			.and()
 			.exceptionHandling().authenticationEntryPoint(authEntryPoint)// 로그인 인증 실패시 진입점
 			.accessDeniedHandler(tokenAccessDeniedHandler)// 사용자 token 인증 실패
-			.and()
-			.logout().logoutUrl("/auth/logout").logoutSuccessHandler(logoutSuccessHandler)
 			.and()
 			.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
 			.authorizeRequests()
