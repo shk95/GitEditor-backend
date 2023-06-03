@@ -1,8 +1,9 @@
 package com.shk95.giteditor.web.apis;
 
+import com.shk95.giteditor.domain.application.commands.ChangeEmailCommand;
 import com.shk95.giteditor.domain.application.commands.UpdatePasswordCommand;
 import com.shk95.giteditor.domain.common.security.CurrentUser;
-import com.shk95.giteditor.domain.common.security.UserAuthorize;
+import com.shk95.giteditor.domain.common.security.UserOrTempAuthorize;
 import com.shk95.giteditor.domain.model.user.CustomUserDetails;
 import com.shk95.giteditor.domain.model.user.UserManagement;
 import com.shk95.giteditor.utils.ImageUtils;
@@ -25,14 +26,14 @@ public class UserController {
 
 	private final UserManagement userManagement;
 
-	@UserAuthorize
+	@UserOrTempAuthorize
 	@Transactional(readOnly = true)
 	@GetMapping("/me")
-	public ResponseEntity<?> getUser(@CurrentUser CustomUserDetails userDetails) {
+	public ResponseEntity<?> me(@CurrentUser CustomUserDetails userDetails) {
 		return Response.success(new UserResponse.Me(userDetails), "회원정보를 성공적으로 가져왔습니다.", HttpStatus.OK);
 	}
 
-	@UserAuthorize
+	@UserOrTempAuthorize
 	@PostMapping("/profile/img")
 	public ResponseEntity<?> updateProfileImg(@CurrentUser CustomUserDetails userDetails,
 											  @RequestPart("file") MultipartFile multipartFile) {
@@ -45,7 +46,7 @@ public class UserController {
 			: Response.fail("업로드에 실패하였습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 
-	@UserAuthorize
+	@UserOrTempAuthorize
 	@PutMapping("/password")
 	public ResponseEntity<?> updatePassword(@CurrentUser CustomUserDetails userDetails,
 											@RequestBody UserRequest.Management management) {
@@ -61,10 +62,21 @@ public class UserController {
 			: Response.fail("비밀번호 초기화에 실패하였습니다. 잘못된 회원정보입니다.", HttpStatus.NOT_ACCEPTABLE);
 	}
 
-	@PostMapping("/email")
-	public ResponseEntity<?> verifyEmail(@RequestParam String code) {// 이메일로 발송된 활성화 주소 검증. 최초 회원가입시 jwt 토큰 코드로 발송.
+	@GetMapping("/email")
+	public ResponseEntity<?> verifyEmail(@RequestParam String code) {// 이메일로 발송된 활성화 주소 검증.
 		return userManagement.verifyEmail(code)
-			? Response.success()
+			? Response.success("이메일이 변경되었습니다.")
 			: Response.fail("이메일이 만료되었습니다.", HttpStatus.BAD_REQUEST);
+	}
+
+	@UserOrTempAuthorize
+	@PutMapping("/email")
+	public ResponseEntity<?> changeDefaultEmail(@CurrentUser CustomUserDetails userDetails,
+												@RequestBody UserRequest.Management userInfo) {
+		return userManagement.changeEmail(ChangeEmailCommand.builder()
+			.userId(userDetails.getUserEntityId())
+			.email(userInfo.getDefaultEmail()).build())
+			? Response.success("이메일이 변경되었습니다")
+			: Response.fail("이메일 변경에 실패하였습니다.", HttpStatus.BAD_REQUEST);
 	}
 }

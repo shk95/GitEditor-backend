@@ -1,13 +1,10 @@
 package com.shk95.giteditor.domain.application.impl;
 
+import com.shk95.giteditor.config.ApplicationProperties;
 import com.shk95.giteditor.domain.application.UserService;
-import com.shk95.giteditor.domain.application.commands.LoginCommand;
-import com.shk95.giteditor.domain.application.commands.LogoutCommand;
-import com.shk95.giteditor.domain.application.commands.ReissueCommand;
-import com.shk95.giteditor.domain.application.commands.SignupOAuthCommand;
+import com.shk95.giteditor.domain.application.commands.*;
 import com.shk95.giteditor.domain.common.constant.ProviderType;
 import com.shk95.giteditor.domain.common.exception.TokenValidFailedException;
-import com.shk95.giteditor.domain.common.file.FileStorageResolver;
 import com.shk95.giteditor.domain.common.mail.MailManager;
 import com.shk95.giteditor.domain.common.mail.MessageVariable;
 import com.shk95.giteditor.domain.common.security.Role;
@@ -21,13 +18,9 @@ import com.shk95.giteditor.domain.model.token.BlacklistTokenRepository;
 import com.shk95.giteditor.domain.model.token.RefreshToken;
 import com.shk95.giteditor.domain.model.token.RefreshTokenRepository;
 import com.shk95.giteditor.domain.model.user.*;
-import com.shk95.giteditor.utils.Response;
-import com.shk95.giteditor.web.apis.request.AuthRequest;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
@@ -39,7 +32,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collection;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static com.shk95.giteditor.config.ConstantFields.Jwt.AUTHORITIES_KEY;
@@ -58,26 +53,29 @@ public class UserServiceImpl implements UserService {
 	private final RefreshTokenRepository refreshTokenRepository;
 	private final BlacklistTokenRepository blacklistTokenRepository;
 	private final MailManager mailManager;
-	private final FileStorageResolver fileStorageResolver;
+	private final ApplicationProperties properties;
 
 	@Override
 	@Transactional
-	public ResponseEntity<?> signupDefault(AuthRequest.Signup.Default signUp) {
+	public SignupResult signupDefault(SignupCommand.Default signUp) {
 		if (userRepository.existsByDefaultEmail(signUp.getDefaultEmail())) {
-			return Response.fail("이미 회원가입된 이메일 입니다.", HttpStatus.BAD_REQUEST);
+			return SignupResult.fail().message("이미 회원가입된 이메일 입니다.").build();
 		}
 		if (userRepository.existsById(new UserId(ProviderType.LOCAL, signUp.getUserId()))) {
-			return Response.fail("이미 회원가입된 아이디 입니다.", HttpStatus.BAD_REQUEST);
+			return SignupResult.fail().message("이미 회원가입된 아이디 입니다.").build();
 		}
-		userRepository.save(User.builder()
+		String emailCode = this.sendVerificationEmail(signUp.getDefaultEmail());
+		User user = userRepository.save(User.builder()
 			.userId(new UserId(ProviderType.LOCAL, signUp.getUserId()))
 			.password(passwordEncoder.encode(signUp.getPassword()))
 			.defaultEmail(signUp.getDefaultEmail())
-			.role(Role.USER)
+			.role(Role.TEMP)
 			.username(signUp.getUsername())
+			.isUserEmailVerified(false)
+			.isUserEnabled(true)
+			.emailVerificationCode(emailCode)
 			.build());
-//		sendWelcomeMessage(user);
-		return Response.success("회원가입에 성공했습니다.");
+		return SignupResult.success().message("회원가입에 성공했습니다.").build();
 	}
 
 	@Override
@@ -107,7 +105,7 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public GeneratedJwtToken loginDefault(LoginCommand login) {
 		// 로그인 인증정보 가져옴.
-		CustomUserDetails userDetails = (CustomUserDetails) grantedUserInfo.loadUserByUsername(login.getUserId());//TODO: 예외처리
+		CustomUserDetails userDetails = (CustomUserDetails) grantedUserInfo.loadUserByUsername(login.getUserId());
 		// 인증용 토큰 생성
 		UsernamePasswordAuthenticationToken authenticationToken
 			= new UsernamePasswordAuthenticationToken(
@@ -180,12 +178,16 @@ public class UserServiceImpl implements UserService {
 		}
 	}
 
-	private void sendWelcomeMessage(User user) {
+	private String sendVerificationEmail(String email) {
+		String code = Base64.getUrlEncoder().encodeToString(UUID.randomUUID().toString().getBytes());
+		String home = properties.getFrontPageUrl();
 		mailManager.send(
-			user.getDefaultEmail(),
+			email,
 			"Welcome to GitEditor",
 			"welcome.ftl",
-			MessageVariable.from("user", user)
+			MessageVariable.from("code", home + "/redirect?type=emailVerification&code=" + code),
+			MessageVariable.from("message", "회원가입을 축하합니다. 아래의 링크를 클릭해서 계정을 활성화해 주세요.")
 		);
+		return code;
 	}
 }

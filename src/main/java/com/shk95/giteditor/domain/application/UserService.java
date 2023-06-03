@@ -1,16 +1,12 @@
 package com.shk95.giteditor.domain.application;
 
-import com.shk95.giteditor.domain.application.commands.LoginCommand;
-import com.shk95.giteditor.domain.application.commands.LogoutCommand;
-import com.shk95.giteditor.domain.application.commands.ReissueCommand;
-import com.shk95.giteditor.domain.application.commands.SignupOAuthCommand;
+import com.shk95.giteditor.domain.application.commands.*;
 import com.shk95.giteditor.domain.common.security.jwt.GeneratedJwtToken;
 import com.shk95.giteditor.domain.model.provider.Provider;
-import com.shk95.giteditor.web.apis.request.AuthRequest;
-import org.springframework.http.ResponseEntity;
+import com.shk95.giteditor.domain.model.user.SignupResult;
 
 public interface UserService {
-	ResponseEntity<?> signupDefault(AuthRequest.Signup.Default signUp);
+	SignupResult signupDefault(SignupCommand.Default command);
 
 	Provider saveOAuthUser(SignupOAuthCommand command);
 

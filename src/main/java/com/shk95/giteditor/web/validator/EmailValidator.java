@@ -1,7 +1,7 @@
 package com.shk95.giteditor.web.validator;
 
+import com.shk95.giteditor.domain.application.commands.SignupCommand;
 import com.shk95.giteditor.domain.model.user.UserRepository;
-import com.shk95.giteditor.web.apis.request.AuthRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
@@ -14,12 +14,12 @@ public class EmailValidator implements Validator {
 
 	@Override
 	public boolean supports(Class<?> clazz) {
-		return clazz.equals(AuthRequest.Signup.Default.class);
+		return clazz.equals(SignupCommand.Default.class);
 	}
 
 	@Override
 	public void validate(Object target, Errors errors) {
-		String email = ((AuthRequest.Signup.Default) target).getDefaultEmail();
+		String email = ((SignupCommand.Default) target).getDefaultEmail();
 		if (repository.existsByDefaultEmail(email)) {
 			errors.rejectValue("defaultEmail", "Duplicate.email");
 		}
