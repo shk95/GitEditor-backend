@@ -20,6 +20,8 @@ public final class ApplicationProperties {
 	private String tokenSecretKey;
 	@NotEmpty
 	private String mailFrom;
+	@NotEmpty
+	private String frontPageUrl;
 
 	private FileStorage fileStorage;
 	private Cors cors;

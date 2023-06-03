@@ -1,6 +1,10 @@
+<!DOCTYPE html>
+<html lang="en">
+<body>
 <h1>Welcome!</h1>
 <p>Here is your registration information:</p>
 <ul>
-  <li>Username: ${user.username}</li>
-  <li>Email Address: ${user.emailAddress}</li>
+	<li>Link : <a href="${code}"></a></li>
 </ul>
+</body>
+</html>

@@ -51,7 +51,7 @@ public class SecurityConfiguration {
 			.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
 			.authorizeRequests()
 			.requestMatchers(CorsUtils::isPreFlightRequest).permitAll()
-			.antMatchers("/auth/*", "/login/**", "/auth/*/oauth").permitAll()
+			.antMatchers("/auth/*", "/login/**", "/auth/*/oauth", "/user/email").permitAll()
 			.antMatchers("/api/**").hasRole("USER")
 			.antMatchers("/admin/**").hasRole("ADMIN")
 			.anyRequest().authenticated()
@@ -85,18 +85,4 @@ public class SecurityConfiguration {
 		source.registerCorsConfiguration(properties.getCors().getAddMapping(), configuration);
 		return source;
 	}
-
-	/*@Bean
-	public InMemoryUserDetailsManager userDetailsService() {
-
-		UserDetails user1 = User.withUsername("user1")
-			.password(passwordEncoder().encode("user1Pass"))
-			.roles("USER")
-			.build();
-		UserDetails admin = User.withUsername("admin")
-			.password(passwordEncoder().encode("adminPass"))
-			.roles("ADMIN")
-			.build();
-		return new InMemoryUserDetailsManager(user1, admin);
-	}*/
 }

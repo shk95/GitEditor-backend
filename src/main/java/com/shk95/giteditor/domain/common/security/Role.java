@@ -9,6 +9,7 @@ import java.util.Arrays;
 @RequiredArgsConstructor
 public enum Role {
 	GUEST("ROLE_GUEST", "Guest User"),
+	TEMP("ROLE_TEMP", "Temporary Granted User"),
 	USER("ROLE_USER", "Granted User"),
 	ADMIN("ROLE_ADMIN", "Admin User");
 

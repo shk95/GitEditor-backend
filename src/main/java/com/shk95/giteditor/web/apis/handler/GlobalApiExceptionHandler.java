@@ -41,6 +41,7 @@ public class GlobalApiExceptionHandler extends ResponseEntityExceptionHandler {
 	@ExceptionHandler({IllegalArgumentException.class})
 	protected ResponseEntity<?> handle(IllegalArgumentException ex) {
 		log.warn("Illegal Argument Exception : {}", ex.getMessage());
+		ex.printStackTrace();
 		return Response.fail(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 }

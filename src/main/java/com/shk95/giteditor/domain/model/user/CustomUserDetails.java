@@ -37,6 +37,9 @@ public class CustomUserDetails implements UserDetails, OAuth2User, OidcUser {
 	private String providerImgUrl;
 	private Map<String, Object> attributes;
 
+	private boolean isUserEmailVerified;
+	private boolean isUserEnabled;
+
 	/**
 	 * 일반가입 사용자
 	 *
@@ -52,7 +55,8 @@ public class CustomUserDetails implements UserDetails, OAuth2User, OidcUser {
 			.providerType(user.getUserId().getProviderType())
 			.defaultUsername(user.getUsername())
 			.defaultEmail(user.getDefaultEmail())
-			.defaultImgUrl(user.getProfileImageUrl());
+			.defaultImgUrl(user.getProfileImageUrl())
+			.isUserEnabled(user.isUserEnabled());
 		if (!user.getProviders().isEmpty()) {
 			userDetailsBuilder
 				.providerEmail(user.getProviders().get(0).getProviderEmail())
@@ -137,7 +141,7 @@ public class CustomUserDetails implements UserDetails, OAuth2User, OidcUser {
 
 	@Override
 	public boolean isEnabled() {
-		return true;
+		return this.isUserEnabled;
 	}
 
 	@Override
