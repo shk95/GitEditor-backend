@@ -84,7 +84,7 @@ app:
     s3-region: <Your S3 Region>
 
   image:
-    command-search-path: /opt/homebrew/bin/
+    command-search-path: /opt/homebrew/bin/ # nullable
 
   cdn:
     url: <S3 root URL>
