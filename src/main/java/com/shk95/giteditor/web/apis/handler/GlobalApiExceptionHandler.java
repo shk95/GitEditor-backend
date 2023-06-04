@@ -12,6 +12,7 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -22,6 +23,14 @@ public class GlobalApiExceptionHandler extends ResponseEntityExceptionHandler {
 	protected ResponseEntity<?> handle(RuntimeException ex, HttpServletResponse httpServletResponse) {
 
 		log.error("Unhandled Runtime exception occurred. cause : [" + ex.getCause() + "]" + "\nError message : [" + ex.getMessage() + "]");
+		ex.printStackTrace();
+		return Response.fail(ex.getMessage(), "Sorry, there was an error on the server side.", HttpStatus.INTERNAL_SERVER_ERROR);
+	}
+
+	@ExceptionHandler({IOException.class})
+	protected ResponseEntity<?> handle(IOException ex, HttpServletResponse httpServletResponse) {
+
+		log.error("IOException occurred. cause : [" + ex.getCause() + "]" + "\nError message : [" + ex.getMessage() + "]");
 		ex.printStackTrace();
 		return Response.fail(ex.getMessage(), "Sorry, there was an error on the server side.", HttpStatus.INTERNAL_SERVER_ERROR);
 	}

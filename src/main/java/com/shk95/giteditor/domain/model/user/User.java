@@ -43,14 +43,17 @@ public class User extends AbstractBaseTimeEntity {
 	@Column(name = "user_email_verified")
 	private boolean isUserEmailVerified;//TODO: email 유효성 가입시 체크 기능
 
+	@Column(name = "user_enabled")
+	private boolean isUserEnabled;//TODO: user 활성화 여부 체크 기능
+
 	@Column(name = "user_email_verification", unique = true, length = 100)
 	private String emailVerificationCode;
 
 	@Column(name = "user_email_new", length = 50)
 	private String emailToBeChanged;
 
-	@Column(name = "user_enabled")
-	private boolean isUserEnabled;//TODO: user 활성화 여부 체크 기능
+	@Column(name = "user_github_enabled")
+	private boolean isGithubEnabled;
 
 	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL,
 		orphanRemoval = true, fetch = FetchType.LAZY)
@@ -62,6 +65,10 @@ public class User extends AbstractBaseTimeEntity {
 
 	public void updatePassword(String newPassword) {
 		this.password = newPassword;
+	}
+
+	public void changeGithubUsage() {
+		this.isGithubEnabled = !this.isGithubEnabled;
 	}
 
 	public void deleteEmailVerificationCode() {
