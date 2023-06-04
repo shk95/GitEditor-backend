@@ -1,6 +1,9 @@
 package com.shk95.giteditor.domain.model.user;
 
+import com.shk95.giteditor.config.ApplicationProperties;
+import com.shk95.giteditor.domain.application.commands.ChangeEmailCommand;
 import com.shk95.giteditor.domain.application.commands.UpdatePasswordCommand;
+import com.shk95.giteditor.domain.common.constant.ProviderType;
 import com.shk95.giteditor.domain.common.file.FileStorage;
 import com.shk95.giteditor.domain.common.file.FileStorageResolver;
 import com.shk95.giteditor.domain.common.file.FileUrlCreator;
@@ -19,6 +22,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Base64;
+import java.util.UUID;
 import java.util.function.Function;
 
 @Slf4j
@@ -32,6 +37,14 @@ public class UserManagement {
 	private final FileUrlCreator fileUrlCreator;
 	private final ThumbnailCreator thumbnailCreator;
 	private final PasswordEncoder encoder;
+	private final ApplicationProperties properties;
+
+	@Transactional
+	public boolean updatePassword(UpdatePasswordCommand passwordCommand) {
+		return passwordCommand.isPasswordForgot()
+			? this.updatePassword(passwordCommand.getDefaultEmail())
+			: this.updatePassword(passwordCommand.getUserId(), passwordCommand.getInputPassword());
+	}
 
 	private boolean updatePassword(String email) {
 		Function<User, Boolean> thenUpdatePasswordAndSendMail = user -> {
@@ -47,13 +60,6 @@ public class UserManagement {
 		return userRepository.findByDefaultEmail(email).map(thenUpdatePasswordAndSendMail).orElse(false);
 	}
 
-	@Transactional
-	public boolean updatePassword(UpdatePasswordCommand passwordCommand) {
-		return passwordCommand.isPasswordForgot()
-			? this.updatePassword(passwordCommand.getDefaultEmail())
-			: this.updatePassword(passwordCommand.getUserId(), passwordCommand.getInputPassword());
-	}
-
 	private boolean updatePassword(UserId userId, String inputPassword) {
 		return userRepository.findById(userId)
 			.map(user -> {
@@ -63,13 +69,34 @@ public class UserManagement {
 	}
 
 	@Transactional
-	public boolean verifyEmail(String emailVerificationCode) {// 회원가입 메일 인증
+	public boolean verifyEmail(String emailVerificationCode) {// 변경된 이메일, 신규가입자 이메일 검증.
 		return userRepository.findByEmailVerificationCode(emailVerificationCode)
 			.map(user -> {
 				user.deleteEmailVerificationCode();
-				user.updateUserStateEnable();
+				user.changeEmailVerified(true);
+				user.updateEmailFromOld();
+				user.changeRoleFromTempToUser();// 최초회원가입 유저인경우.
 				return true;
 			}).orElse(false);
+	}
+
+	@Transactional
+	public boolean changeEmail(ChangeEmailCommand command) {
+		String newEmail = command.getEmail();
+		return userRepository.findById(command.getUserId())
+			.filter(user ->
+				!user.getDefaultEmail().equals(newEmail)
+			)
+			.map(user -> {
+				user.addEmailToBeChanged(newEmail);
+				user.changeEmailVerified(false);
+				user.addEmailVerificationCode(this.sendVerificationEmail(newEmail));
+				if (user.getUserId().getProviderType() == ProviderType.LOCAL) {
+					user.changeRoleFromUserToTemp();
+				}
+				return true;
+			})
+			.orElse(false);
 	}
 
 	@Transactional
@@ -87,5 +114,18 @@ public class UserManagement {
 		return userRepository.findById(userId)
 			.map(u -> u.updateProfileImageUrl(uploadedImageUrl))
 			.isPresent();
+	}
+
+	private String sendVerificationEmail(String email) {
+		String code = Base64.getUrlEncoder().encodeToString(UUID.randomUUID().toString().getBytes());
+		String home = properties.getFrontPageUrl();
+		mailManager.send(
+			email,
+			"이메일 변경 안내",
+			"welcome.ftl",
+			MessageVariable.from("code", home + "/redirect?type=emailVerification&code=" + code),
+			MessageVariable.from("message", "아래의 링크를 클릭해서 이메일을 확인해 주세요.")
+		);
+		return code;
 	}
 }

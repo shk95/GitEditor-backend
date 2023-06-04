@@ -49,6 +49,12 @@ public class User extends AbstractBaseTimeEntity {
 	@Column(name = "user_email_verification", unique = true, length = 100)
 	private String emailVerificationCode;
 
+	@Column(name = "user_email_new", length = 50)
+	private String emailToBeChanged;
+
+	@Column(name = "user_github_enabled")
+	private boolean isGithubEnabled;
+
 	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL,
 		orphanRemoval = true, fetch = FetchType.LAZY)
 	private List<Provider> providers = new ArrayList<>();
@@ -57,18 +63,24 @@ public class User extends AbstractBaseTimeEntity {
 		this.username = username;
 	}
 
-	public User updatePassword(String newPassword) {
+	public void updatePassword(String newPassword) {
 		this.password = newPassword;
-		return this;
+	}
+
+	public void changeGithubUsage() {
+		this.isGithubEnabled = !this.isGithubEnabled;
 	}
 
 	public void deleteEmailVerificationCode() {
 		this.emailVerificationCode = null;
 	}
 
-	public void updateUserStateEnable() {
-		this.isUserEmailVerified = true;
-		this.isUserEnabled = true;
+	public void addEmailVerificationCode(String emailVerificationCode) {
+		this.emailVerificationCode = emailVerificationCode;
+	}
+
+	public void changeEmailVerified(boolean state) {
+		this.isUserEmailVerified = state;
 	}
 
 	public User updateProfileImageUrl(String profileImageUrl) {
@@ -76,39 +88,62 @@ public class User extends AbstractBaseTimeEntity {
 		return this;
 	}
 
+	public void activateUser() {
+		this.isUserEnabled = true;
+	}
+
+	public void deActivateUser() {
+		this.isUserEnabled = false;
+	}
+
+	public void changeRoleFromTempToUser() {
+		if (this.role == Role.TEMP) {
+			this.role = Role.USER;
+		}
+	}
+
+	public void changeRoleFromUserToTemp() {
+		if (this.role == Role.USER) {
+			this.role = Role.TEMP;
+		}
+	}
+
+	public void addEmailToBeChanged(String emailToBeChanged) {
+		this.emailToBeChanged = emailToBeChanged;
+	}
+
+	public void updateEmailFromOld() {
+		if (this.emailToBeChanged != null) {
+			this.defaultEmail = this.emailToBeChanged;
+			this.emailToBeChanged = null;
+		}
+	}
+
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 		User user = (User) o;
-		return isUserEmailVerified == user.isUserEmailVerified
-			&& isUserEnabled == user.isUserEnabled
-			&& Objects.equals(userId, user.userId)
-			&& Objects.equals(defaultEmail, user.defaultEmail)
-			&& role == user.role
-			&& Objects.equals(password, user.password)
-			&& Objects.equals(username, user.username)
-			&& Objects.equals(profileImageUrl, user.profileImageUrl)
-			&& Objects.equals(providers, user.providers);
+		return isUserEmailVerified == user.isUserEmailVerified && isUserEnabled == user.isUserEnabled && Objects.equals(userId, user.userId) && Objects.equals(defaultEmail, user.defaultEmail) && role == user.role && Objects.equals(password, user.password) && Objects.equals(username, user.username) && Objects.equals(profileImageUrl, user.profileImageUrl) && Objects.equals(emailVerificationCode, user.emailVerificationCode) && Objects.equals(emailToBeChanged, user.emailToBeChanged) && Objects.equals(providers, user.providers);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(userId, defaultEmail, role
-			, password, username, profileImageUrl
-			, isUserEmailVerified, isUserEnabled, providers);
+		return Objects.hash(userId, defaultEmail, role, password, username, profileImageUrl, isUserEmailVerified, emailVerificationCode, emailToBeChanged, isUserEnabled, providers);
 	}
 
 	@Override
 	public String toString() {
 		return "User{" +
-			"userId=" + userId.get() +
+			"userId=" + userId +
 			", defaultEmail='" + defaultEmail + '\'' +
 			", role=" + role +
 			", password='" + password + '\'' +
 			", username='" + username + '\'' +
 			", profileImageUrl='" + profileImageUrl + '\'' +
 			", isUserEmailVerified=" + isUserEmailVerified +
+			", emailVerificationCode='" + emailVerificationCode + '\'' +
+			", emailToBeChanged='" + emailToBeChanged + '\'' +
 			", isUserEnabled=" + isUserEnabled +
 			", providers=" + providers +
 			'}';

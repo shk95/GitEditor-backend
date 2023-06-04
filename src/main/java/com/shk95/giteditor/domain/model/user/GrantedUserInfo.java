@@ -21,7 +21,7 @@ public class GrantedUserInfo implements UserDetailsService {
 	private final SecurityUtil securityUtil;
 
 	@Override
-	@Transactional(readOnly = true)
+	@Transactional
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 		User user = userFinder.find(username)
 			.orElseThrow(() -> new UsernameNotFoundException("Cannot find user. user : [" + username + "]"));

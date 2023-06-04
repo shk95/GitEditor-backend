@@ -18,6 +18,7 @@ public class UserResponse {
 	@AllArgsConstructor
 	@Builder
 	public static class Me {
+
 		private Collection<? extends GrantedAuthority> authorities;
 		private String userId;
 		private Role role;
@@ -29,6 +30,7 @@ public class UserResponse {
 		private String providerLoginId;
 		private String providerUsername;
 		private String providerImgUrl;
+		private boolean githubEnabled;
 		private Map<String, Object> attributes;
 
 		public Me() {
@@ -46,12 +48,14 @@ public class UserResponse {
 			this.providerLoginId = customUserDetails.getProviderLoginId();
 			this.providerUsername = customUserDetails.getProviderUsername();
 			this.providerImgUrl = customUserDetails.getProviderImgUrl();
+			this.githubEnabled = customUserDetails.isGithubEnabled();
 		}
 	}
 
 	@Builder
 	@Getter
 	public static class Profile {
+
 		private String uploadedImageUrl;
 	}
 }

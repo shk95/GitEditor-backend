@@ -1,10 +1,7 @@
 package com.shk95.giteditor.web.apis;
 
 import com.shk95.giteditor.domain.application.UserService;
-import com.shk95.giteditor.domain.application.commands.LoginCommand;
-import com.shk95.giteditor.domain.application.commands.LogoutCommand;
-import com.shk95.giteditor.domain.application.commands.ReissueCommand;
-import com.shk95.giteditor.domain.application.commands.SignupOAuthCommand;
+import com.shk95.giteditor.domain.application.commands.*;
 import com.shk95.giteditor.domain.common.constant.ProviderType;
 import com.shk95.giteditor.domain.common.security.CurrentUser;
 import com.shk95.giteditor.domain.common.security.jwt.GeneratedJwtToken;
@@ -15,6 +12,7 @@ import com.shk95.giteditor.domain.model.provider.ProviderLoginInfoRepository;
 import com.shk95.giteditor.domain.model.token.RefreshToken;
 import com.shk95.giteditor.domain.model.token.RefreshTokenRepository;
 import com.shk95.giteditor.domain.model.user.CustomUserDetails;
+import com.shk95.giteditor.domain.model.user.SignupResult;
 import com.shk95.giteditor.utils.CookieUtil;
 import com.shk95.giteditor.utils.Helper;
 import com.shk95.giteditor.utils.Resolver;
@@ -70,17 +68,25 @@ public class AuthController {
 		return Response.success(tokenInfo, "로그인에 성공했습니다.", HttpStatus.OK);
 	}
 
-
 	@PostMapping("/signup")
 	public ResponseEntity<?> signup(@Validated @RequestBody AuthRequest.Signup.Default signup, Errors errors) {
-		emailValidator.validate(signup, errors);
-		userIdValidator.setProviderType(ProviderType.LOCAL);
-		userIdValidator.validate(signup, errors);
+		SignupCommand.Default command = SignupCommand.Default.builder()
+			.userId(signup.getUserId())
+			.password(signup.getPassword())
+			.defaultEmail(signup.getDefaultEmail())
+			.username(signup.getUsername())
+			.build();
 		// validation check
+		userIdValidator.setProviderType(ProviderType.LOCAL);
+		userIdValidator.validate(command, errors);
+		emailValidator.validate(command, errors);
 		if (errors.hasErrors()) {
 			return Response.invalidFields(Resolver.error.inputFields(errors));
 		}
-		return userService.signupDefault(signup);
+		SignupResult result = userService.signupDefault(command);
+		return result.isStatus()
+			? Response.success(result.getMessage())
+			: Response.fail(result.getMessage(), HttpStatus.BAD_REQUEST);
 	}
 
 	@PostMapping("/signup/oauth")

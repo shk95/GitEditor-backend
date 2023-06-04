@@ -35,6 +35,7 @@ public class DefaultMailManager implements MailManager {
 
 		String messageBody = createMessageBody(template, variables);
 		Message message = new SimpleMessage(emailAddress, subject, messageBody, mailFrom);
+		log.info("Email has been sent. Subject : [{}], EmailAddress : [{}], Template : [{}]", subject, emailAddress, template);
 		mailer.send(message);
 	}
 

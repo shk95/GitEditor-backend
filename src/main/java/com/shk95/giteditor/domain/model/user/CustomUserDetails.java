@@ -31,11 +31,15 @@ public class CustomUserDetails implements UserDetails, OAuth2User, OidcUser {
 	private String defaultEmail;
 	private String defaultUsername;
 	private String defaultImgUrl;//default profile image
+	private boolean isGithubEnabled;
 	private String providerEmail;
 	private String providerLoginId;
 	private String providerUsername;
 	private String providerImgUrl;
 	private Map<String, Object> attributes;
+
+	private boolean isUserEmailVerified;
+	private boolean isUserEnabled;
 
 	/**
 	 * 일반가입 사용자
@@ -52,7 +56,9 @@ public class CustomUserDetails implements UserDetails, OAuth2User, OidcUser {
 			.providerType(user.getUserId().getProviderType())
 			.defaultUsername(user.getUsername())
 			.defaultEmail(user.getDefaultEmail())
-			.defaultImgUrl(user.getProfileImageUrl());
+			.defaultImgUrl(user.getProfileImageUrl())
+			.isGithubEnabled(user.isGithubEnabled())
+			.isUserEnabled(user.isUserEnabled());
 		if (!user.getProviders().isEmpty()) {
 			userDetailsBuilder
 				.providerEmail(user.getProviders().get(0).getProviderEmail())
@@ -84,6 +90,7 @@ public class CustomUserDetails implements UserDetails, OAuth2User, OidcUser {
 			.defaultUsername(user.getUsername())
 			.defaultEmail(user.getDefaultEmail())
 			.defaultImgUrl(user.getProfileImageUrl())
+			.isGithubEnabled(user.isGithubEnabled())
 			.providerUsername(providerInfo.getProviderUserName())
 			.providerImgUrl(providerInfo.getProviderImgUrl())
 			.providerLoginId(providerInfo.getProviderLoginId())
@@ -137,7 +144,7 @@ public class CustomUserDetails implements UserDetails, OAuth2User, OidcUser {
 
 	@Override
 	public boolean isEnabled() {
-		return true;
+		return this.isUserEnabled;
 	}
 
 	@Override
