@@ -1,4 +1,4 @@
-package com.shk95.giteditor.domain.model;
+package com.shk95.giteditor.domain.model.github;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

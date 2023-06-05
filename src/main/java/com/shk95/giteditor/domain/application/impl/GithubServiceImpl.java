@@ -4,7 +4,7 @@ import com.shk95.giteditor.domain.application.GithubService;
 import com.shk95.giteditor.domain.application.commands.GetFilesCommand;
 import com.shk95.giteditor.domain.application.commands.GetReposCommand;
 import com.shk95.giteditor.domain.application.commands.GetTreeCommand;
-import com.shk95.giteditor.domain.model.GHOwner;
+import com.shk95.giteditor.domain.model.github.GHOwner;
 import com.shk95.giteditor.domain.model.github.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
