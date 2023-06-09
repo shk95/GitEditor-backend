@@ -70,7 +70,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 		log.info("{}. client ip : {}", getClass(), Helper.getClientIp(request));
 		log.info("{}. request.getRemote() : {}", getClass(), request.getRemoteAddr());
 		// Redis RefreshToken 저장
-		refreshTokenRepository.save(RefreshToken.builder()// TODO: onOAuthSuccess: redis transaction 설정
+		refreshTokenRepository.save(RefreshToken.builder()
 			.subject(tokenProvider.getClaims(tokenInfo.getAccessToken()).getSubject())
 			.ip(Helper.getClientIp(request))
 			.authorities(userDetails.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.joining(",")))

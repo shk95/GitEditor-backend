@@ -88,7 +88,8 @@ public class UserServiceImpl implements UserService {
 			.isUserEnabled(true)
 			.role(Role.USER)
 			.profileImageUrl(command.getOAuthUserImgUrl())
-			.isGithubEnabled(command.getOAuthUserProviderType()==ProviderType.GITHUB)
+			.isGithubEnabled(command.getOAuthUserProviderType() == ProviderType.GITHUB)
+			.isOpenAIEnabled(false)
 			.build();
 		User savedUser = userRepository.saveAndFlush(user);
 		ProviderId providerId = new ProviderId(command.getOAuthUserProviderType(), command.getOAuthUserId());

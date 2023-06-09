@@ -49,4 +49,9 @@ public class Provider extends AbstractBaseTimeEntity {
 		provider.providerUserName = retrievedUserInfo.getName();
 		provider.providerImgUrl = retrievedUserInfo.getImageUrl();
 	}
+
+	// Provider.java
+	public void setUser(User user) {
+		this.user = user;
+	}
 }

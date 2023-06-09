@@ -31,6 +31,7 @@ public class UserResponse {
 		private String providerUsername;
 		private String providerImgUrl;
 		private boolean githubEnabled;
+		private boolean openAIEnabled;
 		private Map<String, Object> attributes;
 
 		public Me() {
@@ -49,6 +50,7 @@ public class UserResponse {
 			this.providerUsername = customUserDetails.getProviderUsername();
 			this.providerImgUrl = customUserDetails.getProviderImgUrl();
 			this.githubEnabled = customUserDetails.isGithubEnabled();
+			this.openAIEnabled = customUserDetails.isOpenAIEnabled();
 		}
 	}
 

@@ -1,8 +1,7 @@
 package com.shk95.giteditor.domain.model.user;
 
 import com.shk95.giteditor.config.ApplicationProperties;
-import com.shk95.giteditor.domain.application.commands.ChangeEmailCommand;
-import com.shk95.giteditor.domain.application.commands.UpdatePasswordCommand;
+import com.shk95.giteditor.domain.application.commands.*;
 import com.shk95.giteditor.domain.common.constant.ProviderType;
 import com.shk95.giteditor.domain.common.file.FileStorage;
 import com.shk95.giteditor.domain.common.file.FileStorageResolver;
@@ -32,6 +31,7 @@ import java.util.function.Function;
 public class UserManagement {
 
 	private final UserRepository userRepository;
+	private final GithubServiceRepository githubServiceRepository;
 	private final MailManager mailManager;
 	private final FileStorageResolver fileStorageResolver;
 	private final FileUrlCreator fileUrlCreator;
@@ -47,17 +47,17 @@ public class UserManagement {
 	}
 
 	private boolean updatePassword(String email) {
-		Function<User, Boolean> thenUpdatePasswordAndSendMail = user -> {
+		Function<User, Boolean> updatePasswordAndSendMail = user -> {
 			String regex = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[~!@#$%^&*()+|=])[A-Za-z\\d~!@#$%^&*()+|=]{8,16}$";
 			Xeger generator = new Xeger(regex);
 			final String NEW_PASSWORD = generator.generate();
 			user.updatePassword(encoder.encode(NEW_PASSWORD));
 			mailManager.send(
-				user.getDefaultEmail(), "[GitEditor] 비밀번호 변경", "findPassword"
-				, MessageVariable.from("code", NEW_PASSWORD));
+				user.getDefaultEmail(), "[GitEditor] 비밀번호 발급 안내", "new-password"
+				, MessageVariable.from("password", NEW_PASSWORD));
 			return true;
 		};
-		return userRepository.findByDefaultEmail(email).map(thenUpdatePasswordAndSendMail).orElse(false);
+		return userRepository.findByDefaultEmail(email).map(updatePasswordAndSendMail).orElse(false);
 	}
 
 	private boolean updatePassword(UserId userId, String inputPassword) {
@@ -116,6 +116,43 @@ public class UserManagement {
 			.isPresent();
 	}
 
+	public void deleteUser(DeleteUserCommand command) {
+		userRepository.deleteById(command.getUserId());
+	}
+
+	@Transactional
+	public boolean updateUser(UpdateUserCommand command) {
+		return userRepository.findById(command.getUserId())
+			.map(user -> {
+				if (command.getPassword() != null) user.updateUserName(command.getUsername());
+				if (command.getUsername() != null) user.updatePassword(command.getPassword());
+				if (command.getEmail() != null) user.updateEmail(command.getEmail());
+				return true;
+			}).orElse(false);
+	}
+
+	@Transactional
+	public boolean updateOpenAIService(UpdateOpenAIServiceCommand command) {
+		if (!verifyOpenAI(command.getAccessToken())) {
+			userRepository.findById(command.getUserId())
+				.map(user -> {
+					user.deactivateOpenAIUsage();
+					return false;
+				});
+			return false;
+		}
+		return userRepository.findById(command.getUserId())
+			.map(user -> {
+				user.upsertOpenAIToken(command.getAccessToken());
+				user.activateOpenAIUsage();
+				return true;
+			}).orElse(false);
+	}
+
+	public void addGithubAccount(AddGithubAccountCommand command) {
+		githubServiceRepository.save(new GithubService(command.getUserId()));
+	}
+
 	private String sendVerificationEmail(String email) {
 		String code = Base64.getUrlEncoder().encodeToString(UUID.randomUUID().toString().getBytes());
 		String home = properties.getFrontPageUrl();
@@ -127,5 +164,10 @@ public class UserManagement {
 			MessageVariable.from("message", "아래의 링크를 클릭해서 이메일을 확인해 주세요.")
 		);
 		return code;
+	}
+
+
+	private boolean verifyOpenAI(String accessToken) {
+		return true;
 	}
 }
