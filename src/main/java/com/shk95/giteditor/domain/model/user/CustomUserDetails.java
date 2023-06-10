@@ -38,6 +38,7 @@ public class CustomUserDetails implements UserDetails, OAuth2User, OidcUser {
 	private String providerLoginId;
 	private String providerUsername;
 	private String providerImgUrl;
+	private String openAIAccessToken;
 	private Map<String, Object> attributes;
 
 	private boolean isUserEmailVerified;
@@ -61,6 +62,7 @@ public class CustomUserDetails implements UserDetails, OAuth2User, OidcUser {
 			.defaultImgUrl(user.getProfileImageUrl())
 			.isGithubEnabled(user.isGithubEnabled())
 			.isOpenAIEnabled(user.isOpenAIEnabled())
+			.openAIAccessToken(user.getOpenAIToken())
 			.isUserEnabled(user.isUserEnabled());
 		if (!user.getProviders().isEmpty()) {
 			userDetailsBuilder
@@ -95,6 +97,7 @@ public class CustomUserDetails implements UserDetails, OAuth2User, OidcUser {
 			.defaultImgUrl(user.getProfileImageUrl())
 			.isGithubEnabled(user.isGithubEnabled())
 			.isOpenAIEnabled(user.isOpenAIEnabled())
+			.openAIAccessToken(user.getOpenAIToken())
 			.providerUsername(providerInfo.getProviderUserName())
 			.providerImgUrl(providerInfo.getProviderImgUrl())
 			.providerLoginId(providerInfo.getProviderLoginId())
