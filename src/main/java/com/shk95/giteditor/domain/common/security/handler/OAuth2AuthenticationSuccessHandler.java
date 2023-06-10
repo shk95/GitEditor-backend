@@ -1,5 +1,6 @@
 package com.shk95.giteditor.domain.common.security.handler;
 
+import com.shk95.giteditor.config.ApplicationProperties;
 import com.shk95.giteditor.domain.common.security.jwt.GeneratedJwtToken;
 import com.shk95.giteditor.domain.common.security.jwt.JwtTokenProvider;
 import com.shk95.giteditor.domain.common.security.repository.OAuth2AuthorizationRequestBasedOnCookieRepository;
@@ -35,6 +36,7 @@ import static com.shk95.giteditor.config.ConstantFields.OAuthRepo.*;
 @Component
 public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
+	private final ApplicationProperties properties;
 	private final JwtTokenProvider tokenProvider;
 	private final RefreshTokenRepository refreshTokenRepository;
 	private final OAuth2AuthorizationRequestBasedOnCookieRepository authorizationRequestRepository;
@@ -105,7 +107,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
 	private boolean isAuthorizedRedirectUri(String uri) {
 		URI clientRedirectUri = URI.create(uri);
-		URI authorizedURI = URI.create(OAUTH_DEFAULT_REDIRECT);
+		URI authorizedURI = URI.create(properties.getFrontPageUrl() + OAUTH_DEFAULT_REDIRECT);
 		// Only validate host and port. Let the clients use different paths if they want to
 		return authorizedURI.getHost().equalsIgnoreCase(clientRedirectUri.getHost())
 			&& authorizedURI.getPort() == clientRedirectUri.getPort();
