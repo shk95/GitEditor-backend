@@ -91,6 +91,11 @@
 		</dependency>
 
 		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-mongodb</artifactId>
+		</dependency>
+
+		<dependency>
 			<groupId>com.amazonaws</groupId>
 			<artifactId>aws-java-sdk</artifactId>
 			<version>${aws.sdk.version}</version>
@@ -158,6 +163,11 @@
 			<groupId>com.github.krraghavan</groupId>
 			<artifactId>xeger</artifactId>
 			<version>1.0.0-RELEASE</version>
+		</dependency>
+		<dependency>
+			<groupId>io.github.aminovmaksim</groupId>
+			<artifactId>chatgpt4j</artifactId>
+			<version>1.0.3</version>
 		</dependency>
 	</dependencies>
 

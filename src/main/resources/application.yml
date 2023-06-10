@@ -4,6 +4,7 @@ spring:
     url: <>
     username: <>
     password: <>
+
   redis:
     host: <>
     port: 0000
@@ -18,6 +19,14 @@ spring:
         jdbc.batch_size: 20
         format_sql: true
     show-sql: true
+
+  data:
+    mongodb:
+      host:
+      port:
+      username:
+      password:
+      database:
 
   security:
     oauth2:
