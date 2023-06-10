@@ -8,7 +8,6 @@ import com.shk95.giteditor.domain.model.token.RefreshToken;
 import com.shk95.giteditor.domain.model.token.RefreshTokenRepository;
 import com.shk95.giteditor.domain.model.user.CustomUserDetails;
 import com.shk95.giteditor.utils.CookieUtil;
-import com.shk95.giteditor.utils.Helper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -29,7 +28,8 @@ import java.util.stream.Collectors;
 
 import static com.shk95.giteditor.config.ConstantFields.Jwt.ExpireTime.REFRESH_TOKEN_EXPIRE_TIME;
 import static com.shk95.giteditor.config.ConstantFields.Jwt.JWT_TYPE_REFRESH;
-import static com.shk95.giteditor.config.ConstantFields.OAuthRepo.*;
+import static com.shk95.giteditor.config.ConstantFields.OAuthRepo.OAUTH_DEFAULT_REDIRECT;
+import static com.shk95.giteditor.config.ConstantFields.OAuthRepo.OAUTH_REDIRECT_URI_PARAM_COOKIE_NAME;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -69,12 +69,10 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 		CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
 		GeneratedJwtToken tokenInfo = tokenProvider.generateToken(authentication);
 
-		log.info("{}. client ip : {}", getClass(), Helper.getClientIp(request));
 		log.info("{}. request.getRemote() : {}", getClass(), request.getRemoteAddr());
 		// Redis RefreshToken 저장
 		refreshTokenRepository.save(RefreshToken.builder()
 			.subject(tokenProvider.getClaims(tokenInfo.getAccessToken()).getSubject())
-			.ip(Helper.getClientIp(request))
 			.authorities(userDetails.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.joining(",")))
 			.refreshToken(tokenInfo.getRefreshToken())
 			.build());

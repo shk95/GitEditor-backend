@@ -22,7 +22,5 @@ public class RefreshToken {
 	@Indexed
 	private String refreshToken;
 
-	private String ip;
-
 	private String authorities;// 값 변환 필요. String <--> Collection<? extends GrantedAuthority>
 }
