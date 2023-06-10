@@ -21,6 +21,7 @@ public class RedisConfig {
 	@Bean
 	public RedisConnectionFactory redisConnectionFactory() {
 		RedisStandaloneConfiguration redisStandaloneConfiguration = new RedisStandaloneConfiguration();
+		redisStandaloneConfiguration.setUsername(redisProperties.getUsername());
 		redisStandaloneConfiguration.setHostName(redisProperties.getHost());
 		redisStandaloneConfiguration.setPort(redisProperties.getPort());
 		redisStandaloneConfiguration.setPassword(redisProperties.getPassword());
