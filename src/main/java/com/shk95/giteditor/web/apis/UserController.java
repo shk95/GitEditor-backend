@@ -16,11 +16,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
-import javax.validation.Valid;
 
 import static com.shk95.giteditor.config.ConstantFields.ADD_GITHUB_ACCOUNT_REDIS_EXPIRATION;
 import static com.shk95.giteditor.config.ConstantFields.ADD_OAUTH_SERVICE_USER_INFO;
@@ -56,14 +56,14 @@ public class UserController {
 	@UserOrTempAuthorize
 	@PutMapping("/password")
 	public ResponseEntity<?> updatePassword(@CurrentUser CustomUserDetails userDetails,
-											@Valid @RequestBody UserRequest.UpdatePassword management) {
+											@Validated @RequestBody UserRequest.UpdatePassword management) {
 		return userManagement.updatePassword(new UpdatePasswordCommand(userDetails.getUserEntityId(), management.getPassword()))
 			? Response.success("비밀번호가 변경되었습니다.")
 			: Response.fail("입력정보 또는 회원정보가 잘못되었습니다.", HttpStatus.NOT_ACCEPTABLE);
 	}
 
 	@PostMapping("/password")// 잃어버렸을때
-	public ResponseEntity<?> updatePassword(@Valid @RequestBody UserRequest.ChangePassword management) {
+	public ResponseEntity<?> updatePassword(@Validated @RequestBody UserRequest.ChangePassword management) {
 		return userManagement.updatePassword(new UpdatePasswordCommand(management.getDefaultEmail(), management.getPassword()))
 			? Response.success("새로운 비밀번호가 발급되었습니다. 이메일을 확인해주세요.")
 			: Response.fail("비밀번호 초기화에 실패하였습니다. 잘못된 회원정보입니다.", HttpStatus.NOT_ACCEPTABLE);
@@ -79,7 +79,7 @@ public class UserController {
 	@UserOrTempAuthorize
 	@PutMapping("/email")
 	public ResponseEntity<?> changeDefaultEmail(@CurrentUser CustomUserDetails userDetails,
-												@Valid @RequestBody UserRequest.ChangeEmail userInfo) {
+												@Validated @RequestBody UserRequest.ChangeEmail userInfo) {
 		return userManagement.changeEmail(ChangeEmailCommand.builder()
 			.userId(userDetails.getUserEntityId())
 			.email(userInfo.getDefaultEmail()).build())
@@ -97,7 +97,7 @@ public class UserController {
 	@UserOrTempAuthorize
 	@PutMapping("/profile")
 	public ResponseEntity<?> updateUser(@CurrentUser CustomUserDetails userDetails,
-										@Valid @RequestBody UserRequest.Profile profile) {
+										@Validated @RequestBody UserRequest.Profile profile) {
 		return userManagement.updateUser(UpdateUserCommand.builder()
 			.userId(userDetails.getUserEntityId())
 			.username(profile.getNewUsername())
@@ -121,7 +121,7 @@ public class UserController {
 	@UserAuthorize
 	@PostMapping("/profile/openai")
 	public ResponseEntity<?> addOpenAIService(@CurrentUser CustomUserDetails userDetails,
-											  @Valid @RequestBody UserRequest.OpenAI request) {
+											  @Validated @RequestBody UserRequest.OpenAI request) {
 		if (userDetails.isOpenAIEnabled()) {
 			return Response.fail("이미 추가된 서비스입니다.", HttpStatus.NOT_ACCEPTABLE);
 		}

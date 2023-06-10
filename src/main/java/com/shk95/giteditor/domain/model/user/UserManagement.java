@@ -25,6 +25,8 @@ import java.util.Base64;
 import java.util.UUID;
 import java.util.function.Function;
 
+import static com.shk95.giteditor.domain.model.chat.SimpleGpt.simpleResponse;
+
 @Slf4j
 @RequiredArgsConstructor
 @Component
@@ -134,11 +136,6 @@ public class UserManagement {
 	@Transactional
 	public boolean updateOpenAIService(UpdateOpenAIServiceCommand command) {
 		if (!verifyOpenAI(command.getAccessToken())) {
-			userRepository.findById(command.getUserId())
-				.map(user -> {
-					user.deactivateOpenAIUsage();
-					return false;
-				});
 			return false;
 		}
 		return userRepository.findById(command.getUserId())
@@ -168,6 +165,12 @@ public class UserManagement {
 
 
 	private boolean verifyOpenAI(String accessToken) {
+		try {
+			simpleResponse(accessToken, "just say hi");
+		} catch (Exception e) {
+			log.info("Failed to verify OpenAI access token");
+			return false;
+		}
 		return true;
 	}
 }
