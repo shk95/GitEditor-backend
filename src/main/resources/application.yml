@@ -68,7 +68,7 @@ spring:
       - application-secret
 
 app:
-  front-page-url: 'localhost'
+  front-page-url: 'http://localhost'
 
   mail-from: test@test.com
 

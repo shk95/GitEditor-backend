@@ -3,10 +3,10 @@ package com.shk95.giteditor.config;
 import java.util.HashSet;
 import java.util.Set;
 
-public final class ConstantFields {//TODO: 설정값 상수 관리
+public final class ConstantFields {
 
-	public static final String REDIRECT_LOGIN_PATH = "http://localhost:4000/login";
-	public static final String REDIRECT_SIGNUP_OAUTH_PATH = "http://localhost:4000/signup/oauth";
+	public static final String REDIRECT_LOGIN_PATH = "/login";
+	public static final String REDIRECT_SIGNUP_OAUTH_PATH = "/signup/oauth";
 	public static final String REDIRECT_SIGNUP_OAUTH_ID = "oauth2_signup";
 	public static final int REDIRECT_SIGNUP_OAUTH_EXPIRE = 10 * 60;// 10분
 	public static final int ADD_GITHUB_ACCOUNT_REDIS_EXPIRATION = 10 * 60;
@@ -19,7 +19,7 @@ public final class ConstantFields {//TODO: 설정값 상수 관리
 
 	public static final class OAuthRepo {
 
-		public static final String OAUTH_DEFAULT_REDIRECT = "http://localhost:4000/oauth/redirect";//TODO: oauth default redirect url 관리
+		public static final String OAUTH_DEFAULT_REDIRECT = "/oauth/redirect";//TODO: oauth default redirect url 수정
 		public static final String OAUTH_AUTHORIZATION_REQUEST_COOKIE_NAME = "oauth2_auth_request";
 		public static final String OAUTH_REDIRECT_URI_PARAM_COOKIE_NAME = "redirect_uri";
 		public static final String OAUTH_REFRESH_TOKEN = "refresh_token";

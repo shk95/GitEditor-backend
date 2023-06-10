@@ -1,5 +1,6 @@
 package com.shk95.giteditor.domain.common.security.handler;
 
+import com.shk95.giteditor.config.ApplicationProperties;
 import com.shk95.giteditor.domain.common.exception.OAuthUserNotRegisteredException;
 import com.shk95.giteditor.domain.common.model.AbstractOAuth2UserInfo;
 import com.shk95.giteditor.domain.common.security.repository.OAuth2AuthorizationRequestBasedOnCookieRepository;
@@ -31,6 +32,7 @@ import static com.shk95.giteditor.config.ConstantFields.OAuthRepo.OAUTH_REDIRECT
 @Component
 public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationFailureHandler {
 
+	private final ApplicationProperties properties;
 	private final OAuth2AuthorizationRequestBasedOnCookieRepository authorizationRequestRepository;
 	private final ProviderLoginInfoRepository providerLoginInfoRepository;
 	private final GithubServiceRepository githubServiceRepository;
@@ -58,7 +60,7 @@ public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationF
 				// 로그인한 사용자의 서비스 추가
 				this.addOAuthService(userInfo, addServiceCookie.get());
 				CookieUtil.deleteCookie(request, response, ADD_OAUTH_SERVICE_USER_INFO);
-				redirectUrl = OAUTH_DEFAULT_REDIRECT;
+				redirectUrl = properties.getFrontPageUrl() + OAUTH_DEFAULT_REDIRECT;
 			} else {
 				// oAuth 로 가입한 사용자
 				this.signup(userInfo);
@@ -68,7 +70,7 @@ public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationF
 					, CookieUtil.serialize(userInfo.getId())
 					, REDIRECT_SIGNUP_OAUTH_EXPIRE
 				);
-				redirectUrl = REDIRECT_SIGNUP_OAUTH_PATH;
+				redirectUrl = properties.getFrontPageUrl() + REDIRECT_SIGNUP_OAUTH_PATH;
 			}
 		} else {
 			exception.printStackTrace();
