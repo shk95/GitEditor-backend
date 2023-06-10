@@ -104,4 +104,4 @@ app:
 
 logging:
   level:
-    com.shk95.*: log
+    com.shk95.*: INFO
