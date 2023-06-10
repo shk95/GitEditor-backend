@@ -147,7 +147,7 @@ public class UserManagement {
 	}
 
 	public void addGithubAccount(AddGithubAccountCommand command) {
-		githubServiceRepository.save(new GithubService(command.getUserId()));
+		githubServiceRepository.save(new GithubService(command.getUserId().get()));
 	}
 
 	private String sendVerificationEmail(String email) {

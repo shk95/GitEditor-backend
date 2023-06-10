@@ -114,7 +114,7 @@ public class UserController {
 		}
 		userManagement.addGithubAccount(AddGithubAccountCommand.builder().userId(userDetails.getUserEntityId()).build());
 		CookieUtil.addCookie(response, ADD_OAUTH_SERVICE_USER_INFO
-			, CookieUtil.serialize(userDetails.getUserEntityId()), ADD_GITHUB_ACCOUNT_REDIS_EXPIRATION);
+			, CookieUtil.serialize(userDetails.getUserEntityId().get()), ADD_GITHUB_ACCOUNT_REDIS_EXPIRATION);
 		return Response.success("서비스가 추가되었습니다.");
 	}
 

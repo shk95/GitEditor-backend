@@ -5,15 +5,17 @@ import com.shk95.giteditor.domain.common.exception.OAuthUserNotRegisteredExcepti
 import com.shk95.giteditor.domain.common.model.AbstractOAuth2UserInfo;
 import com.shk95.giteditor.domain.common.security.repository.OAuth2AuthorizationRequestBasedOnCookieRepository;
 import com.shk95.giteditor.domain.model.provider.*;
-import com.shk95.giteditor.domain.model.user.GithubServiceRepository;
-import com.shk95.giteditor.domain.model.user.UserId;
-import com.shk95.giteditor.domain.model.user.UserRepository;
+import com.shk95.giteditor.domain.model.user.*;
 import com.shk95.giteditor.utils.CookieUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.servlet.ServletException;
@@ -38,6 +40,7 @@ public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationF
 	private final GithubServiceRepository githubServiceRepository;
 	private final UserRepository userRepository;
 	private final ProviderRepository providerRepository;
+	private final GrantedUserInfo grantedUserInfo;
 
 	/*
 			기능 : 회원가입 추가정보를 받도록 회원가입 페이지로 리디렉션 & oAuth 인증 쿠키 유지 & oAuth 인증시 가입 정보를 넘겨줌
@@ -46,6 +49,7 @@ public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationF
 			-> onAuthenticationFailure 에서 oAuth 로그인후 일정시간내에 회원가입하지 않을시 쿠키 소멸로 인하여 실패(회원가입 재 진행)
 	*/
 
+	@Transactional
 	@Override
 	public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response
 		, AuthenticationException exception) throws IOException, ServletException {
@@ -60,7 +64,10 @@ public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationF
 				// 로그인한 사용자의 서비스 추가
 				this.addOAuthService(userInfo, addServiceCookie.get());
 				CookieUtil.deleteCookie(request, response, ADD_OAUTH_SERVICE_USER_INFO);
-				redirectUrl = properties.getFrontPageUrl() + OAUTH_DEFAULT_REDIRECT;
+
+				redirectUrl = UriComponentsBuilder.fromUriString(properties.getFrontPageUrl() + OAUTH_DEFAULT_REDIRECT)
+					.queryParam("type", "addGithubService")
+					.build().toUriString();
 			} else {
 				// oAuth 로 가입한 사용자
 				this.signup(userInfo);
@@ -98,19 +105,24 @@ public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationF
 	}
 
 	private void addOAuthService(AbstractOAuth2UserInfo userInfo, Cookie cookie) {
-		UserId userId = CookieUtil.deserialize(cookie, UserId.class);
+		UserId userId = UserId.of(CookieUtil.deserialize(cookie, String.class));
 
-		boolean state = githubServiceRepository.findById(userId).isPresent();
+		CustomUserDetails userDetails = (CustomUserDetails) grantedUserInfo.loadUserByUsername(userId.getUserLoginId());
+		Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+		SecurityContextHolder.getContext().setAuthentication(authentication);
+
+		boolean state = githubServiceRepository.findById(userId.get()).isPresent();
 		if (state) {
 			userRepository.findById(userId)
 				.ifPresent(user -> {
+					user.activateGithubUsage();
 					Provider provider = providerRepository.save(Provider.builder()
 						.providerId(new ProviderId(userInfo.getProviderType(), userInfo.getId()))
-						.providerLoginId(userId.getUserLoginId()).providerEmail(userInfo.getEmail())
+						.providerLoginId(userInfo.getLoginId()).providerEmail(userInfo.getEmail())
 						.providerImgUrl(userInfo.getImageUrl()).providerUserName(userInfo.getName())
 						.accessToken(userInfo.getAccessToken()).user(user).build());
 				});
-			githubServiceRepository.deleteById(userId);
+			githubServiceRepository.deleteById(userId.get());
 		}
 	}
 }
