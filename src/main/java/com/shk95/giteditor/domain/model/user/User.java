@@ -119,7 +119,7 @@ public class User extends AbstractBaseTimeEntity {
 	}
 
 	public void upsertOpenAIToken(String accessToken) {
-
+		this.openAIToken = accessToken;
 	}
 
 	public void activateUser() {
