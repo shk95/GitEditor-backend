@@ -35,6 +35,6 @@ public class ChatServiceImpl implements ChatService {
 	@Transactional(readOnly = true)
 	public Page<Chat> getCompletions(GetCompletionCommand command) {
 		PageRequest pageRequest = PageRequest.of(command.getPageAt(), command.getSize(), Sort.by(Sort.Direction.DESC, "createdDate"));
-		return chatRepository.findAllByUserIdOrderByCreatedDateDesc(pageRequest);
+		return chatRepository.findAllByUserIdOrderByCreatedDateDesc(command.getUserId(),pageRequest);
 	}
 }
