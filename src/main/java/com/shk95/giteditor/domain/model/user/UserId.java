@@ -26,7 +26,7 @@ public class UserId implements Serializable {
 	protected UserId() {
 	}
 
-	public static UserId of(String jwtSubject) throws Exception{
+	public static UserId of(String jwtSubject) {
 		String[] sub = jwtSubject.split(",");
 		return new UserId(ProviderType.valueOf(sub[0]), sub[1]);
 	}

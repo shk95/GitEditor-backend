@@ -39,14 +39,14 @@ public class ChatController {
 
 	@GetMapping
 	public ResponseEntity<?> getCompletions(@CurrentUser CustomUserDetails userDetails,
-											@Validated @RequestBody ChatRequest.Completion request) {
+											@RequestParam String pageAt, @RequestParam String pageSize) {
 		return userDetails.isOpenAIEnabled()
 			? Response.success(
 			chatService.getCompletions(GetCompletionCommand.builder()
 				.userId(userDetails.getUserEntityId())
 				.accessToken(userDetails.getOpenAIAccessToken())
-				.pageAt(request.getPageAt())
-				.size(request.getSize())
+				.pageAt(Integer.parseInt(pageAt))
+				.size(Integer.parseInt(pageSize))
 				.build())
 			, "메시지를 가져왔습니다", HttpStatus.OK)
 			: Response.fail("Chat Service 를 사용할 수 없습니다.", HttpStatus.FORBIDDEN);
