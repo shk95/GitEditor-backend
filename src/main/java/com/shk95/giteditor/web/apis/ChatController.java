@@ -30,12 +30,15 @@ public class ChatController {
 	@PostMapping
 	public ResponseEntity<?> simpleResponse(@CurrentUser CustomUserDetails userDetails,
 											@Validated @RequestBody ChatRequest.Simple request) {
+		Chat chat = chatService.simpleRequest(RequestCommand.builder()
+			.userId(userDetails.getUserEntityId())
+			.prompt(request.getPrompt())
+			.accessToken(userDetails.getOpenAIAccessToken()).build());
 		return userDetails.isOpenAIEnabled()
-			? Response.success(
-			chatService.simpleRequest(RequestCommand.builder()
-				.userId(userDetails.getUserEntityId())
-				.prompt(request.getPrompt())
-				.accessToken(userDetails.getOpenAIAccessToken()).build())
+			? Response.success(ChatResponse.Message.builder()
+				.prompt(chat.getPrompt())
+				.completion(chat.getCompletion())
+				.createdDate(chat.getCreatedDate()).build()
 			, "Get simple ChatGpt Response", HttpStatus.OK)
 			: Response.fail("Chat Service 를 사용할 수 없습니다.", HttpStatus.FORBIDDEN);
 	}
