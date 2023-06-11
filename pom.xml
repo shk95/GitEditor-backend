@@ -14,7 +14,7 @@
 	<name>GitEditor</name>
 	<description>GitEditor</description>
 	<properties>
-		<java.version>1.8</java.version>
+		<java.version>11</java.version>
 		<commons-io.version>2.7</commons-io.version>
 		<im4java.version>1.4.0</im4java.version>
 		<kohsuke-github.version>1.314</kohsuke-github.version>
@@ -169,7 +169,40 @@
 			<artifactId>chatgpt4j</artifactId>
 			<version>1.0.3</version>
 		</dependency>
+		<dependency>
+			<!-- jsoup HTML parser library @ https://jsoup.org/ -->
+			<groupId>org.jsoup</groupId>
+			<artifactId>jsoup</artifactId>
+			<version>1.16.1</version>
+		</dependency>
+		<dependency>
+			<groupId>com.vladsch.flexmark</groupId>
+			<artifactId>flexmark-all</artifactId>
+			<version>0.64.8</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.groupdocs</groupId>
+			<artifactId>groupdocs-conversion-cloud</artifactId>
+			<version>23.4</version>
+			<scope>compile</scope>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/com.squareup.okhttp/okhttp -->
+		<dependency>
+			<groupId>com.squareup.okhttp3</groupId>
+			<artifactId>okhttp</artifactId>
+			<version>4.11.0</version>
+		</dependency>
+
 	</dependencies>
+
+	<repositories>
+		<repository>
+			<id>groupdocs-artifact-repository</id>
+			<name>GroupDocs Artifact Repository</name>
+			<url>https://repository.groupdocs.cloud/repo</url>
+		</repository>
+	</repositories>
 
 	<build>
 		<plugins>
