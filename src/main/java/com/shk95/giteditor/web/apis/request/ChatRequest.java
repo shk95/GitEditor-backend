@@ -12,13 +12,4 @@ public class ChatRequest {
 		@NotBlank
 		private String prompt;
 	}
-
-	@Getter
-	public static class Completion {
-
-		@NotBlank(message = "페이지 번호는 필수 입력값 입니다.")
-		private int pageAt;
-		@NotBlank(message = "페이지 사이즈는 필수 입력값 입니다.")
-		private int size;
-	}
 }

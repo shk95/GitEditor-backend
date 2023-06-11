@@ -19,5 +19,5 @@ public class GithubService implements Serializable {
 	private static final long serialVersionUID = 34282394902347411L;
 
 	@Id
-	private UserId userId;
+	private String userEntityId;
 }

@@ -11,7 +11,10 @@ import com.shk95.giteditor.domain.model.user.oauth.OAuth2UserInfoFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
@@ -64,8 +67,13 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 		Provider oAuthUser = providerRepository.findById(providerId).orElseThrow(
 			() -> new OAuthUserNotRegisteredException("서비스에 가입되지 않은 oAuth2 로그인 유저. 가입 필요.", null, retrievedUserInfo));
 
+		CustomUserDetails userDetails =
+			CustomUserDetails.createUserDetailsOfOAuthUser(oAuthUser.getUser(), oAuth2User.getAttributes()).build();
+		Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+		SecurityContextHolder.getContext().setAuthentication(authentication);
+
 		updateUserInfo(oAuthUser, retrievedUserInfo);// jpa 변경감지 이용 업데이트
-		return CustomUserDetails.createUserDetailsOfOAuthUser(oAuthUser.getUser(), oAuth2User.getAttributes()).build();
+		return userDetails;
 	}
 
 	/**

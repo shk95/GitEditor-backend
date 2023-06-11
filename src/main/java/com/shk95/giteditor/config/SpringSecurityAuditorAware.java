@@ -17,7 +17,7 @@ public class SpringSecurityAuditorAware implements AuditorAware<UserId> {
 	public Optional<UserId> getCurrentAuditor() {
 		UserId currentUser = ((CustomUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal())
 			.getUserEntityId();
-		log.info("getCurrentAuditor called : {}", currentUser);
+		log.info("Current Auditor called : {}", currentUser);
 		return Optional.of(currentUser);
 	}
 }
