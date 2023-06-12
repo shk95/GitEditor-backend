@@ -5,11 +5,11 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class GHCredentialDelegator {
+public class GithubCredentialDelegator {
 	private String accessToken;
 	private String githubLoginId;
 
-	GHCredentialDelegator() {
+	GithubCredentialDelegator() {
 	}
 
 	public boolean isInstantiate() {

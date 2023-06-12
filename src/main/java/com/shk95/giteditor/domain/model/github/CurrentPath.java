@@ -6,5 +6,5 @@ import java.util.List;
 
 @Getter
 public class CurrentPath {
-	private List<GHFile> filesInPath;
+	private List<GithubFile> filesInPath;
 }

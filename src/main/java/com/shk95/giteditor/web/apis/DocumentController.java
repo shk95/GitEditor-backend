@@ -35,13 +35,15 @@ public class DocumentController {
 		return userDetails.isGithubEnabled()
 			? Response.success(markdownService.createMarkdown(
 			CreateDocumentCommand.builder()
+				.userId(userDetails.getUserEntityId())
 				.url(request.getUrl())
 				.storageType(StorageType.GITHUB)
-				.extension(Extension.MD)
 				.repoName(request.getRepoName())
+				.branchName(request.getBranchName())
+				.baseTreeSha(request.getBaseTreeSha())
 				.path(request.getPath())
-				.fileName(request.getFileName()).build()))
+				.fileName(request.getFileName())
+				.extension(Extension.MD).build()))
 			: Response.fail("Github 연동이 되어있지 않습니다.", HttpStatus.NOT_ACCEPTABLE);
-
 	}
 }
