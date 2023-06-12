@@ -63,8 +63,8 @@ public class UserController {
 	}
 
 	@PostMapping("/password")// 잃어버렸을때
-	public ResponseEntity<?> updatePassword(@Validated @RequestBody UserRequest.ChangePassword management) {
-		return userManagement.updatePassword(new UpdatePasswordCommand(management.getDefaultEmail(), management.getPassword()))
+	public ResponseEntity<?> updatePassword(@Validated @RequestBody UserRequest.ForgotPassword management) {
+		return userManagement.updatePassword(new UpdatePasswordCommand(management.getDefaultEmail()))
 			? Response.success("새로운 비밀번호가 발급되었습니다. 이메일을 확인해주세요.")
 			: Response.fail("비밀번호 초기화에 실패하였습니다. 잘못된 회원정보입니다.", HttpStatus.NOT_ACCEPTABLE);
 	}
