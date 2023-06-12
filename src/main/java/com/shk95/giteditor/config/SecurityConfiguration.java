@@ -51,7 +51,7 @@ public class SecurityConfiguration {
 			.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
 			.authorizeRequests()
 			.requestMatchers(CorsUtils::isPreFlightRequest).permitAll()
-			.antMatchers("/auth/*", "/login/**", "/auth/*/oauth", "/user/email").permitAll()
+			.antMatchers("/auth/*", "/login/**", "/auth/*/oauth", "/user/email", "/user/password").permitAll()
 			.antMatchers("/api/**").hasRole("USER")
 			.antMatchers("/admin/**").hasRole("ADMIN")
 			.anyRequest().authenticated()
