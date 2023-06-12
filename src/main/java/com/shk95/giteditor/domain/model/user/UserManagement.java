@@ -175,8 +175,8 @@ public class UserManagement {
 	public boolean updateUser(UpdateUserCommand command) {
 		return userRepository.findById(command.getUserId())
 			.map(user -> {
-				if (command.getPassword() != null) user.updateUserName(command.getUsername());
-				if (command.getUsername() != null) user.updatePassword(command.getPassword());
+				if (command.getUsername() != null) user.updateUserName(command.getUsername());
+				if (command.getPassword() != null) user.updatePassword(encoder.encode(command.getPassword()));
 				if (command.getEmail() != null) {
 					sendVerificationEmail(command.getEmail());
 					user.updateEmail(command.getEmail());
