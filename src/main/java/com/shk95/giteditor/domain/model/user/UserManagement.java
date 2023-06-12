@@ -124,7 +124,7 @@ public class UserManagement {
 		return userRepository.findByEmailVerificationCode(emailVerificationCode)
 			.map(user -> {
 				user.deleteEmailVerificationCode();
-				user.changeEmailVerified(true);
+				user.activateEmailVerified();
 				user.updateEmailFromOld();
 				user.changeRoleFromTempToUser();// 최초회원가입 유저인경우.
 				return true;
@@ -140,7 +140,7 @@ public class UserManagement {
 			)
 			.map(user -> {
 				user.addEmailToBeChanged(newEmail);
-				user.changeEmailVerified(false);
+				user.deactivateEmailVerified();
 				user.addEmailVerificationCode(this.sendVerificationEmail(newEmail));
 				if (user.getUserId().getProviderType() == ProviderType.LOCAL) {
 					user.changeRoleFromUserToTemp();
@@ -177,7 +177,12 @@ public class UserManagement {
 			.map(user -> {
 				if (command.getPassword() != null) user.updateUserName(command.getUsername());
 				if (command.getUsername() != null) user.updatePassword(command.getPassword());
-				if (command.getEmail() != null) user.updateEmail(command.getEmail());
+				if (command.getEmail() != null) {
+					sendVerificationEmail(command.getEmail());
+					user.updateEmail(command.getEmail());
+					user.deactivateEmailVerified();
+					user.changeRoleFromUserToTemp();
+				}
 				return true;
 			}).orElse(false);
 	}

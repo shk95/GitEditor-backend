@@ -105,8 +105,12 @@ public class User extends AbstractBaseTimeEntity {
 		this.isOpenAIEnabled = false;
 	}
 
-	public void changeEmailVerified(boolean state) {
-		this.isUserEmailVerified = state;
+	public void activateEmailVerified() {
+		this.isUserEmailVerified = true;
+	}
+
+	public void deactivateEmailVerified() {
+		this.isUserEmailVerified = false;
 	}
 
 	public void updateEmail(String email) {

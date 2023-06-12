@@ -43,7 +43,7 @@ public class UserResponse {
 			this.role = customUserDetails.getRole();
 			this.providerType = customUserDetails.getProviderType();
 			this.defaultEmail = customUserDetails.getDefaultEmail();
-			this.defaultUsername = customUserDetails.getUsername();
+			this.defaultUsername = customUserDetails.getDefaultUsername();
 			this.defaultImgUrl = customUserDetails.getDefaultImgUrl();
 			this.providerEmail = customUserDetails.getProviderEmail();
 			this.providerLoginId = customUserDetails.getProviderLoginId();
