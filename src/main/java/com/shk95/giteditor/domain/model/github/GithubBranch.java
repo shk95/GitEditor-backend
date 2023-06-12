@@ -7,11 +7,10 @@ import lombok.Getter;
 @AllArgsConstructor
 @Getter
 @Builder
-public class GHOwner {
+public class GithubBranch {
+	private String branchName;
+	private String branchSha;
 
-	private String name;
-	private String loginId;
-	private String avatarUrl;
-	private String email;
-	private String type;
+	GithubBranch() {
+	}
 }

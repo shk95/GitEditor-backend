@@ -6,23 +6,29 @@ import lombok.AllArgsConstructor;
 import java.util.Arrays;
 
 @AllArgsConstructor
-public enum GHFileType {
-	COMMIT("commit", "submodule"), BLOB("blob", "file"), TREE("tree", "directory");
+public enum GithubFileMode {
+	RW_BLOB("100644", "file"), X_BLOB("100755", "executable"),
+	TREE("040000", "subdirectory"), COMMIT("160000", "submodule"),
+	SYMLINK("120000", "a blob that specifies the path of a symlink");
 
 	private final String code;
 	private final String description;
 
-	public static GHFileType fromCode(String code) {
-		return Arrays.stream(GHFileType.values())
+	public static GithubFileMode fromCode(String code) {
+		return Arrays.stream(GithubFileMode.values())
 			.filter(e -> e.getCode().equals(code)).findAny().orElseThrow(IllegalArgumentException::new);
 	}
 
 	@JsonValue
 	public String getCode() {
-		return this.code;
+		return code;
 	}
 
 	public String getDescription() {
-		return this.description;
+		return description;
+	}
+
+	public boolean isExecutable() {
+		return this == X_BLOB;
 	}
 }

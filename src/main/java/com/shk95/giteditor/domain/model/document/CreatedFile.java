@@ -7,10 +7,10 @@ import lombok.Getter;
 @Builder
 public class CreatedFile {
 
-	private String content;
-	private String path;
-	private String repoName;
 	private StorageType storageType;
+	private String content;
+	private String repoName;
+	private String path;
 	private String fileName;
-	private String extension;
+	private Extension extension;
 }

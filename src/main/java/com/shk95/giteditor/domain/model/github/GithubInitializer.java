@@ -7,9 +7,9 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 
 @Component
-public class GHInitializer {
+public class GithubInitializer {
 
-	public GitHub getInstance(GHCredentialDelegator delegator) throws IOException {
+	public GitHub getInstance(GithubCredentialDelegator delegator) throws IOException {
 		return new GitHubBuilder().withOAuthToken(delegator.getAccessToken(), delegator.getGithubLoginId()).build();
 	}
 }

@@ -1,4 +1,4 @@
-package com.shk95.giteditor.domain.application.commands;
+package com.shk95.giteditor.domain.application.commands.github;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,9 +9,9 @@ import lombok.Getter;
 @Builder
 public class GetReposCommand {
 
-	private final String username;
+	private final String owner;
 
 	public boolean isMine() {
-		return this.username == null;
+		return this.owner == null;
 	}
 }

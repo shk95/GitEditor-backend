@@ -9,13 +9,13 @@ import java.util.List;
 @Getter
 @AllArgsConstructor
 @Builder
-public class GHRepo {
+public class GithubRepo {
 
 	private String repoFullName;
 	private String repoName;
-	private List<GHBranch> branches;
+	private List<GithubBranch> branches;
 	private String url;
 	private String htmlUrl;
 	private String defaultBranch;
-	private GHOwner owner;
+	private GithubOwner owner;
 }

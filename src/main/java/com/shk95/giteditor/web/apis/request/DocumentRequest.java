@@ -10,9 +10,13 @@ public class DocumentRequest {
 		public static class Create {
 
 			private String url;
+
+			private String branchName;
+			private String baseTreeSha;
+
 			private String storageType;
-			private String path;
 			private String repoName;
+			private String path;
 			private String fileName;
 		}
 	}

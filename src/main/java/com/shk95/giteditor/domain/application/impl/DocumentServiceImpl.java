@@ -3,7 +3,6 @@ package com.shk95.giteditor.domain.application.impl;
 import com.shk95.giteditor.domain.application.DocumentService;
 import com.shk95.giteditor.domain.application.commands.document.CreateDocumentCommand;
 import com.shk95.giteditor.domain.model.document.CreatedFile;
-import com.shk95.giteditor.domain.model.document.StorageType;
 import com.vladsch.flexmark.html2md.converter.FlexmarkHtmlConverter;
 import com.vladsch.flexmark.util.data.MutableDataSet;
 import lombok.RequiredArgsConstructor;
@@ -27,10 +26,10 @@ public class DocumentServiceImpl implements DocumentService {
 		FlexmarkHtmlConverter converter = FlexmarkHtmlConverter.builder(options).build();
 		String markdown = converter.convert(html);
 		return CreatedFile.builder()
-			.content(markdown)
-			.storageType(StorageType.valueOf(command.getStorageType()))
-			.path(command.getPath())
+			.storageType(command.getStorageType())
 			.repoName(command.getRepoName())
+			.content(markdown)
+			.path(command.getPath())
 			.fileName(command.getFileName())
 			.extension(command.getExtension())
 			.build();

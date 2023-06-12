@@ -11,20 +11,20 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @RequiredArgsConstructor
 @Component
-public class GHCredentialResolver {
+public class GithubCredentialResolver {
 
 	private final UserRepository userRepository;
 
 	@Transactional(readOnly = true)
-	public GHCredentialDelegator getCredential(UserId userId) {
+	public GithubCredentialDelegator getCredential(UserId userId) {
 		log.info("User's Github Credential Fetched. User Id : [{}]", userId.toString());
 		return userRepository.findById(userId)
 			.map(u ->
 				u.getProviders().stream()
 					.filter(provider -> provider.getProviderId().getProviderType() == ProviderType.GITHUB)
 					.findFirst()
-					.map(provider -> new GHCredentialDelegator(provider.getAccessToken(), provider.getProviderLoginId()))
-					.orElseGet(GHCredentialDelegator::new)
-			).orElseGet(GHCredentialDelegator::new);
+					.map(provider -> new GithubCredentialDelegator(provider.getAccessToken(), provider.getProviderLoginId()))
+					.orElseGet(GithubCredentialDelegator::new)
+			).orElseGet(GithubCredentialDelegator::new);
 	}
 }
