@@ -132,11 +132,11 @@ public class UserManagement {
 	}
 
 	@Transactional
-	public boolean changeEmail(ChangeEmailCommand command) {
+	public boolean updateEmail(UpdateEmailCommand command) {
 		String newEmail = command.getEmail();
 		return userRepository.findById(command.getUserId())
 			.filter(user ->
-				!user.getDefaultEmail().equals(newEmail)
+				(user.getDefaultEmail() == null) || (!user.getDefaultEmail().equals(newEmail))
 			)
 			.map(user -> {
 				user.addEmailToBeChanged(newEmail);
@@ -185,12 +185,6 @@ public class UserManagement {
 			.ifPresent(user -> {
 				user.updateUserName(command.getUsername());
 			});
-	}
-
-	@Transactional
-	public boolean updateEmail(UpdateUserCommand command) {
-		return this.changeEmail(ChangeEmailCommand.builder()
-			.userId(command.getUserId()).email(command.getEmail()).build());
 	}
 
 	@Transactional

@@ -8,7 +8,7 @@ import lombok.Getter;
 @AllArgsConstructor
 @Getter
 @Builder
-public class ChangeEmailCommand {
+public class UpdateEmailCommand {
 	private String email;
 	private UserId userId;
 }
