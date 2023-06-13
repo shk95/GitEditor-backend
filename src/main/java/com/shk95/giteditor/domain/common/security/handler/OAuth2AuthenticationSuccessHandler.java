@@ -1,5 +1,6 @@
 package com.shk95.giteditor.domain.common.security.handler;
 
+import com.shk95.giteditor.config.ApplicationProperties;
 import com.shk95.giteditor.domain.common.security.jwt.GeneratedJwtToken;
 import com.shk95.giteditor.domain.common.security.jwt.JwtTokenProvider;
 import com.shk95.giteditor.domain.common.security.repository.OAuth2AuthorizationRequestBasedOnCookieRepository;
@@ -7,7 +8,6 @@ import com.shk95.giteditor.domain.model.token.RefreshToken;
 import com.shk95.giteditor.domain.model.token.RefreshTokenRepository;
 import com.shk95.giteditor.domain.model.user.CustomUserDetails;
 import com.shk95.giteditor.utils.CookieUtil;
-import com.shk95.giteditor.utils.Helper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -28,13 +28,15 @@ import java.util.stream.Collectors;
 
 import static com.shk95.giteditor.config.ConstantFields.Jwt.ExpireTime.REFRESH_TOKEN_EXPIRE_TIME;
 import static com.shk95.giteditor.config.ConstantFields.Jwt.JWT_TYPE_REFRESH;
-import static com.shk95.giteditor.config.ConstantFields.OAuthRepo.*;
+import static com.shk95.giteditor.config.ConstantFields.OAuthRepo.OAUTH_DEFAULT_REDIRECT;
+import static com.shk95.giteditor.config.ConstantFields.OAuthRepo.OAUTH_REDIRECT_URI_PARAM_COOKIE_NAME;
 
 @Slf4j
 @RequiredArgsConstructor
 @Component
 public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
+	private final ApplicationProperties properties;
 	private final JwtTokenProvider tokenProvider;
 	private final RefreshTokenRepository refreshTokenRepository;
 	private final OAuth2AuthorizationRequestBasedOnCookieRepository authorizationRequestRepository;
@@ -67,12 +69,10 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 		CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
 		GeneratedJwtToken tokenInfo = tokenProvider.generateToken(authentication);
 
-		log.info("{}. client ip : {}", getClass(), Helper.getClientIp(request));
 		log.info("{}. request.getRemote() : {}", getClass(), request.getRemoteAddr());
 		// Redis RefreshToken 저장
-		refreshTokenRepository.save(RefreshToken.builder()// TODO: onOAuthSuccess: redis transaction 설정
+		refreshTokenRepository.save(RefreshToken.builder()
 			.subject(tokenProvider.getClaims(tokenInfo.getAccessToken()).getSubject())
-			.ip(Helper.getClientIp(request))
 			.authorities(userDetails.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.joining(",")))
 			.refreshToken(tokenInfo.getRefreshToken())
 			.build());
@@ -105,7 +105,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
 	private boolean isAuthorizedRedirectUri(String uri) {
 		URI clientRedirectUri = URI.create(uri);
-		URI authorizedURI = URI.create(OAUTH_DEFAULT_REDIRECT);
+		URI authorizedURI = URI.create(properties.getFrontPageUrl() + OAUTH_DEFAULT_REDIRECT);
 		// Only validate host and port. Let the clients use different paths if they want to
 		return authorizedURI.getHost().equalsIgnoreCase(clientRedirectUri.getHost())
 			&& authorizedURI.getPort() == clientRedirectUri.getPort();

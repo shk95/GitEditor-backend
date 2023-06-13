@@ -37,7 +37,8 @@ public class KakaoOAuth2UserInfo extends AbstractOAuth2UserInfo {
 
 	@Override
 	public String getEmail() {
-		return (String) super.getAttributes().get("account_email");
+		String email = (String) super.getAttributes().get("account_email");
+		return email != null ? email : (String) ((Map<?, ?>) super.getAttributes().get("kakao_account")).get("email");
 	}
 
 	@Override

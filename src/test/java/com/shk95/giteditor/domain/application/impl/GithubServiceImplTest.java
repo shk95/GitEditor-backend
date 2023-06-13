@@ -1,9 +1,8 @@
 package com.shk95.giteditor.domain.application.impl;
 
 import com.shk95.giteditor.domain.application.GithubService;
-import com.shk95.giteditor.domain.application.commands.GetFilesCommand;
-import com.shk95.giteditor.domain.application.commands.GetReposCommand;
-import com.shk95.giteditor.domain.application.commands.GetTreeCommand;
+import com.shk95.giteditor.domain.application.commands.github.GetFilesCommand;
+import com.shk95.giteditor.domain.application.commands.github.GetReposCommand;
 import com.shk95.giteditor.domain.common.constant.ProviderType;
 import com.shk95.giteditor.domain.model.github.*;
 import com.shk95.giteditor.domain.model.provider.Provider;
@@ -39,7 +38,7 @@ class GithubServiceImplTest {
 
 
 	@MockBean
-	GHInitializer initializer;
+	GithubInitializer initializer;
 
 	private ServiceUserInfo userInfo;
 
@@ -51,9 +50,9 @@ class GithubServiceImplTest {
 
 		this.userInfo = new ServiceUserInfo(provider.getProviderLoginId(), ProviderType.GITHUB);
 
-		GHCredentialDelegator credentialDelegator = new GHCredentialDelegator(provider.getAccessToken(), provider.getProviderLoginId());
+		GithubCredentialDelegator credentialDelegator = new GithubCredentialDelegator(provider.getAccessToken(), provider.getProviderLoginId());
 
-		Mockito.when(initializer.getInstance(isA(GHCredentialDelegator.class))).thenReturn(
+		Mockito.when(initializer.getInstance(isA(GithubCredentialDelegator.class))).thenReturn(
 			new GitHubBuilder().withOAuthToken(credentialDelegator.getAccessToken(), credentialDelegator.getGithubLoginId()).build());
 	}
 
@@ -69,8 +68,8 @@ class GithubServiceImplTest {
 	void getTreeRecursively() throws IOException {
 		GetReposCommand command = GetReposCommand.builder().build();
 		String someRepo = githubService.getRepos(userInfo, command).get(0).getRepoName();
-		githubService.getFilesRecursively(userInfo, GetTreeCommand.builder()
-			.repositoryName(someRepo).build()).forEach(t -> {
+		githubService.getFiles(userInfo, GetFilesCommand.builder()
+			.repositoryName(someRepo).recursive(true).build()).forEach(t -> {
 			System.out.println(t.getMode());
 			System.out.println(t.getPath());
 			System.out.println(t.getType());
@@ -85,7 +84,7 @@ class GithubServiceImplTest {
 		GetReposCommand command = GetReposCommand.builder().build();
 		String someRepo = githubService.getRepos(userInfo, command).get(0).getRepoName();
 
-		List<GHFile> f = githubService.getFilesFromRoot(userInfo, GetFilesCommand.builder().repositoryName(someRepo).build());
+		List<GithubFile> f = githubService.getFiles(userInfo, GetFilesCommand.builder().repositoryName(someRepo).build());
 		f.forEach(
 			t -> {
 				System.out.println(t.getType().getCode());
@@ -103,12 +102,12 @@ class GithubServiceImplTest {
 	void getFilesByTreeSha() throws IOException {
 		GetReposCommand command = GetReposCommand.builder().build();
 		String someRepo = githubService.getRepos(userInfo, command).get(0).getRepoName();
-		GHFile ifFileTypeTree = githubService
-			.getFilesFromRoot(userInfo, GetFilesCommand.builder().repositoryName(someRepo).build())
+		GithubFile ifFileTypeTree = githubService
+			.getFiles(userInfo, GetFilesCommand.builder().repositoryName(someRepo).build())
 			.stream()
-			.filter(ghFile -> ghFile.getType() == GHFileType.TREE).findAny().orElseThrow(IOException::new);
+			.filter(githubFile -> githubFile.getType() == GithubFileType.TREE).findAny().orElseThrow(IOException::new);
 
-		githubService.getFilesByTreeSha(userInfo, GetFilesCommand.builder()
+		githubService.getFiles(userInfo, GetFilesCommand.builder()
 			.repositoryName(someRepo)
 			.treeSha(ifFileTypeTree.getSha()).build()).parallelStream().forEachOrdered(
 			t -> {

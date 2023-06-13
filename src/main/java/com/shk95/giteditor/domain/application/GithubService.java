@@ -1,10 +1,8 @@
 package com.shk95.giteditor.domain.application;
 
-import com.shk95.giteditor.domain.application.commands.GetFilesCommand;
-import com.shk95.giteditor.domain.application.commands.GetReposCommand;
-import com.shk95.giteditor.domain.application.commands.GetTreeCommand;
-import com.shk95.giteditor.domain.model.github.GHFile;
-import com.shk95.giteditor.domain.model.github.GHRepo;
+import com.shk95.giteditor.domain.application.commands.github.*;
+import com.shk95.giteditor.domain.model.github.GithubFile;
+import com.shk95.giteditor.domain.model.github.GithubRepo;
 import com.shk95.giteditor.domain.model.github.ServiceUserInfo;
 
 import java.io.IOException;
@@ -12,13 +10,25 @@ import java.util.List;
 
 public interface GithubService {
 
-	List<GHRepo> getRepos(ServiceUserInfo userInfo, GetReposCommand command) throws IOException;
+	List<GithubRepo> getRepos(ServiceUserInfo userInfo, GetReposCommand command) throws IOException;
 
-	GHRepo getRepo(ServiceUserInfo userInfo) throws IOException;
+	GithubRepo getRepoInfo(ServiceUserInfo userInfo) throws IOException;
 
-	List<GHFile> getFilesRecursively(ServiceUserInfo userInfo, GetTreeCommand command) throws IOException;
+	List<GithubFile> getFiles(ServiceUserInfo userInfo, GetFilesCommand command) throws IOException;
 
-	List<GHFile> getFilesFromRoot(ServiceUserInfo userInfo, GetFilesCommand command) throws IOException;
+	void createFile(ServiceUserInfo userInfo, CreateFileCommand command) throws IOException;
 
-	List<GHFile> getFilesByTreeSha(ServiceUserInfo userInfo, GetFilesCommand command) throws IOException;
+	GithubFile readFileAsString(ServiceUserInfo userInfo, ReadFileCommand command) throws IOException;
+
+	boolean commitFiles(ServiceUserInfo userInfo, CommitFilesCommand command) throws IOException;
+
+	void createBranch(ServiceUserInfo userInfo, CreateBranchCommand command) throws IOException;
+
+	void deleteBranch(ServiceUserInfo userInfo, String branchName) throws IOException;
+
+	void createRepo(ServiceUserInfo userInfo, String repoName) throws IOException;
+
+	void deleteRepo(ServiceUserInfo userInfo, String repoName) throws IOException;
+
+	GithubFile getFileAsBlob(ServiceUserInfo userInfo, GetFilesCommand command) throws IOException;
 }

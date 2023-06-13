@@ -16,9 +16,8 @@ public class UpdatePasswordCommand {
 		this.inputPassword = inputPassword;
 	}
 
-	public UpdatePasswordCommand(String defaultEmail, String inputPassword) {
+	public UpdatePasswordCommand(String defaultEmail) {
 		this.defaultEmail = defaultEmail;
-		this.inputPassword = inputPassword;
 	}
 
 	public boolean isPasswordForgot() {

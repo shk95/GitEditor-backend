@@ -1,8 +1,7 @@
 package com.shk95.giteditor.domain.model.user;
 
 import com.shk95.giteditor.config.ApplicationProperties;
-import com.shk95.giteditor.domain.application.commands.ChangeEmailCommand;
-import com.shk95.giteditor.domain.application.commands.UpdatePasswordCommand;
+import com.shk95.giteditor.domain.application.commands.*;
 import com.shk95.giteditor.domain.common.constant.ProviderType;
 import com.shk95.giteditor.domain.common.file.FileStorage;
 import com.shk95.giteditor.domain.common.file.FileStorageResolver;
@@ -14,7 +13,9 @@ import com.shk95.giteditor.domain.common.mail.MessageVariable;
 import com.shk95.giteditor.utils.ImageUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import nl.flotsam.xeger.Xeger;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,9 +23,12 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.UUID;
 import java.util.function.Function;
+
+import static com.shk95.giteditor.domain.model.chat.SimpleGpt.simpleResponse;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -32,12 +36,44 @@ import java.util.function.Function;
 public class UserManagement {
 
 	private final UserRepository userRepository;
+	private final GithubServiceRepository githubServiceRepository;
 	private final MailManager mailManager;
 	private final FileStorageResolver fileStorageResolver;
 	private final FileUrlCreator fileUrlCreator;
 	private final ThumbnailCreator thumbnailCreator;
 	private final PasswordEncoder encoder;
 	private final ApplicationProperties properties;
+
+	public static String generatePassword() {
+		final String ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+		final String NUMBERS = "0123456789";
+		final String SPECIAL_CHARACTERS = "~!@#$%^&*()+|=";
+		final String ALL_CHARACTERS = ALPHABET + NUMBERS + SPECIAL_CHARACTERS;
+		final int PASSWORD_LENGTH = 16;
+		SecureRandom random = new SecureRandom();
+
+		StringBuilder password = new StringBuilder(PASSWORD_LENGTH);
+
+		// Ensure at least one alphabet character, one number, and one special character
+		password.append(ALPHABET.charAt(random.nextInt(ALPHABET.length())));
+		password.append(NUMBERS.charAt(random.nextInt(NUMBERS.length())));
+		password.append(SPECIAL_CHARACTERS.charAt(random.nextInt(SPECIAL_CHARACTERS.length())));
+
+		// Fill the rest with random characters
+		for (int i = 3; i < PASSWORD_LENGTH; i++) {
+			password.append(ALL_CHARACTERS.charAt(random.nextInt(ALL_CHARACTERS.length())));
+		}
+
+		// Shuffle the characters to ensure randomness
+		for (int i = 0; i < password.length(); i++) {
+			int j = random.nextInt(password.length());
+			char temp = password.charAt(i);
+			password.setCharAt(i, password.charAt(j));
+			password.setCharAt(j, temp);
+		}
+
+		return password.toString();
+	}
 
 	@Transactional
 	public boolean updatePassword(UpdatePasswordCommand passwordCommand) {
@@ -47,17 +83,32 @@ public class UserManagement {
 	}
 
 	private boolean updatePassword(String email) {
-		Function<User, Boolean> thenUpdatePasswordAndSendMail = user -> {
-			String regex = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[~!@#$%^&*()+|=])[A-Za-z\\d~!@#$%^&*()+|=]{8,16}$";
-			Xeger generator = new Xeger(regex);
-			final String NEW_PASSWORD = generator.generate();
+		final String C_1 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+		final String C_2 = "abcdefghijklmnopqrstuvwxyz";
+		final String C_3 = "0123456789";
+		final String C_4 = "!@#$%^&*()+";
+		SecureRandom random = new SecureRandom();
+
+		Function<User, Boolean> updatePasswordAndSendMail = user -> {
+			CustomUserDetails userDetails = CustomUserDetails.of(user);
+			Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+			SecurityContextHolder.getContext().setAuthentication(authentication);
+
+			StringBuilder password = new StringBuilder(16);
+			for (int i = 0; i < 4; i++) {
+				password.append(C_1.charAt(random.nextInt(C_1.length())));
+				password.append(C_2.charAt(random.nextInt(C_3.length())));
+				password.append(C_3.charAt(random.nextInt(C_3.length())));
+				password.append(C_4.charAt(random.nextInt(C_4.length())));
+			}
+			final String NEW_PASSWORD = password.toString();
 			user.updatePassword(encoder.encode(NEW_PASSWORD));
 			mailManager.send(
-				user.getDefaultEmail(), "[GitEditor] 비밀번호 변경", "findPassword"
-				, MessageVariable.from("code", NEW_PASSWORD));
+				user.getDefaultEmail(), "[GitEditor] 비밀번호 발급 안내", "new-password.ftl"
+				, MessageVariable.from("password", NEW_PASSWORD));
 			return true;
 		};
-		return userRepository.findByDefaultEmail(email).map(thenUpdatePasswordAndSendMail).orElse(false);
+		return userRepository.findByDefaultEmail(email).map(updatePasswordAndSendMail).orElse(false);
 	}
 
 	private boolean updatePassword(UserId userId, String inputPassword) {
@@ -73,7 +124,7 @@ public class UserManagement {
 		return userRepository.findByEmailVerificationCode(emailVerificationCode)
 			.map(user -> {
 				user.deleteEmailVerificationCode();
-				user.changeEmailVerified(true);
+				user.activateEmailVerified();
 				user.updateEmailFromOld();
 				user.changeRoleFromTempToUser();// 최초회원가입 유저인경우.
 				return true;
@@ -89,7 +140,7 @@ public class UserManagement {
 			)
 			.map(user -> {
 				user.addEmailToBeChanged(newEmail);
-				user.changeEmailVerified(false);
+				user.deactivateEmailVerified();
 				user.addEmailVerificationCode(this.sendVerificationEmail(newEmail));
 				if (user.getUserId().getProviderType() == ProviderType.LOCAL) {
 					user.changeRoleFromUserToTemp();
@@ -116,6 +167,49 @@ public class UserManagement {
 			.isPresent();
 	}
 
+	public void deleteUser(DeleteUserCommand command) {
+		userRepository.deleteById(command.getUserId());
+	}
+
+	@Transactional
+	public void updatePassword(UpdateUserCommand command) {
+		userRepository.findById(command.getUserId())
+			.ifPresent(user -> {
+				user.updatePassword(encoder.encode(command.getPassword()));
+			});
+	}
+
+	@Transactional
+	public void updateUsername(UpdateUserCommand command) {
+		userRepository.findById(command.getUserId())
+			.ifPresent(user -> {
+				user.updateUserName(command.getUsername());
+			});
+	}
+
+	@Transactional
+	public boolean updateEmail(UpdateUserCommand command) {
+		return this.changeEmail(ChangeEmailCommand.builder()
+			.userId(command.getUserId()).email(command.getEmail()).build());
+	}
+
+	@Transactional
+	public boolean updateOpenAIService(UpdateOpenAIServiceCommand command) {
+		if (!verifyOpenAI(command.getAccessToken())) {
+			return false;
+		}
+		return userRepository.findById(command.getUserId())
+			.map(user -> {
+				user.upsertOpenAIToken(command.getAccessToken());
+				user.activateOpenAIUsage();
+				return true;
+			}).orElse(false);
+	}
+
+	public void addGithubAccount(AddGithubAccountCommand command) {
+		githubServiceRepository.save(new GithubService(command.getUserId().get()));
+	}
+
 	private String sendVerificationEmail(String email) {
 		String code = Base64.getUrlEncoder().encodeToString(UUID.randomUUID().toString().getBytes());
 		String home = properties.getFrontPageUrl();
@@ -127,5 +221,15 @@ public class UserManagement {
 			MessageVariable.from("message", "아래의 링크를 클릭해서 이메일을 확인해 주세요.")
 		);
 		return code;
+	}
+
+	private boolean verifyOpenAI(String accessToken) {
+		try {
+			simpleResponse(accessToken, "just say hi");
+		} catch (Exception e) {
+			log.info("Failed to verify OpenAI access token");
+			return false;
+		}
+		return true;
 	}
 }

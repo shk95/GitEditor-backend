@@ -9,7 +9,6 @@ public class ReissueCommand {
 
 	private String accessToken;
 	private String refreshToken;
-	private String ip;
 
 	private ReissueCommand() {
 	}

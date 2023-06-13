@@ -23,6 +23,7 @@ import java.util.Map;
 @Builder
 @Getter
 public class CustomUserDetails implements UserDetails, OAuth2User, OidcUser {
+
 	private Collection<? extends GrantedAuthority> authorities;
 	private String userId;
 	private String password;
@@ -32,10 +33,12 @@ public class CustomUserDetails implements UserDetails, OAuth2User, OidcUser {
 	private String defaultUsername;
 	private String defaultImgUrl;//default profile image
 	private boolean isGithubEnabled;
+	private boolean isOpenAIEnabled;
 	private String providerEmail;
 	private String providerLoginId;
 	private String providerUsername;
 	private String providerImgUrl;
+	private String openAIAccessToken;
 	private Map<String, Object> attributes;
 
 	private boolean isUserEmailVerified;
@@ -58,6 +61,8 @@ public class CustomUserDetails implements UserDetails, OAuth2User, OidcUser {
 			.defaultEmail(user.getDefaultEmail())
 			.defaultImgUrl(user.getProfileImageUrl())
 			.isGithubEnabled(user.isGithubEnabled())
+			.isOpenAIEnabled(user.isOpenAIEnabled())
+			.openAIAccessToken(user.getOpenAIToken())
 			.isUserEnabled(user.isUserEnabled());
 		if (!user.getProviders().isEmpty()) {
 			userDetailsBuilder
@@ -91,6 +96,8 @@ public class CustomUserDetails implements UserDetails, OAuth2User, OidcUser {
 			.defaultEmail(user.getDefaultEmail())
 			.defaultImgUrl(user.getProfileImageUrl())
 			.isGithubEnabled(user.isGithubEnabled())
+			.isOpenAIEnabled(user.isOpenAIEnabled())
+			.openAIAccessToken(user.getOpenAIToken())
 			.providerUsername(providerInfo.getProviderUserName())
 			.providerImgUrl(providerInfo.getProviderImgUrl())
 			.providerLoginId(providerInfo.getProviderLoginId())

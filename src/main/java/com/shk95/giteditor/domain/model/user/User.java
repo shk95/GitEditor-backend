@@ -41,7 +41,7 @@ public class User extends AbstractBaseTimeEntity {
 	private String profileImageUrl;
 
 	@Column(name = "user_email_verified")
-	private boolean isUserEmailVerified;//TODO: email 유효성 가입시 체크 기능
+	private boolean isUserEmailVerified;
 
 	@Column(name = "user_enabled")
 	private boolean isUserEnabled;//TODO: user 활성화 여부 체크 기능
@@ -52,12 +52,24 @@ public class User extends AbstractBaseTimeEntity {
 	@Column(name = "user_email_new", length = 50)
 	private String emailToBeChanged;
 
+	@Column(name = "user_openai_token", length = 128)
+	private String openAIToken;
+
 	@Column(name = "user_github_enabled")
 	private boolean isGithubEnabled;
 
+	@Column(name = "user_openai_enabled")
+	private boolean isOpenAIEnabled;
+
+	@Builder.Default
 	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL,
 		orphanRemoval = true, fetch = FetchType.LAZY)
 	private List<Provider> providers = new ArrayList<>();
+
+	public void addProvider(Provider provider) {
+		this.providers.add(provider);
+		provider.setUser(this);
+	}
 
 	public void updateUserName(String username) {
 		this.username = username;
@@ -67,8 +79,14 @@ public class User extends AbstractBaseTimeEntity {
 		this.password = newPassword;
 	}
 
-	public void changeGithubUsage() {
-		this.isGithubEnabled = !this.isGithubEnabled;
+	public User activateGithubUsage() {
+		this.isGithubEnabled = true;
+		return this;
+	}
+
+	public User deactivateGithubUsage() {
+		this.isGithubEnabled = false;
+		return this;
 	}
 
 	public void deleteEmailVerificationCode() {
@@ -79,13 +97,33 @@ public class User extends AbstractBaseTimeEntity {
 		this.emailVerificationCode = emailVerificationCode;
 	}
 
-	public void changeEmailVerified(boolean state) {
-		this.isUserEmailVerified = state;
+	public void activateOpenAIUsage() {
+		this.isOpenAIEnabled = true;
+	}
+
+	public void deactivateOpenAIUsage() {
+		this.isOpenAIEnabled = false;
+	}
+
+	public void activateEmailVerified() {
+		this.isUserEmailVerified = true;
+	}
+
+	public void deactivateEmailVerified() {
+		this.isUserEmailVerified = false;
+	}
+
+	public void updateEmail(String email) {
+		this.defaultEmail = email;
 	}
 
 	public User updateProfileImageUrl(String profileImageUrl) {
 		this.profileImageUrl = profileImageUrl;
 		return this;
+	}
+
+	public void upsertOpenAIToken(String accessToken) {
+		this.openAIToken = accessToken;
 	}
 
 	public void activateUser() {
@@ -138,7 +176,7 @@ public class User extends AbstractBaseTimeEntity {
 			"userId=" + userId +
 			", defaultEmail='" + defaultEmail + '\'' +
 			", role=" + role +
-			", password='" + password + '\'' +
+			", password='" + "[password]" + '\'' +
 			", username='" + username + '\'' +
 			", profileImageUrl='" + profileImageUrl + '\'' +
 			", isUserEmailVerified=" + isUserEmailVerified +

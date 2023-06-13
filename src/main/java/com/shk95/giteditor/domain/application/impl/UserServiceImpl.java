@@ -88,7 +88,8 @@ public class UserServiceImpl implements UserService {
 			.isUserEnabled(true)
 			.role(Role.USER)
 			.profileImageUrl(command.getOAuthUserImgUrl())
-			.isGithubEnabled(command.getOAuthUserProviderType()==ProviderType.GITHUB)
+			.isGithubEnabled(command.getOAuthUserProviderType() == ProviderType.GITHUB)
+			.isOpenAIEnabled(false)
 			.build();
 		User savedUser = userRepository.saveAndFlush(user);
 		ProviderId providerId = new ProviderId(command.getOAuthUserProviderType(), command.getOAuthUserId());
@@ -123,7 +124,6 @@ public class UserServiceImpl implements UserService {
 		// Redis RefreshToken 저장
 		refreshTokenRepository.save(RefreshToken.builder()// TODO : redis transaction 설정
 			.subject(jwtTokenProvider.getClaims(tokenInfo.getAccessToken()).getSubject())
-			.ip(login.getIp())
 			.authorities(authentication.getAuthorities().stream()
 				.map(GrantedAuthority::getAuthority).collect(Collectors.joining(",")))
 			.refreshToken(tokenInfo.getRefreshToken())
@@ -135,7 +135,6 @@ public class UserServiceImpl implements UserService {
 	public GeneratedJwtToken reissue(ReissueCommand command) {
 		final String accessToken = command.getAccessToken();
 		final String refreshToken = command.getRefreshToken();
-		final String currentIpAddress = command.getIp();
 		Assert.notNull(accessToken, "access token may not be null");
 		Assert.notNull(refreshToken, "refresh token may not be null");
 
@@ -156,7 +155,6 @@ public class UserServiceImpl implements UserService {
 		// Redis RefreshToken update
 		refreshTokenRepository.save(RefreshToken.builder()
 			.subject(subject)
-			.ip(currentIpAddress)
 			.authorities(claims.get(AUTHORITIES_KEY).toString())
 			.refreshToken(renewedTokenInfo.getRefreshToken())
 			.build());
@@ -168,7 +166,6 @@ public class UserServiceImpl implements UserService {
 	public void logout(LogoutCommand command) {
 		// user id 로 refresh token repository 검색
 		refreshTokenRepository.findByRefreshToken(command.getRefreshToken())
-			.filter((e) -> e.getIp().equals(command.getIp()))
 			.ifPresent(refreshTokenRepository::delete);
 		// 해당 Access Token 유효시간 가지고 와서 BlackList 로 저장하기
 		Long expiration = jwtTokenProvider.getExpiration(command.getAccessToken());

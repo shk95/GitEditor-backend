@@ -1,6 +1,7 @@
 package com.shk95.giteditor.web.apis.handler;
 
 import com.shk95.giteditor.utils.Response;
+import io.github.aminovmaksim.chatgpt4j.ChatGPTClientException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -23,7 +24,6 @@ public class GlobalApiExceptionHandler extends ResponseEntityExceptionHandler {
 	protected ResponseEntity<?> handle(RuntimeException ex, HttpServletResponse httpServletResponse) {
 
 		log.error("Unhandled Runtime exception occurred. cause : [" + ex.getCause() + "]" + "\nError message : [" + ex.getMessage() + "]");
-		ex.printStackTrace();
 		return Response.fail(ex.getMessage(), "Sorry, there was an error on the server side.", HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 
@@ -31,7 +31,6 @@ public class GlobalApiExceptionHandler extends ResponseEntityExceptionHandler {
 	protected ResponseEntity<?> handle(IOException ex, HttpServletResponse httpServletResponse) {
 
 		log.error("IOException occurred. cause : [" + ex.getCause() + "]" + "\nError message : [" + ex.getMessage() + "]");
-		ex.printStackTrace();
 		return Response.fail(ex.getMessage(), "Sorry, there was an error on the server side.", HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 
@@ -50,7 +49,12 @@ public class GlobalApiExceptionHandler extends ResponseEntityExceptionHandler {
 	@ExceptionHandler({IllegalArgumentException.class})
 	protected ResponseEntity<?> handle(IllegalArgumentException ex) {
 		log.warn("Illegal Argument Exception : {}", ex.getMessage());
-		ex.printStackTrace();
+		return Response.fail(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+	}
+
+	@ExceptionHandler({ChatGPTClientException.class})
+	protected ResponseEntity<?> handle(ChatGPTClientException ex) {
+		log.warn("ChatGPT Exception : {}", ex.getMessage());
 		return Response.fail(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 }

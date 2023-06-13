@@ -14,7 +14,9 @@
 	<name>GitEditor</name>
 	<description>GitEditor</description>
 	<properties>
-		<java.version>1.8</java.version>
+		<maven.compiler.source>11</maven.compiler.source>
+		<maven.compiler.target>11</maven.compiler.target>
+		<java.version>11</java.version>
 		<commons-io.version>2.7</commons-io.version>
 		<im4java.version>1.4.0</im4java.version>
 		<kohsuke-github.version>1.314</kohsuke-github.version>
@@ -73,14 +75,26 @@
 			<artifactId>h2</artifactId>
 			<scope>runtime test</scope>
 		</dependency>
+
 		<dependency>
 			<groupId>org.mariadb.jdbc</groupId>
 			<artifactId>mariadb-java-client</artifactId>
 			<scope>runtime</scope>
 		</dependency>
+
+		<!--<dependency>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
+		</dependency>-->
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-redis</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-mongodb</artifactId>
 		</dependency>
 
 		<dependency>
@@ -93,6 +107,7 @@
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 			<optional>true</optional>
+			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.freemarker</groupId>
@@ -116,6 +131,7 @@
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
+			<version>3.10</version>
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-api -->
 		<dependency>
@@ -147,11 +163,44 @@
 			<version>${kohsuke-github.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>com.github.krraghavan</groupId>
-			<artifactId>xeger</artifactId>
-			<version>1.0.0-RELEASE</version>
+			<groupId>io.github.aminovmaksim</groupId>
+			<artifactId>chatgpt4j</artifactId>
+			<version>1.0.3</version>
 		</dependency>
+		<dependency>
+			<!-- jsoup HTML parser library @ https://jsoup.org/ -->
+			<groupId>org.jsoup</groupId>
+			<artifactId>jsoup</artifactId>
+			<version>1.16.1</version>
+		</dependency>
+		<dependency>
+			<groupId>com.vladsch.flexmark</groupId>
+			<artifactId>flexmark-all</artifactId>
+			<version>0.64.8</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.groupdocs</groupId>
+			<artifactId>groupdocs-conversion-cloud</artifactId>
+			<version>23.4</version>
+			<scope>compile</scope>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/com.squareup.okhttp/okhttp -->
+		<dependency>
+			<groupId>com.squareup.okhttp3</groupId>
+			<artifactId>okhttp</artifactId>
+			<version>4.11.0</version>
+		</dependency>
+
 	</dependencies>
+
+	<repositories>
+		<repository>
+			<id>groupdocs-artifact-repository</id>
+			<name>GroupDocs Artifact Repository</name>
+			<url>https://repository.groupdocs.cloud/repo</url>
+		</repository>
+	</repositories>
 
 	<build>
 		<plugins>
@@ -170,8 +219,17 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.8.1</version>
 				<configuration>
-					<proc>none</proc>
+					<source>11</source>
+					<target>11</target>
+					<annotationProcessorPaths>
+						<path>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+							<version>1.18.24</version>
+						</path>
+					</annotationProcessorPaths>
 				</configuration>
 			</plugin>
 		</plugins>

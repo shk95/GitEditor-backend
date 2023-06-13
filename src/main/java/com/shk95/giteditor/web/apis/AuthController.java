@@ -60,9 +60,8 @@ public class AuthController {
 		if (errors.hasErrors()) {
 			return Response.invalidFields(Resolver.error.inputFields(errors));
 		}
-		String clientIp = Helper.getClientIp(request);
 
-		GeneratedJwtToken tokenInfo = userService.loginDefault(LoginCommand.of(login, clientIp));
+		GeneratedJwtToken tokenInfo = userService.loginDefault(LoginCommand.of(login));
 		CookieUtil.addCookie(response, JWT_TYPE_REFRESH, tokenInfo.getRefreshToken(), (int) (REFRESH_TOKEN_EXPIRE_TIME / 1000));
 
 		return Response.success(tokenInfo, "로그인에 성공했습니다.", HttpStatus.OK);
@@ -119,7 +118,6 @@ public class AuthController {
 	public ResponseEntity<?> reissue(HttpServletRequest request, HttpServletResponse response) {
 		String accessToken = jwtTokenProvider.resolveAccessToken(request);
 		String refreshToken = jwtTokenProvider.resolveRefreshToken(request);
-		String currentIpAddress = Helper.getClientIp(request);
 
 		//FIXME: 리펙토링
 		/*
@@ -129,7 +127,7 @@ public class AuthController {
 		 *
 		 * refresh token 검증
 		 * access token 에서 subject(user id) 로 refresh token repository 에서 검색
-		 * 현재 ip 와 refresh token repository 의 ip 일치 확인
+		 * 현재 ip 와 refresh token repository 의 ip 일치 확인 -> 확인 필요
 		 *
 		 * access token 에 유지되야할 목록 : subject(user id), claim(authorities)
 		 */
@@ -147,14 +145,9 @@ public class AuthController {
 		if (!savedRefreshToken.isPresent()) {
 			return Response.fail("Refresh Token 정보와 Access Token 정보가 일치하지 않습니다.", HttpStatus.NOT_ACCEPTABLE);
 		}
-		// 최초 로그인한 ip 와 같은지 확인. (처리 방식에 따라 재발급을 하지 않거나 메일 등의 알림을 주는 방법이 있음)
-		if (!savedRefreshToken.get().getIp().equals(currentIpAddress)) {
-			refreshTokenRepository.delete(savedRefreshToken.get());
-			return Response.fail("IP 주소가 다릅니다.", HttpStatus.NOT_ACCEPTABLE);
-		}
 
 		GeneratedJwtToken tokenInfo = userService.reissue(
-			new ReissueCommand(accessToken, refreshToken, currentIpAddress));
+			new ReissueCommand(accessToken, refreshToken));
 
 		CookieUtil.deleteCookie(request, response, JWT_TYPE_REFRESH);
 		CookieUtil.addCookie(response, JWT_TYPE_REFRESH, tokenInfo.getRefreshToken(), (int) (REFRESH_TOKEN_EXPIRE_TIME / 1000));

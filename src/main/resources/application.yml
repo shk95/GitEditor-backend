@@ -1,6 +1,6 @@
 spring:
   datasource:
-    driver-class-name: org.mariadb.jdbc.Driver
+    driver-class-name:
     url: <>
     username: <>
     password: <>
@@ -19,6 +19,14 @@ spring:
         jdbc.batch_size: 20
         format_sql: true
     show-sql: true
+
+  data:
+    mongodb:
+      host:
+      port:
+      username:
+      password:
+      database:
 
   security:
     oauth2:
@@ -62,13 +70,14 @@ spring:
     password: asdf
 
   config:
-    import: application-secret.yml
+    import:
+    - application-secret.yml
   profiles:
     include:
       - application-secret
 
 app:
-  front-page-url: 'localhost'
+  front-page-url: 'http://localhost'
 
   mail-from: test@test.com
 
@@ -104,4 +113,4 @@ app:
 
 logging:
   level:
-    com.shk95.*: log
+    com.shk95.*: INFO
