@@ -78,20 +78,13 @@ public class UserController {
 
 	@UserOrTempAuthorize
 	@PutMapping("/email")
-	public ResponseEntity<?> changeDefaultEmail(@CurrentUser CustomUserDetails userDetails,
+	public ResponseEntity<?> updateDefaultEmail(@CurrentUser CustomUserDetails userDetails,
 												@Validated @RequestBody UserRequest.ChangeEmail userInfo) {
-		return userManagement.changeEmail(ChangeEmailCommand.builder()
+		return userManagement.updateEmail(UpdateEmailCommand.builder()
 			.userId(userDetails.getUserEntityId())
 			.email(userInfo.getDefaultEmail()).build())
 			? Response.success("이메일이 변경되었습니다")
 			: Response.fail("이메일 변경에 실패하였습니다.", HttpStatus.BAD_REQUEST);
-	}
-
-	@UserOrTempAuthorize
-	@DeleteMapping
-	public ResponseEntity<?> deleteUser(@CurrentUser CustomUserDetails userDetails) {
-		userManagement.deleteUser(DeleteUserCommand.builder().userId(userDetails.getUserEntityId()).build());
-		return Response.success("탈퇴되었습니다.");
 	}
 
 	@UserOrTempAuthorize
@@ -112,9 +105,18 @@ public class UserController {
 		if (!command.isEmail()) {
 			return Response.success("변경되었습니다.");
 		}
-		return userManagement.updateEmail(command)
+		return userManagement.updateEmail(UpdateEmailCommand.builder()
+			.userId(userDetails.getUserEntityId())
+			.email(profile.getNewEmail()).build())
 			? Response.success("변경되었습니다.")
 			: Response.fail("잘못된 이메일입니다.", HttpStatus.NOT_ACCEPTABLE);
+	}
+
+	@UserOrTempAuthorize
+	@DeleteMapping
+	public ResponseEntity<?> deleteUser(@CurrentUser CustomUserDetails userDetails) {
+		userManagement.deleteUser(DeleteUserCommand.builder().userId(userDetails.getUserEntityId()).build());
+		return Response.success("탈퇴되었습니다.");
 	}
 
 	@UserAuthorize
