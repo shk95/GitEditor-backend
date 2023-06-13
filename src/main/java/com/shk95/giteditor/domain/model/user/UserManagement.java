@@ -189,17 +189,8 @@ public class UserManagement {
 
 	@Transactional
 	public boolean updateEmail(UpdateUserCommand command) {
-		return userRepository.findById(command.getUserId())
-			.map(user -> {
-				if (userRepository.existsByDefaultEmail(command.getEmail())) {
-					return false;
-				}
-				sendVerificationEmail(command.getEmail());
-				user.updateEmail(command.getEmail());
-				user.deactivateEmailVerified();
-				user.changeRoleFromUserToTemp();
-				return true;
-			}).orElse(false);
+		return this.changeEmail(ChangeEmailCommand.builder()
+			.userId(command.getUserId()).email(command.getEmail()).build());
 	}
 
 	@Transactional
