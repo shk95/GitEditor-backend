@@ -41,7 +41,7 @@ public class User extends AbstractBaseTimeEntity {
 	private String profileImageUrl;
 
 	@Column(name = "user_email_verified")
-	private boolean isUserEmailVerified;//TODO: email 유효성 가입시 체크 기능
+	private boolean isUserEmailVerified;
 
 	@Column(name = "user_enabled")
 	private boolean isUserEnabled;//TODO: user 활성화 여부 체크 기능
@@ -105,8 +105,12 @@ public class User extends AbstractBaseTimeEntity {
 		this.isOpenAIEnabled = false;
 	}
 
-	public void changeEmailVerified(boolean state) {
-		this.isUserEmailVerified = state;
+	public void activateEmailVerified() {
+		this.isUserEmailVerified = true;
+	}
+
+	public void deactivateEmailVerified() {
+		this.isUserEmailVerified = false;
 	}
 
 	public void updateEmail(String email) {

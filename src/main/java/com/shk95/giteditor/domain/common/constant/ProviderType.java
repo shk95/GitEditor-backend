@@ -11,5 +11,6 @@ public enum ProviderType implements Serializable {
 	NAVER,
 	KAKAO,
 	GITHUB,
-	LOCAL
+	LOCAL,
+	ANONYMOUS;
 }

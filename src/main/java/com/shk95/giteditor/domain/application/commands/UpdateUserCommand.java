@@ -12,4 +12,16 @@ public class UpdateUserCommand {
 	private String email;
 	private String username;
 	private String password;
+
+	public boolean isEmail() {
+		return email != null;
+	}
+
+	public boolean isUsername() {
+		return username != null;
+	}
+
+	public boolean isPassword() {
+		return password != null;
+	}
 }
