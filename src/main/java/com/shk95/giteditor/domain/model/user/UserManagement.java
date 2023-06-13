@@ -172,17 +172,32 @@ public class UserManagement {
 	}
 
 	@Transactional
-	public boolean updateUser(UpdateUserCommand command) {
+	public void updatePassword(UpdateUserCommand command) {
+		userRepository.findById(command.getUserId())
+			.ifPresent(user -> {
+				user.updatePassword(encoder.encode(command.getPassword()));
+			});
+	}
+
+	@Transactional
+	public void updateUsername(UpdateUserCommand command) {
+		userRepository.findById(command.getUserId())
+			.ifPresent(user -> {
+				user.updateUserName(command.getUsername());
+			});
+	}
+
+	@Transactional
+	public boolean updateEmail(UpdateUserCommand command) {
 		return userRepository.findById(command.getUserId())
 			.map(user -> {
-				if (command.getUsername() != null) user.updateUserName(command.getUsername());
-				if (command.getPassword() != null) user.updatePassword(encoder.encode(command.getPassword()));
-				if (command.getEmail() != null) {
-					sendVerificationEmail(command.getEmail());
-					user.updateEmail(command.getEmail());
-					user.deactivateEmailVerified();
-					user.changeRoleFromUserToTemp();
+				if (userRepository.existsByDefaultEmail(command.getEmail())) {
+					return false;
 				}
+				sendVerificationEmail(command.getEmail());
+				user.updateEmail(command.getEmail());
+				user.deactivateEmailVerified();
+				user.changeRoleFromUserToTemp();
 				return true;
 			}).orElse(false);
 	}
