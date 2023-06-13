@@ -63,8 +63,8 @@ public class UserController {
 	}
 
 	@PostMapping("/password")// 잃어버렸을때
-	public ResponseEntity<?> updatePassword(@Validated @RequestBody UserRequest.ChangePassword management) {
-		return userManagement.updatePassword(new UpdatePasswordCommand(management.getDefaultEmail(), management.getPassword()))
+	public ResponseEntity<?> updatePassword(@Validated @RequestBody UserRequest.ForgotPassword management) {
+		return userManagement.updatePassword(new UpdatePasswordCommand(management.getDefaultEmail()))
 			? Response.success("새로운 비밀번호가 발급되었습니다. 이메일을 확인해주세요.")
 			: Response.fail("비밀번호 초기화에 실패하였습니다. 잘못된 회원정보입니다.", HttpStatus.NOT_ACCEPTABLE);
 	}
@@ -98,12 +98,23 @@ public class UserController {
 	@PutMapping("/profile")
 	public ResponseEntity<?> updateUser(@CurrentUser CustomUserDetails userDetails,
 										@Validated @RequestBody UserRequest.Profile profile) {
-		return userManagement.updateUser(UpdateUserCommand.builder()
+		UpdateUserCommand command = UpdateUserCommand.builder()
 			.userId(userDetails.getUserEntityId())
 			.username(profile.getNewUsername())
 			.password(profile.getNewPassword())
-			.email(profile.getNewEmail()).build())
-			? Response.success("변경되었습니다.") : Response.fail("변경에 실패하였습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
+			.email(profile.getNewEmail()).build();
+		if (command.isUsername()) {
+			userManagement.updateUsername(command);
+		}
+		if (command.isPassword()) {
+			userManagement.updatePassword(command);
+		}
+		if (!command.isEmail()) {
+			return Response.success("변경되었습니다.");
+		}
+		return userManagement.updateEmail(command)
+			? Response.success("변경되었습니다.")
+			: Response.fail("잘못된 이메일입니다.", HttpStatus.NOT_ACCEPTABLE);
 	}
 
 	@UserAuthorize

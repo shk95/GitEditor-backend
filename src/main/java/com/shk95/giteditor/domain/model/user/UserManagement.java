@@ -13,7 +13,9 @@ import com.shk95.giteditor.domain.common.mail.MessageVariable;
 import com.shk95.giteditor.utils.ImageUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import nl.flotsam.xeger.Xeger;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.UUID;
 import java.util.function.Function;
@@ -41,6 +44,37 @@ public class UserManagement {
 	private final PasswordEncoder encoder;
 	private final ApplicationProperties properties;
 
+	public static String generatePassword() {
+		final String ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+		final String NUMBERS = "0123456789";
+		final String SPECIAL_CHARACTERS = "~!@#$%^&*()+|=";
+		final String ALL_CHARACTERS = ALPHABET + NUMBERS + SPECIAL_CHARACTERS;
+		final int PASSWORD_LENGTH = 16;
+		SecureRandom random = new SecureRandom();
+
+		StringBuilder password = new StringBuilder(PASSWORD_LENGTH);
+
+		// Ensure at least one alphabet character, one number, and one special character
+		password.append(ALPHABET.charAt(random.nextInt(ALPHABET.length())));
+		password.append(NUMBERS.charAt(random.nextInt(NUMBERS.length())));
+		password.append(SPECIAL_CHARACTERS.charAt(random.nextInt(SPECIAL_CHARACTERS.length())));
+
+		// Fill the rest with random characters
+		for (int i = 3; i < PASSWORD_LENGTH; i++) {
+			password.append(ALL_CHARACTERS.charAt(random.nextInt(ALL_CHARACTERS.length())));
+		}
+
+		// Shuffle the characters to ensure randomness
+		for (int i = 0; i < password.length(); i++) {
+			int j = random.nextInt(password.length());
+			char temp = password.charAt(i);
+			password.setCharAt(i, password.charAt(j));
+			password.setCharAt(j, temp);
+		}
+
+		return password.toString();
+	}
+
 	@Transactional
 	public boolean updatePassword(UpdatePasswordCommand passwordCommand) {
 		return passwordCommand.isPasswordForgot()
@@ -49,13 +83,28 @@ public class UserManagement {
 	}
 
 	private boolean updatePassword(String email) {
+		final String C_1 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+		final String C_2 = "abcdefghijklmnopqrstuvwxyz";
+		final String C_3 = "0123456789";
+		final String C_4 = "!@#$%^&*()+";
+		SecureRandom random = new SecureRandom();
+
 		Function<User, Boolean> updatePasswordAndSendMail = user -> {
-			String regex = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[~!@#$%^&*()+|=])[A-Za-z\\d~!@#$%^&*()+|=]{8,16}$";
-			Xeger generator = new Xeger(regex);
-			final String NEW_PASSWORD = generator.generate();
+			CustomUserDetails userDetails = CustomUserDetails.of(user);
+			Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+			SecurityContextHolder.getContext().setAuthentication(authentication);
+
+			StringBuilder password = new StringBuilder(16);
+			for (int i = 0; i < 4; i++) {
+				password.append(C_1.charAt(random.nextInt(C_1.length())));
+				password.append(C_2.charAt(random.nextInt(C_3.length())));
+				password.append(C_3.charAt(random.nextInt(C_3.length())));
+				password.append(C_4.charAt(random.nextInt(C_4.length())));
+			}
+			final String NEW_PASSWORD = password.toString();
 			user.updatePassword(encoder.encode(NEW_PASSWORD));
 			mailManager.send(
-				user.getDefaultEmail(), "[GitEditor] 비밀번호 발급 안내", "new-password"
+				user.getDefaultEmail(), "[GitEditor] 비밀번호 발급 안내", "new-password.ftl"
 				, MessageVariable.from("password", NEW_PASSWORD));
 			return true;
 		};
@@ -75,7 +124,7 @@ public class UserManagement {
 		return userRepository.findByEmailVerificationCode(emailVerificationCode)
 			.map(user -> {
 				user.deleteEmailVerificationCode();
-				user.changeEmailVerified(true);
+				user.activateEmailVerified();
 				user.updateEmailFromOld();
 				user.changeRoleFromTempToUser();// 최초회원가입 유저인경우.
 				return true;
@@ -91,7 +140,7 @@ public class UserManagement {
 			)
 			.map(user -> {
 				user.addEmailToBeChanged(newEmail);
-				user.changeEmailVerified(false);
+				user.deactivateEmailVerified();
 				user.addEmailVerificationCode(this.sendVerificationEmail(newEmail));
 				if (user.getUserId().getProviderType() == ProviderType.LOCAL) {
 					user.changeRoleFromUserToTemp();
@@ -123,14 +172,25 @@ public class UserManagement {
 	}
 
 	@Transactional
-	public boolean updateUser(UpdateUserCommand command) {
-		return userRepository.findById(command.getUserId())
-			.map(user -> {
-				if (command.getPassword() != null) user.updateUserName(command.getUsername());
-				if (command.getUsername() != null) user.updatePassword(command.getPassword());
-				if (command.getEmail() != null) user.updateEmail(command.getEmail());
-				return true;
-			}).orElse(false);
+	public void updatePassword(UpdateUserCommand command) {
+		userRepository.findById(command.getUserId())
+			.ifPresent(user -> {
+				user.updatePassword(encoder.encode(command.getPassword()));
+			});
+	}
+
+	@Transactional
+	public void updateUsername(UpdateUserCommand command) {
+		userRepository.findById(command.getUserId())
+			.ifPresent(user -> {
+				user.updateUserName(command.getUsername());
+			});
+	}
+
+	@Transactional
+	public boolean updateEmail(UpdateUserCommand command) {
+		return this.changeEmail(ChangeEmailCommand.builder()
+			.userId(command.getUserId()).email(command.getEmail()).build());
 	}
 
 	@Transactional
@@ -162,7 +222,6 @@ public class UserManagement {
 		);
 		return code;
 	}
-
 
 	private boolean verifyOpenAI(String accessToken) {
 		try {
