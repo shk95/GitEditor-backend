@@ -10,12 +10,12 @@ import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -24,6 +24,22 @@ public class GithubServiceImpl implements GithubService {
 
 	private final GithubInitializer initializer;
 	private final GithubCredentialResolver credentialResolver;
+
+	private static String readBlobAsString(GHBlob content) {
+		StringBuilder sb = new StringBuilder();
+		try {
+			InputStream is = content.read();
+			BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
+			String line;
+			while ((line = reader.readLine()) != null) {
+				sb.append(line);
+			}
+		} catch (Exception e) {
+			log.warn("Unexpected exception occurred while reading blob as string. {}", e.getMessage());
+			return null;
+		}
+		return sb.toString();
+	}
 
 	@Override
 	public List<GithubRepo> getRepos(ServiceUserInfo userInfo, GetReposCommand command) throws IOException {
@@ -123,19 +139,21 @@ public class GithubServiceImpl implements GithubService {
 	}
 
 	@Override
-	public GithubFile readFileAsString(ServiceUserInfo userInfo, ReadFileCommand command) throws IOException {
+	public GithubFile readBlobAsString(ServiceUserInfo userInfo, ReadFileCommand command) throws IOException {
 		GitHub github = initializer.getInstance(credentialResolver.getCredential(userInfo.getUserId()));
 
 		GHRepository repository = command.isMine()
 			? github.getMyself().getRepository(command.getRepoName())
 			: github.getUser(command.getOwner()).getRepository(command.getRepoName());
 
-		GHContent content = repository.getFileContent(command.getPath(), command.getBranchName());
-		String fileContent = new BufferedReader(new InputStreamReader(content.read(), StandardCharsets.UTF_8))
-			.lines().collect(Collectors.joining("\n"));
+		GHBlob content = repository.getBlob(command.getSha());
+
+		String textContent = readBlobAsString(content);
 
 		return GithubFile.builder()
-			.content(fileContent)
+			.textContent(textContent)
+			.sha(content.getSha())
+			.url(content.getUrl().toString())
 			.build();
 	}
 
@@ -205,7 +223,7 @@ public class GithubServiceImpl implements GithubService {
 	}
 
 	@Override
-	public GithubFile getFileAsBlob(ServiceUserInfo userInfo, GetFilesCommand command) throws IOException {
+	public GithubFile readBlobAsString(ServiceUserInfo userInfo, GetFilesCommand command) throws IOException {
 		GitHub github = initializer.getInstance(credentialResolver.getCredential(userInfo.getUserId()));
 
 		return null;

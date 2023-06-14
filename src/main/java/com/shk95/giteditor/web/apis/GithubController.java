@@ -68,13 +68,15 @@ public class GithubController {
 	@GetMapping(value = {"/repo/{repoName}/tree"})
 	public ResponseEntity<?> getFilesByTreeSha(@CurrentUser CustomUserDetails userDetails,
 											   @PathVariable String repoName,
-											   @RequestParam String treeSha,
 											   @RequestParam String branchName,
+											   @RequestParam(required = false) String treeSha,
+											   @RequestParam(required = false) String recursive,
 											   @RequestParam(required = false) String username) throws IOException {
 		GetFilesCommand command = GetFilesCommand.builder()
 			.repositoryName(repoName)
 			.branchName(decode(branchName, String.valueOf(StandardCharsets.UTF_8)))
 			.treeSha(treeSha)
+			.recursive(recursive != null)
 			.owner(username)
 			.build();
 		return userDetails.isGithubEnabled()
@@ -83,18 +85,18 @@ public class GithubController {
 			: Response.fail("파일 목록을 가져오는데 실패하였습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 
-	@GetMapping(value = {"/repo/{repoName}/file/read"})
-	public ResponseEntity<?> readFileAsString(@CurrentUser CustomUserDetails userDetails,
-											  @PathVariable String repoName,
-											  @RequestParam String path,
-											  @RequestParam String branchName,
-											  @RequestParam(required = false) String owner) throws IOException {
-		GithubFile fileAsString = githubService.readFileAsString(ServiceUserInfo.userId(userDetails.getUserEntityId()),
+	@GetMapping(value = {"/repo/{repoName}/file/string"})
+	public ResponseEntity<?> getFileAsBlob(@CurrentUser CustomUserDetails userDetails,
+										   @PathVariable String repoName,
+										   @RequestParam String sha,
+										   @RequestParam String branchName,
+										   @RequestParam(required = false) String owner) throws IOException {
+		GithubFile fileAsString = githubService.readBlobAsString(ServiceUserInfo.userId(userDetails.getUserEntityId()),
 			ReadFileCommand.builder()
 				.owner(owner)
 				.repoName(repoName)
-				.branchName(branchName)
-				.path(path)
+				.branchName(decode(branchName, String.valueOf(StandardCharsets.UTF_8)))
+				.sha(sha)
 				.build());
 		return Response.success(fileAsString, "파일을 성공적으로 읽었습니다.", HttpStatus.OK);
 	}

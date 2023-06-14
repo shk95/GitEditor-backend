@@ -18,7 +18,7 @@ public interface GithubService {
 
 	void createFile(ServiceUserInfo userInfo, CreateFileCommand command) throws IOException;
 
-	GithubFile readFileAsString(ServiceUserInfo userInfo, ReadFileCommand command) throws IOException;
+	GithubFile readBlobAsString(ServiceUserInfo userInfo, ReadFileCommand command) throws IOException;
 
 	boolean commitFiles(ServiceUserInfo userInfo, CommitFilesCommand command) throws IOException;
 
@@ -30,5 +30,5 @@ public interface GithubService {
 
 	void deleteRepo(ServiceUserInfo userInfo, String repoName) throws IOException;
 
-	GithubFile getFileAsBlob(ServiceUserInfo userInfo, GetFilesCommand command) throws IOException;
+	GithubFile readBlobAsString(ServiceUserInfo userInfo, GetFilesCommand command) throws IOException;
 }

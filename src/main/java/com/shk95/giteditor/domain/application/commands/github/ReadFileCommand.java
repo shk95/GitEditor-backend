@@ -11,7 +11,7 @@ public class ReadFileCommand {
 	private String branchName;
 
 	private String repoName;
-	private String path;
+	private String sha;
 
 
 	public boolean isMine() {
