@@ -12,6 +12,7 @@ import com.shk95.giteditor.utils.Response;
 import com.shk95.giteditor.web.apis.request.GithubRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -31,6 +32,7 @@ public class GithubController {
 
 	private final GithubService githubService;
 
+	@Cacheable(value = "repos", key = "#userDetails.getUserEntityId() + '_' + (#username != null ? #username : 'noUsername')")
 	@GetMapping("/repos")
 	public ResponseEntity<?> getRepos(@CurrentUser CustomUserDetails userDetails,
 									  @RequestParam(required = false) String username) throws IOException {
@@ -65,6 +67,8 @@ public class GithubController {
 			: Response.fail("파일 목록을 가져오는데 실패하였습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 
+	@Cacheable(value = "tree",
+		key = "#repoName + '_' + #branchName + '_' + (#treeSha != null ? #treeSha : 'noTreeSha') + '_' + (#recursive != null ? #recursive : 'noRecursive') + '_' + (#username != null ? #username : 'noUsername')")
 	@GetMapping(value = {"/repo/{repoName}/tree"})
 	public ResponseEntity<?> getFilesByTreeSha(@CurrentUser CustomUserDetails userDetails,
 											   @PathVariable String repoName,
