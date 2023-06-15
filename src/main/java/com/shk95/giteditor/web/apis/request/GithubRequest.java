@@ -25,12 +25,21 @@ public class GithubRequest {
 
 			private String repoName;
 			private String branchName;
-			private String path;
+			private String path; // file path
 			private String content;// base64 encoded
 			private String mode;
+			private String filename; // actual file s=name
 
 			private String commitMessage;
 			private String baseTreeSha;
 		}
+	}
+
+	@Getter
+	public static class CreateRepo {
+
+		private String repoName;
+		private boolean makePrivate;
+		private String description;
 	}
 }

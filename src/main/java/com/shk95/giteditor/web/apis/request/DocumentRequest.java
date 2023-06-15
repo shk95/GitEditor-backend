@@ -13,11 +13,12 @@ public class DocumentRequest {
 
 			private String branchName;
 			private String baseTreeSha;
+			private String basePath;
 
 			private String storageType;
 			private String repoName;
 			private String path;
-			private String fileName;
+			private String filename;
 		}
 	}
 }

@@ -15,10 +15,11 @@ public class CreateDocumentCommand {
 
 	private String branchName;
 	private String baseTreeSha;
+	private String commitMessage;
 
 	private StorageType storageType;
 	private Extension extension;
 	private String repoName;
-	private String path;
-	private String fileName;
+	private String basePath;
+	private String filename;
 }

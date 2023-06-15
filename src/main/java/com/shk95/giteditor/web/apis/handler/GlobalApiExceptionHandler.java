@@ -1,5 +1,6 @@
 package com.shk95.giteditor.web.apis.handler;
 
+import com.shk95.giteditor.domain.model.github.GithubInitException;
 import com.shk95.giteditor.utils.Response;
 import io.github.aminovmaksim.chatgpt4j.ChatGPTClientException;
 import lombok.RequiredArgsConstructor;
@@ -56,5 +57,11 @@ public class GlobalApiExceptionHandler extends ResponseEntityExceptionHandler {
 	protected ResponseEntity<?> handle(ChatGPTClientException ex) {
 		log.warn("ChatGPT Exception : {}", ex.getMessage());
 		return Response.fail(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+	}
+
+	@ExceptionHandler({GithubInitException.class})
+	protected ResponseEntity<?> handle(GithubInitException ex) {
+		log.warn("Github Init Exception : {}", ex.getMessage());
+		return Response.fail("깃허브 서비스 인증 실패.", HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 }

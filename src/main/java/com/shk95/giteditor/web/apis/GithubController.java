@@ -6,10 +6,12 @@ import com.shk95.giteditor.domain.common.security.CurrentUser;
 import com.shk95.giteditor.domain.common.security.UserAuthorize;
 import com.shk95.giteditor.domain.model.github.GithubFile;
 import com.shk95.giteditor.domain.model.github.GithubFileMode;
+import com.shk95.giteditor.domain.model.github.GithubRepo;
 import com.shk95.giteditor.domain.model.github.ServiceUserInfo;
 import com.shk95.giteditor.domain.model.user.CustomUserDetails;
 import com.shk95.giteditor.utils.Response;
 import com.shk95.giteditor.web.apis.request.GithubRequest;
+import com.shk95.giteditor.web.apis.response.GithubResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
@@ -44,11 +46,14 @@ public class GithubController {
 	}
 
 	@GetMapping("/repo")
-	public ResponseEntity<?> getRepo(@CurrentUser CustomUserDetails userDetails) throws IOException {
-		return userDetails.isGithubEnabled()
-			? Response.success(githubService.getRepoInfo(ServiceUserInfo.userId(userDetails.getUserEntityId()))
-			, "리포지토리 목록을 성공적으로 가져왔습니다.", HttpStatus.OK)
-			: Response.fail("리포지토리 목록을 가져오는데 실패하였습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
+	public ResponseEntity<?> getRepo(@CurrentUser CustomUserDetails userDetails,
+									 @RequestParam String repoName) throws IOException {
+		GithubRepo repo = githubService.getRepoInfo(
+			ServiceUserInfo.userId(userDetails.getUserEntityId()),
+			decode(repoName, String.valueOf(StandardCharsets.UTF_8)));
+		return userDetails.isGithubEnabled() && !repo.getRepoName().isEmpty()
+			? Response.success(repo, "리포지토리 정보를 가져왔습니다.", HttpStatus.OK)
+			: Response.fail("리포지토리 정보를 가져오는데 실패하였습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 
 	@GetMapping(value = {"/repo/{repoName}/files"})
@@ -67,8 +72,8 @@ public class GithubController {
 			: Response.fail("파일 목록을 가져오는데 실패하였습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 
-	@Cacheable(value = "tree",
-		key = "#repoName + '_' + #branchName + '_' + (#treeSha != null ? #treeSha : 'noTreeSha') + '_' + (#recursive != null ? #recursive : 'noRecursive') + '_' + (#username != null ? #username : 'noUsername')")
+/*	@Cacheable(value = "tree",
+		key = "#repoName + '_' + #branchName + '_' + (#treeSha != null ? #treeSha : 'noTreeSha') + '_' + (#recursive != null ? #recursive : 'noRecursive') + '_' + (#username != null ? #username : 'noUsername')")*/
 	@GetMapping(value = {"/repo/{repoName}/tree"})
 	public ResponseEntity<?> getFilesByTreeSha(@CurrentUser CustomUserDetails userDetails,
 											   @PathVariable String repoName,
@@ -116,19 +121,33 @@ public class GithubController {
 		return Response.success("브랜치를 성공적으로 생성하였습니다.");
 	}
 
-	@PostMapping("/file")
+	@PostMapping("/file")// 문서 1개 생성
 	public ResponseEntity<?> createFile(@CurrentUser CustomUserDetails userDetails,
 										@Validated @RequestBody GithubRequest.File.Create request) throws IOException {
 		githubService.createFile(ServiceUserInfo.userId(userDetails.getUserEntityId()),
 			CreateFileCommand.builder()
 				.repoName(request.getRepoName())
 				.branchName(request.getBranchName())
-				.path(request.getPath())
+				.basePath(request.getPath())// ex) 기본적으로 파일이 위치하는 경로
 				.content(request.getContent())
-				.commitMessage(request.getCommitMessage())
+				.filename(request.getFilename())
 				.mode(GithubFileMode.valueOf(request.getMode()))
 				.baseTreeSha(request.getBaseTreeSha())
+				.commitMessage("giteditor commit")
 				.build());
 		return Response.success("파일을 성공적으로 커밋하였습니다.");
+	}
+
+	@PostMapping("/repo")
+	public ResponseEntity<?> createRepo(@CurrentUser CustomUserDetails userDetails,
+										@RequestBody GithubRequest.CreateRepo request) throws IOException {
+		String created = githubService.createRepo(ServiceUserInfo.userId(userDetails.getUserEntityId()),
+			CreateRepoCommand.builder()
+				.repoName(request.getRepoName())
+				.description(request.getDescription())
+				.makePrivate(request.isMakePrivate())
+				.build());
+		return Response.success(GithubResponse.Repo.builder().repoName(created).build()
+			, "리포지토리를 성공적으로 생성하였습니다.", HttpStatus.CREATED);
 	}
 }

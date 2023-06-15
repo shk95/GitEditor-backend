@@ -3,7 +3,6 @@ package com.shk95.giteditor.web.apis;
 import com.shk95.giteditor.domain.application.commands.document.CreateDocumentCommand;
 import com.shk95.giteditor.domain.common.security.CurrentUser;
 import com.shk95.giteditor.domain.common.security.UserAuthorize;
-import com.shk95.giteditor.domain.model.document.Extension;
 import com.shk95.giteditor.domain.model.document.MarkdownService;
 import com.shk95.giteditor.domain.model.document.StorageType;
 import com.shk95.giteditor.domain.model.user.CustomUserDetails;
@@ -41,9 +40,9 @@ public class DocumentController {
 				.repoName(request.getRepoName())
 				.branchName(request.getBranchName())
 				.baseTreeSha(request.getBaseTreeSha())
-				.path(request.getPath())
-				.fileName(request.getFileName())
-				.extension(Extension.MD).build()))
+				.commitMessage("giteditor commit")
+				.filename(request.getFilename() + ".md")
+				.basePath(request.getBasePath()).build())) // ex) path : readme -> 확장자 없음
 			: Response.fail("Github 연동이 되어있지 않습니다.", HttpStatus.NOT_ACCEPTABLE);
 	}
 }

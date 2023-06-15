@@ -12,7 +12,7 @@ public interface GithubService {
 
 	List<GithubRepo> getRepos(ServiceUserInfo userInfo, GetReposCommand command) throws IOException;
 
-	GithubRepo getRepoInfo(ServiceUserInfo userInfo) throws IOException;
+	GithubRepo getRepoInfo(ServiceUserInfo userInfo, String repoName) throws IOException;
 
 	List<GithubFile> getFiles(ServiceUserInfo userInfo, GetFilesCommand command) throws IOException;
 
@@ -26,7 +26,7 @@ public interface GithubService {
 
 	void deleteBranch(ServiceUserInfo userInfo, String branchName) throws IOException;
 
-	void createRepo(ServiceUserInfo userInfo, String repoName) throws IOException;
+	String createRepo(ServiceUserInfo userInfo, CreateRepoCommand command) throws IOException;
 
 	void deleteRepo(ServiceUserInfo userInfo, String repoName) throws IOException;
 
