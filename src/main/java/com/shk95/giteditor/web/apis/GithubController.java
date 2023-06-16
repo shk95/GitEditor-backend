@@ -5,7 +5,6 @@ import com.shk95.giteditor.domain.application.commands.github.*;
 import com.shk95.giteditor.domain.common.security.CurrentUser;
 import com.shk95.giteditor.domain.common.security.UserAuthorize;
 import com.shk95.giteditor.domain.model.github.GithubFile;
-import com.shk95.giteditor.domain.model.github.GithubFileMode;
 import com.shk95.giteditor.domain.model.github.GithubRepo;
 import com.shk95.giteditor.domain.model.github.ServiceUserInfo;
 import com.shk95.giteditor.domain.model.user.CustomUserDetails;
@@ -72,8 +71,8 @@ public class GithubController {
 			: Response.fail("파일 목록을 가져오는데 실패하였습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 
-/*	@Cacheable(value = "tree",
-		key = "#repoName + '_' + #branchName + '_' + (#treeSha != null ? #treeSha : 'noTreeSha') + '_' + (#recursive != null ? #recursive : 'noRecursive') + '_' + (#username != null ? #username : 'noUsername')")*/
+	/*	@Cacheable(value = "tree",
+			key = "#repoName + '_' + #branchName + '_' + (#treeSha != null ? #treeSha : 'noTreeSha') + '_' + (#recursive != null ? #recursive : 'noRecursive') + '_' + (#username != null ? #username : 'noUsername')")*/
 	@GetMapping(value = {"/repo/{repoName}/tree"})
 	public ResponseEntity<?> getFilesByTreeSha(@CurrentUser CustomUserDetails userDetails,
 											   @PathVariable String repoName,
@@ -121,7 +120,17 @@ public class GithubController {
 		return Response.success("브랜치를 성공적으로 생성하였습니다.");
 	}
 
-	@PostMapping("/file")// 문서 1개 생성
+	@DeleteMapping("/branch")
+	public ResponseEntity<?> deleteBranch(@CurrentUser CustomUserDetails userDetails,
+										  @Validated @RequestBody GithubRequest.DeleteBranch request) throws IOException {
+		githubService.deleteBranch(ServiceUserInfo.userId(userDetails.getUserEntityId())
+			, DeleteBranchCommand.builder()
+				.branchName(request.getBranchName())
+				.repoName(request.getRepoName()).build());
+		return Response.success("브랜치를 성공적으로 삭제하였습니다.");
+	}
+
+	/*@PostMapping("/file")// 문서 1개 생성
 	public ResponseEntity<?> createFile(@CurrentUser CustomUserDetails userDetails,
 										@Validated @RequestBody GithubRequest.File.Create request) throws IOException {
 		githubService.createFile(ServiceUserInfo.userId(userDetails.getUserEntityId()),
@@ -136,7 +145,7 @@ public class GithubController {
 				.commitMessage("giteditor commit")
 				.build());
 		return Response.success("파일을 성공적으로 커밋하였습니다.");
-	}
+	}*/
 
 	@PostMapping("/repo")
 	public ResponseEntity<?> createRepo(@CurrentUser CustomUserDetails userDetails,
@@ -149,5 +158,15 @@ public class GithubController {
 				.build());
 		return Response.success(GithubResponse.Repo.builder().repoName(created).build()
 			, "리포지토리를 성공적으로 생성하였습니다.", HttpStatus.CREATED);
+	}
+
+	@DeleteMapping("/repo")
+	public ResponseEntity<?> deleteRepo(@CurrentUser CustomUserDetails userDetails,
+										@RequestParam String repoName) throws IOException {
+		githubService.deleteRepo(ServiceUserInfo.userId(userDetails.getUserEntityId()),
+			DeleteRepoCommand.builder()
+				.repoName(repoName)
+				.build());
+		return Response.success("리포지토리를 성공적으로 삭제하였습니다.");
 	}
 }

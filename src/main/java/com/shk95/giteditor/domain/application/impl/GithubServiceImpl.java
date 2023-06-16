@@ -32,7 +32,7 @@ public class GithubServiceImpl implements GithubService {
 			BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
 			String line;
 			while ((line = reader.readLine()) != null) {
-				sb.append(line);
+				sb.append(line).append("\n");
 			}
 		} catch (Exception e) {
 			log.warn("Unexpected exception occurred while reading blob as string. {}", e.getMessage());
@@ -106,7 +106,7 @@ public class GithubServiceImpl implements GithubService {
 			.branch(command.getBranchName())
 			.message(command.getCommitMessage())
 			.content(command.getContent())
-			.path(command.getBasePath() + "/" + command.getFilename())
+			.path(command.getPath())
 			.commit();
 	}
 
@@ -177,9 +177,10 @@ public class GithubServiceImpl implements GithubService {
 	}
 
 	@Override
-	public void deleteBranch(ServiceUserInfo userInfo, String branchName) throws IOException {
+	public void deleteBranch(ServiceUserInfo userInfo, DeleteBranchCommand command) throws IOException {
 		GitHub github = initializer.getInstance(credentialResolver.getCredential(userInfo.getUserId()));
 
+		github.getMyself().getRepository(command.getRepoName()).getRef("heads/" + command.getBranchName()).delete();
 	}
 
 	@Override
@@ -192,8 +193,31 @@ public class GithubServiceImpl implements GithubService {
 	}
 
 	@Override
-	public void deleteRepo(ServiceUserInfo userInfo, String repoName) throws IOException {
+	public void deleteRepo(ServiceUserInfo userInfo, DeleteRepoCommand command) throws IOException {
 		GitHub github = initializer.getInstance(credentialResolver.getCredential(userInfo.getUserId()));
+		github.getMyself().getRepository(command.getRepoName()).delete();
+	}
+
+	@Override
+	public void deleteFile(ServiceUserInfo userInfo, DeleteFileCommand command) throws IOException {
+		GitHub github = initializer.getInstance(credentialResolver.getCredential(userInfo.getUserId()));
+
+		GHContentUpdateResponse res = github.getMyself().getRepository(command.getRepoName()).getFileContent(command.getPath())
+			.delete(command.getCommitMessage());
+	}
+
+	@Override
+	public void updateFile(ServiceUserInfo userInfo, UpdateFileCommand command) throws IOException {
+		GitHub github = initializer.getInstance(credentialResolver.getCredential(userInfo.getUserId()));
+		GHContentUpdateResponse res = github.getMyself().getRepository(command.getRepoName()).getFileContent(command.getPath())
+			.update(command.getContent(), command.getCommitMessage());
+	}
+
+	@Override
+	public void deleteDirectory(ServiceUserInfo userInfo, DeleteFileCommand command) throws IOException {
+		GitHub github = initializer.getInstance(credentialResolver.getCredential(userInfo.getUserId()));
+		GHRepository repository = github.getMyself().getRepository(command.getRepoName());
+
 
 	}
 

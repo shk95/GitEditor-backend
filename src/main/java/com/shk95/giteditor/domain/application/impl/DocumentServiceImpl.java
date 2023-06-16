@@ -29,8 +29,7 @@ public class DocumentServiceImpl implements DocumentService {
 			.storageType(command.getStorageType())
 			.repoName(command.getRepoName())
 			.content(markdown)
-			.path(command.getBasePath())
-			.fileName(command.getFilename())
+			.path(command.getPath())
 			.extension(command.getExtension())
 			.build();
 	}

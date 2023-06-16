@@ -30,8 +30,7 @@ public class MarkdownService {
 				.baseTreeSha(command.getBaseTreeSha())
 				.content(md.getContent())
 				.commitMessage(command.getCommitMessage())
-				.filename(command.getFilename())
-				.basePath(command.getBasePath()).build());
+				.path(command.getPath()).build());
 		return md;
 	}
 }

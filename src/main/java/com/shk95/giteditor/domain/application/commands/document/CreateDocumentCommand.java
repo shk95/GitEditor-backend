@@ -20,6 +20,5 @@ public class CreateDocumentCommand {
 	private StorageType storageType;
 	private Extension extension;
 	private String repoName;
-	private String basePath;
-	private String filename;
+	private String path;
 }

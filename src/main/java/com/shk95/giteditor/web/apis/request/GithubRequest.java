@@ -13,6 +13,13 @@ public class GithubRequest {
 		private String repoName;
 	}
 
+	@Getter
+	public static class DeleteBranch {
+
+		private String branchName;
+		private String repoName;
+	}
+
 	public static class File {
 
 		@Getter
@@ -41,5 +48,11 @@ public class GithubRequest {
 		private String repoName;
 		private boolean makePrivate;
 		private String description;
+	}
+
+	@Getter
+	public static class DeleteRepo {
+
+		private String repoName;
 	}
 }

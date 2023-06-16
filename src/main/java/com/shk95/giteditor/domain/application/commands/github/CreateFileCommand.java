@@ -10,10 +10,9 @@ public class CreateFileCommand {
 
 	private final String repoName;
 	private final String branchName;
-	private final String basePath;// file's relative path
-	private final String content;// base64 encoded
+	private final String content;
 	private final GithubFileMode mode;
-	private final String filename;
+	private final String path;
 
 	private final String commitMessage;
 	private final String baseTreeSha;

@@ -24,11 +24,17 @@ public interface GithubService {
 
 	void createBranch(ServiceUserInfo userInfo, CreateBranchCommand command) throws IOException;
 
-	void deleteBranch(ServiceUserInfo userInfo, String branchName) throws IOException;
+	void deleteBranch(ServiceUserInfo userInfo, DeleteBranchCommand command) throws IOException;
 
 	String createRepo(ServiceUserInfo userInfo, CreateRepoCommand command) throws IOException;
 
-	void deleteRepo(ServiceUserInfo userInfo, String repoName) throws IOException;
+	void deleteRepo(ServiceUserInfo userInfo, DeleteRepoCommand command) throws IOException;
+
+	void deleteFile(ServiceUserInfo userInfo, DeleteFileCommand command) throws IOException;
+
+	void updateFile(ServiceUserInfo userInfo, UpdateFileCommand command) throws IOException;
+
+	void deleteDirectory(ServiceUserInfo userInfo, DeleteFileCommand command) throws IOException;
 
 	GithubFile readBlobAsString(ServiceUserInfo userInfo, GetFilesCommand command) throws IOException;
 }
