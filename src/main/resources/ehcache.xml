@@ -1,0 +1,10 @@
+<ehcache>
+	<defaultCache maxElementsInMemory="100" eternal="false"
+				  timeToIdleSeconds="120" timeToLiveSeconds="200"/>
+
+	<cache name="repos"
+		   maxElementsInMemory="50"
+		   eternal="false"
+		   timeToIdleSeconds="200"
+		   timeToLiveSeconds="300"/>
+</ehcache>

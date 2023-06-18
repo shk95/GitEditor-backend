@@ -11,8 +11,8 @@ public class GithubFile {
 	private GithubFileType type;
 	private String path; // relative file name
 	private String url;
-	private String content; //plain text
 	private GithubFileMode mode;
-	private GithubBlob blob;
 	private long size;
+
+	private String textContent; //plain text
 }

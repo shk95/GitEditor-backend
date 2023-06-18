@@ -10,12 +10,12 @@ import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -24,6 +24,22 @@ public class GithubServiceImpl implements GithubService {
 
 	private final GithubInitializer initializer;
 	private final GithubCredentialResolver credentialResolver;
+
+	private static String readBlobAsString(GHBlob content) {
+		StringBuilder sb = new StringBuilder();
+		try {
+			InputStream is = content.read();
+			BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
+			String line;
+			while ((line = reader.readLine()) != null) {
+				sb.append(line).append("\n");
+			}
+		} catch (Exception e) {
+			log.warn("Unexpected exception occurred while reading blob as string. {}", e.getMessage());
+			return null;
+		}
+		return sb.toString();
+	}
 
 	@Override
 	public List<GithubRepo> getRepos(ServiceUserInfo userInfo, GetReposCommand command) throws IOException {
@@ -35,42 +51,17 @@ public class GithubServiceImpl implements GithubService {
 
 		List<GithubRepo> repos = new ArrayList<>();
 		repositories.forEach((repoName, getRepo) -> {
-			GithubRepo.GithubRepoBuilder repo = GithubRepo.builder()
-				.repoName(repoName)
-				.repoFullName(getRepo.getFullName())
-				.htmlUrl(getRepo.getHtmlUrl().toString())
-				.defaultBranch(getRepo.getDefaultBranch())
-				.url(getRepo.getUrl().toString());
-
-			List<GithubBranch> branches = new ArrayList<>();
-			try {
-				getRepo.getBranches()
-					.forEach((k, v) -> branches.add(GithubBranch.builder().branchName(k).branchSha(v.getSHA1()).build()));
-			} catch (IOException e) {
-				log.debug("{}.getRepos | some errors occurred while getting branches. {}", getClass().getName(), e.getMessage());
-			}
-			repo.branches(branches);
-
-			GithubOwner owner = null;
-			try {
-				GHUser user = getRepo.getOwner();
-				owner = GithubOwner.builder()
-					.email(user.getEmail()).name(user.getName())
-					.loginId(user.getLogin()).avatarUrl(user.getAvatarUrl())
-					.type(user.getType()).build();
-			} catch (IOException e) {
-				log.debug("{}.getRepos | some errors occurred while getting the owner. {}", getClass().getName(), e.getMessage());
-			}
-			repo.owner(owner);
-
-			repos.add(repo.build());
+			repoBuilder(repoName, getRepo);
+			repos.add(repoBuilder(repoName, getRepo));
 		});
 		return repos;
 	}
 
 	@Override
-	public GithubRepo getRepoInfo(ServiceUserInfo userInfo) throws IOException {
-		return null;
+	public GithubRepo getRepoInfo(ServiceUserInfo userInfo, String repoName) throws IOException {
+		GitHub github = initializer.getInstance(credentialResolver.getCredential(userInfo.getUserId()));
+		GHRepository repository = github.getMyself().getRepository(repoName);
+		return repoBuilder(repoName, repository);
 	}
 
 	@Override
@@ -109,33 +100,32 @@ public class GithubServiceImpl implements GithubService {
 	public void createFile(ServiceUserInfo userInfo, CreateFileCommand command) throws IOException {
 		GitHub github = initializer.getInstance(credentialResolver.getCredential(userInfo.getUserId()));
 
-		GHTree newTree = github.getMyself()
-			.getRepository(command.getRepoName()).createTree().baseTree(command.getBaseTreeSha())
-			.add(command.getPath(), command.getContent().getBytes(), command.isExecutable()).create();
+		GHRepository repository = github.getMyself().getRepository(command.getRepoName());
 
-		String parentCommit = github.getMyself().getRepository(command.getRepoName()).getBranch(command.getBranchName()).getSHA1();
-		GHCommit newCommit = github.getMyself().getRepository(command.getRepoName())
-			.createCommit()
+		GHContentUpdateResponse res = repository.createContent()
+			.branch(command.getBranchName())
 			.message(command.getCommitMessage())
-			.tree(newTree.getSha())
-			.parent(parentCommit)
-			.create();
+			.content(command.getContent())
+			.path(command.getPath())
+			.commit();
 	}
 
 	@Override
-	public GithubFile readFileAsString(ServiceUserInfo userInfo, ReadFileCommand command) throws IOException {
+	public GithubFile readBlobAsString(ServiceUserInfo userInfo, ReadFileCommand command) throws IOException {
 		GitHub github = initializer.getInstance(credentialResolver.getCredential(userInfo.getUserId()));
 
 		GHRepository repository = command.isMine()
 			? github.getMyself().getRepository(command.getRepoName())
 			: github.getUser(command.getOwner()).getRepository(command.getRepoName());
 
-		GHContent content = repository.getFileContent(command.getPath(), command.getBranchName());
-		String fileContent = new BufferedReader(new InputStreamReader(content.read(), StandardCharsets.UTF_8))
-			.lines().collect(Collectors.joining("\n"));
+		GHBlob content = repository.getBlob(command.getSha());
+
+		String textContent = readBlobAsString(content);
 
 		return GithubFile.builder()
-			.content(fileContent)
+			.textContent(textContent)
+			.sha(content.getSha())
+			.url(content.getUrl().toString())
 			.build();
 	}
 
@@ -187,27 +177,85 @@ public class GithubServiceImpl implements GithubService {
 	}
 
 	@Override
-	public void deleteBranch(ServiceUserInfo userInfo, String branchName) throws IOException {
+	public void deleteBranch(ServiceUserInfo userInfo, DeleteBranchCommand command) throws IOException {
 		GitHub github = initializer.getInstance(credentialResolver.getCredential(userInfo.getUserId()));
+
+		github.getMyself().getRepository(command.getRepoName()).getRef("heads/" + command.getBranchName()).delete();
+	}
+
+	@Override
+	public String createRepo(ServiceUserInfo userInfo, CreateRepoCommand command) throws IOException {
+		GitHub github = initializer.getInstance(credentialResolver.getCredential(userInfo.getUserId()));
+		return github.createRepository(command.getRepoName())
+			.description(command.getDescription())
+			.private_(command.isMakePrivate()).create()
+			.getName();
+	}
+
+	@Override
+	public void deleteRepo(ServiceUserInfo userInfo, DeleteRepoCommand command) throws IOException {
+		GitHub github = initializer.getInstance(credentialResolver.getCredential(userInfo.getUserId()));
+		github.getMyself().getRepository(command.getRepoName()).delete();
+	}
+
+	@Override
+	public void deleteFile(ServiceUserInfo userInfo, DeleteFileCommand command) throws IOException {
+		GitHub github = initializer.getInstance(credentialResolver.getCredential(userInfo.getUserId()));
+
+		GHContentUpdateResponse res = github.getMyself().getRepository(command.getRepoName()).getFileContent(command.getPath())
+			.delete(command.getCommitMessage());
+	}
+
+	@Override
+	public void updateFile(ServiceUserInfo userInfo, UpdateFileCommand command) throws IOException {
+		GitHub github = initializer.getInstance(credentialResolver.getCredential(userInfo.getUserId()));
+		GHContentUpdateResponse res = github.getMyself().getRepository(command.getRepoName()).getFileContent(command.getPath())
+			.update(command.getContent(), command.getCommitMessage());
+	}
+
+	@Override
+	public void deleteDirectory(ServiceUserInfo userInfo, DeleteFileCommand command) throws IOException {
+		GitHub github = initializer.getInstance(credentialResolver.getCredential(userInfo.getUserId()));
+		GHRepository repository = github.getMyself().getRepository(command.getRepoName());
+
 
 	}
 
 	@Override
-	public void createRepo(ServiceUserInfo userInfo, String repoName) throws IOException {
-		GitHub github = initializer.getInstance(credentialResolver.getCredential(userInfo.getUserId()));
-
-	}
-
-	@Override
-	public void deleteRepo(ServiceUserInfo userInfo, String repoName) throws IOException {
-		GitHub github = initializer.getInstance(credentialResolver.getCredential(userInfo.getUserId()));
-
-	}
-
-	@Override
-	public GithubFile getFileAsBlob(ServiceUserInfo userInfo, GetFilesCommand command) throws IOException {
+	public GithubFile readBlobAsString(ServiceUserInfo userInfo, GetFilesCommand command) throws IOException {
 		GitHub github = initializer.getInstance(credentialResolver.getCredential(userInfo.getUserId()));
 
 		return null;
+	}
+
+	private GithubRepo repoBuilder(String repoName, GHRepository repository) {
+		GithubRepo.GithubRepoBuilder repo = GithubRepo.builder()
+			.repoName(repoName)
+			.repoFullName(repository.getFullName())
+			.htmlUrl(repository.getHtmlUrl().toString())
+			.defaultBranch(repository.getDefaultBranch())
+			.url(repository.getUrl().toString());
+
+		List<GithubBranch> branches = new ArrayList<>();
+		try {
+			repository.getBranches()
+				.forEach((k, v) -> branches.add(GithubBranch.builder().branchName(k).branchSha(v.getSHA1()).build()));
+		} catch (IOException e) {
+			log.debug("{}.getRepos | some errors occurred while getting branches. {}", getClass().getName(), e.getMessage());
+		}
+		repo.branches(branches);
+
+		GithubOwner owner = null;
+		try {
+			GHUser user = repository.getOwner();
+			owner = GithubOwner.builder()
+				.email(user.getEmail()).name(user.getName())
+				.loginId(user.getLogin()).avatarUrl(user.getAvatarUrl())
+				.type(user.getType()).build();
+		} catch (IOException e) {
+			log.debug("{}.getRepos | some errors occurred while getting the owner. {}", getClass().getName(), e.getMessage());
+		}
+		repo.owner(owner);
+		return repo.build();
 	}
 }

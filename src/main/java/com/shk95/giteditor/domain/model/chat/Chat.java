@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @Getter
 @Builder
 @Document(collection = "chat")
-public class Chat {
+public class Chat {// TODO : 사용자 삭제시 채팅 삭제
 
 	@Id
 	private String id;

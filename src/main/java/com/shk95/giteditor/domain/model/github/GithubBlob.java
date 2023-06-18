@@ -1,36 +1,44 @@
+/*
 package com.shk95.giteditor.domain.model.github;
 
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import org.kohsuke.github.GHBlob;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 
+@Slf4j
 @Getter
 public class GithubBlob {
 
-	private final String content;
+	private String textContent;
+	private byte[] blobContent;
+	private ReadableType readableType;
 
-	public GithubBlob(String rawContent) {
-		this.content = rawContent;
-	}
-
-	public GithubBlob(InputStream inputStream) {
+	public GithubBlob(GHBlob ghBlob) {
 		StringBuilder builder = new StringBuilder();
-
-		try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
+		try (BufferedReader reader = new BufferedReader(new InputStreamReader(ghBlob.read(), StandardCharsets.UTF_8))) {
 			String line;
 			while ((line = reader.readLine()) != null) {
 				builder.append(line);
 			}
-		} catch (IOException e) {
-			// handle exception
+		} catch (Exception e) {
+			log.warn("Unexpected exception occurred while reading blob as string. {}", e.getMessage());
+			builder = null;
 		}
-		this.content = builder.toString();
+		if (builder == null) {
+			this.readableType = ReadableType.BINARY;
+			this.blobContent =
+		} else {
+
+		}
+		this.readableType = ReadableType.TEXT;
 	}
 
 	//string to byte
 
 }
+*/
