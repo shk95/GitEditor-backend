@@ -4,11 +4,11 @@ import com.shk95.giteditor.config.ApplicationProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cache.annotation.EnableCaching;
 
+@EnableConfigurationProperties({ApplicationProperties.class})
+@EnableCaching
 @SpringBootApplication
-@EnableConfigurationProperties({
-	ApplicationProperties.class
-})
 public class GitEditorApplication {
 
 	static {

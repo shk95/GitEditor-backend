@@ -5,18 +5,12 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class ReadFileCommand {
+public class DeleteFileCommand {
 
-	private String owner;
 	private String branchName;
-
-	private String repoName;
-	private String sha;
-
+	private String baseTreeSha;
 	private String path;
-
-
-	public boolean isMine() {
-		return this.owner == null;
-	}
+	private String repoName;
+	private String fileSha;
+	private String commitMessage;
 }

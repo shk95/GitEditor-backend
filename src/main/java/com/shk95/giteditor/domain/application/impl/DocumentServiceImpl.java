@@ -30,7 +30,6 @@ public class DocumentServiceImpl implements DocumentService {
 			.repoName(command.getRepoName())
 			.content(markdown)
 			.path(command.getPath())
-			.fileName(command.getFileName())
 			.extension(command.getExtension())
 			.build();
 	}

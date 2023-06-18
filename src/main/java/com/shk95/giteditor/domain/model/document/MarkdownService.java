@@ -29,7 +29,8 @@ public class MarkdownService {
 				.mode(GithubFileMode.RW_BLOB)
 				.baseTreeSha(command.getBaseTreeSha())
 				.content(md.getContent())
-				.path(command.getPath() + "/" + command.getFileName() + "/" + command.getExtension()).build());
+				.commitMessage(command.getCommitMessage())
+				.path(command.getPath()).build());
 		return md;
 	}
 }
