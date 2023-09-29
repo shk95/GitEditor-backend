@@ -10,9 +10,9 @@ import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.shk95.giteditor.config.ApplicationProperties;
-import com.shk95.giteditor.domain.common.file.AbstractBaseFileStorage;
-import com.shk95.giteditor.domain.common.file.FileStorageException;
-import com.shk95.giteditor.domain.common.file.TempFile;
+import com.shk95.giteditor.common.file.AbstractBaseFileStorage;
+import com.shk95.giteditor.common.file.FileStorageException;
+import com.shk95.giteditor.common.file.TempFile;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
@@ -25,13 +25,11 @@ import java.util.List;
 @Component("s3FileStorage")
 public class S3FileStorage extends AbstractBaseFileStorage {
 
-	private final Environment environment;
 	private final ApplicationProperties properties;
 	private final String rootTempPath;
 	private AmazonS3 s3;
 
 	public S3FileStorage(Environment environment, ApplicationProperties properties) {
-		this.environment = environment;
 		this.properties = properties;
 		this.rootTempPath = properties.getFileStorage().getTempFolder();
 

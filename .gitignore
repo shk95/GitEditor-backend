@@ -35,7 +35,11 @@ build/
 /src/main/resources/application-dev.yml
 /src/main/resources/application-secret.yml
 /src/main/resources/application-prod.yml
+/src/main/resources/application-paasta.yml
+
+/src/test/resources/application-test_secret.yml
 
 /src/test/http-client/**
 /src/test/memo/
 
+.DS_Store

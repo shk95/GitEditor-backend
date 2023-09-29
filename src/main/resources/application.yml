@@ -1,48 +1,15 @@
 spring:
-  datasource:
-    driver-class-name:
-    url: <>
-    username: <>
-    password: <>
-
-  redis:
-    host: <>
-    port: 0000
-    password: 0000
+  config:
+    import:
+      - application-secret.yml
 
   jpa:
-    hibernate:
-      ddl-auto: update
     open-in-view: false
     properties:
       hibernate:
         jdbc.batch_size: 20
         format_sql: true
-    show-sql: true
-
-  data:
-    mongodb:
-      host:
-      port:
-      username:
-      password:
-      database:
-
-  security:
-    oauth2:
-      client:
-        registration:
-          github:
-            client-id: <>
-            client-secret: <>
-            scope: <>
-
-        provider:
-          github:
-            authorization-uri: <>
-            token-uri: <>
-            user-info-uri: <>
-            user-name-attribute: <>
+    show-sql: false
 
   devtools:
     livereload:
@@ -54,49 +21,17 @@ spring:
       maxRequestSize: 100MB
 
   freemarker:
-    template-loader-path: classpath:/mail-templates/
+    template-loader-path: 'classpath:/mail-templates/'
 
-  mail:
-    host: localhost
-    port: 0
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
-        debug: false
-    username: asdf
-    password: asdf
-
-  config:
-    import:
-    - application-secret.yml
-  profiles:
-    include:
-      - application-secret
+  ai:
+    openai:
+      model: gpt-3.5-turbo
+      api-key: "secretkey"
 
 app:
-  front-page-url: 'http://localhost'
-
-  mail-from: test@test.com
-
-  token-secret-key: test
-
   file-storage:
-    local-root-folder: /opt/data/files
-    temp-folder: /opt/data/temp
-    active: s3FileStorage
-    s3-access-key: <Your S3 Access Key>
-    s3-secret-key: <Your S3 Secret Key>
-    s3-bucket-name: <Your S3 Bucket Name>
-    s3-region: <Your S3 Region>
-
-  image:
-    command-search-path: /opt/homebrew/bin/ # nullable
-
-  cdn:
-    url: <S3 root URL>
+    local-root-folder: '/tmp/img'
+    temp-folder: '/tmp/img/tmp'
 
   cors:
     add-mapping: '/**'
@@ -111,6 +46,20 @@ app:
       - '*'
     max-age: 3600
 
+#  cache:
+#    default-cache:
+#      max-entries-local-heap: 100
+#      time-to-idle-seconds: 120
+#      time-to-live-seconds: 200
+#      eternal: false
+#      disk-expiry-thread-interval-seconds: 1200
+#      memory-store-eviction-policy: LRU
+#    names:
+#      - name: repos
+#        max-entries-local-heap: 50
+#        time-to-idle-seconds: 200
+#        time-to-live-seconds: 300
+#
 logging:
   level:
     com.shk95.*: INFO

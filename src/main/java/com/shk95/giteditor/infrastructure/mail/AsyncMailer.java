@@ -1,7 +1,7 @@
 package com.shk95.giteditor.infrastructure.mail;
 
-import com.shk95.giteditor.domain.common.mail.Mailer;
-import com.shk95.giteditor.domain.common.mail.Message;
+import com.shk95.giteditor.common.mail.Mailer;
+import com.shk95.giteditor.common.mail.Message;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;

@@ -1,6 +1,6 @@
 package com.shk95.giteditor.config;
 
-import com.shk95.giteditor.domain.model.user.UserId;
+import com.shk95.giteditor.core.user.domain.user.UserId;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.AuditorAware;

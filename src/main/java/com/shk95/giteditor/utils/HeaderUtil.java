@@ -1,9 +1,10 @@
 package com.shk95.giteditor.utils;
 
-import javax.servlet.http.HttpServletRequest;
 
-import static com.shk95.giteditor.config.ConstantFields.Jwt.AUTHORIZATION_HEADER;
-import static com.shk95.giteditor.config.ConstantFields.Jwt.BEARER_TYPE;
+import jakarta.servlet.http.HttpServletRequest;
+
+import static com.shk95.giteditor.config.Constants.Jwt.AUTHORIZATION_HEADER;
+import static com.shk95.giteditor.config.Constants.Jwt.BEARER_TYPE;
 
 public class HeaderUtil {
 

@@ -1,9 +1,9 @@
 package com.shk95.giteditor.config;
 
-import com.shk95.giteditor.domain.common.constant.ProviderType;
-import com.shk95.giteditor.domain.common.security.Role;
-import com.shk95.giteditor.domain.model.user.CustomUserDetails;
-import com.shk95.giteditor.domain.model.user.UserId;
+import com.shk95.giteditor.common.constant.ProviderType;
+import com.shk95.giteditor.common.security.Role;
+import com.shk95.giteditor.core.user.domain.user.CustomUserDetails;
+import com.shk95.giteditor.core.user.domain.user.UserId;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.AuditorAware;

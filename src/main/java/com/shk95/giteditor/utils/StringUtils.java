@@ -1,6 +1,6 @@
 package com.shk95.giteditor.utils;
 
-import com.shk95.giteditor.domain.common.constant.Constants;
+import com.shk95.giteditor.common.constant.Constants;
 import com.shk95.giteditor.utils.text.StrFormatter;
 import org.springframework.util.AntPathMatcher;
 

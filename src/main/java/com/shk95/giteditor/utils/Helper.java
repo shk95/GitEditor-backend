@@ -1,8 +1,8 @@
 package com.shk95.giteditor.utils;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.util.StringUtils;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
 

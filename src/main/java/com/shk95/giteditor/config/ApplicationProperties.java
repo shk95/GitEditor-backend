@@ -1,13 +1,13 @@
 package com.shk95.giteditor.config;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
 import java.util.List;
 
 @Setter
@@ -27,10 +27,12 @@ public final class ApplicationProperties {
 	private Cors cors;
 	private Image image;
 	private Cdn cdn;
+	private CacheConfig cache;
 
 	@Setter
 	@Getter
 	public static class FileStorage {
+
 		@NotEmpty
 		private String localRootFolder;
 		@NotEmpty
@@ -50,18 +52,21 @@ public final class ApplicationProperties {
 	@Setter
 	@Getter
 	public static class Image {
+
 		private String commandSearchPath;
 	}
 
 	@Setter
 	@Getter
 	public static class Cdn {
+
 		private String url;
 	}
 
 	@Setter
 	@Getter
 	public static class Cors {
+
 		@NotBlank
 		private String addMapping;
 		@NotBlank
@@ -70,5 +75,26 @@ public final class ApplicationProperties {
 		private List<String> allowedHeaders;
 		@NotNull
 		private Long maxAge;
+	}
+
+	@Setter
+	@Getter
+	public static class CacheConfig {
+
+		public Cache defaultCache;
+		public List<Cache> names;
+
+		@Setter
+		@Getter
+		public static class Cache {
+
+			private String name;
+			private Long maxEntriesLocalHeap;
+			private Long timeToIdleSeconds;
+			private Long timeToLiveSeconds;
+			private Boolean eternal;
+			private Long diskExpiryThreadIntervalSeconds;
+			private String memoryStoreEvictionPolicy;
+		}
 	}
 }

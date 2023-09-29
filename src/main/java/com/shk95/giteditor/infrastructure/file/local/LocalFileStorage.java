@@ -1,8 +1,8 @@
 package com.shk95.giteditor.infrastructure.file.local;
 
-import com.shk95.giteditor.domain.common.file.AbstractBaseFileStorage;
-import com.shk95.giteditor.domain.common.file.FileStorageException;
-import com.shk95.giteditor.domain.common.file.TempFile;
+import com.shk95.giteditor.common.file.AbstractBaseFileStorage;
+import com.shk95.giteditor.common.file.FileStorageException;
+import com.shk95.giteditor.common.file.TempFile;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
