@@ -3,12 +3,12 @@ package com.shk95.giteditor.core.github.adapter.in;
 import com.shk95.giteditor.common.ServiceUserId;
 import com.shk95.giteditor.common.security.CurrentUser;
 import com.shk95.giteditor.common.security.UserAuthorize;
+import com.shk95.giteditor.common.utils.Response;
+import com.shk95.giteditor.core.auth.domain.CustomUserDetails;
 import com.shk95.giteditor.core.github.application.port.in.GithubServiceUseCase;
 import com.shk95.giteditor.core.github.application.service.command.*;
 import com.shk95.giteditor.core.github.domain.GithubFile;
 import com.shk95.giteditor.core.github.domain.GithubRepo;
-import com.shk95.giteditor.core.user.domain.user.CustomUserDetails;
-import com.shk95.giteditor.utils.Response;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
@@ -31,7 +31,7 @@ public class GithubController {
 
 	private final GithubServiceUseCase githubServiceUseCase;
 
-	@Cacheable(value = "repos", key = "#userDetails.getUserEntityId() + '_' + (#username != null ? #username : 'noUsername')")
+	@Cacheable(value = "repos", key = "#userDetails.providerTypeAndLoginId() + '_' + (#username != null ? #username : 'noUsername')")
 	@GetMapping("/repos")
 	public ResponseEntity<?> getRepos(@CurrentUser CustomUserDetails userDetails,
 	                                  @RequestParam(required = false) String username) throws IOException {

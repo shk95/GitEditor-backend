@@ -1,7 +1,7 @@
 package com.shk95.giteditor.common.security.repository;
 
 import com.nimbusds.oauth2.sdk.util.StringUtils;
-import com.shk95.giteditor.utils.CookieUtil;
+import com.shk95.giteditor.common.utils.web.CookieUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.oauth2.client.web.AuthorizationRequestRepository;

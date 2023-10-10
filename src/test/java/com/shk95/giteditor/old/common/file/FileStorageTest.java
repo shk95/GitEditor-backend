@@ -1,7 +1,7 @@
 package com.shk95.giteditor.old.common.file;
 
 import com.amazonaws.services.s3.AmazonS3;
-import com.shk95.giteditor.common.file.FileStorageResolver;
+import com.shk95.giteditor.common.service.file.FileStorageResolver;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

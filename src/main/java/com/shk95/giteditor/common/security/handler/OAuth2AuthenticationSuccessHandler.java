@@ -3,11 +3,10 @@ package com.shk95.giteditor.common.security.handler;
 import com.shk95.giteditor.common.security.jwt.GeneratedJwtToken;
 import com.shk95.giteditor.common.security.jwt.JwtTokenProvider;
 import com.shk95.giteditor.common.security.repository.OAuth2AuthorizationRequestBasedOnCookieRepository;
+import com.shk95.giteditor.common.utils.web.CookieUtil;
 import com.shk95.giteditor.config.ApplicationProperties;
-import com.shk95.giteditor.core.user.domain.token.RefreshToken;
-import com.shk95.giteditor.core.user.domain.token.RefreshTokenRepository;
-import com.shk95.giteditor.core.user.domain.user.CustomUserDetails;
-import com.shk95.giteditor.utils.CookieUtil;
+import com.shk95.giteditor.core.auth.application.port.out.RefreshTokenRepositoryPort;
+import com.shk95.giteditor.core.auth.domain.RefreshToken;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,7 +23,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Collection;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static com.shk95.giteditor.config.Constants.Jwt.ExpireTime.REFRESH_TOKEN_EXPIRE_TIME;
 import static com.shk95.giteditor.config.Constants.Jwt.JWT_TYPE_REFRESH;
@@ -38,7 +36,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
 	private final ApplicationProperties properties;
 	private final JwtTokenProvider tokenProvider;
-	private final RefreshTokenRepository refreshTokenRepository;
+	private final RefreshTokenRepositoryPort refreshTokenRepositoryPort;
 	private final OAuth2AuthorizationRequestBasedOnCookieRepository authorizationRequestRepository;
 
 	// oAuth provider 로그인 페이지 로그인 성공후
@@ -66,22 +64,22 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
 		final String TARGET_URL = redirectUri.orElse(getDefaultTargetUrl());
 
-		CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-		GeneratedJwtToken tokenInfo = tokenProvider.generateToken(authentication);
+		GeneratedJwtToken generatedJwtToken = tokenProvider.generateToken(authentication);
 
 		log.info("{}. request.getRemote() : {}", getClass(), request.getRemoteAddr());
 		// Redis RefreshToken 저장
-		refreshTokenRepository.save(RefreshToken.builder()
-			.subject(tokenProvider.getClaims(tokenInfo.getAccessToken()).getSubject())
-			.authorities(userDetails.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.joining(",")))
-			.refreshToken(tokenInfo.getRefreshToken())
-			.build());
+		refreshTokenRepositoryPort.save(
+			RefreshToken.builder()
+				.accessToken(generatedJwtToken.getAccessToken())
+				.refreshToken(generatedJwtToken.getRefreshToken())
+				.build());
 
 		CookieUtil.deleteCookie(request, response, JWT_TYPE_REFRESH);
-		CookieUtil.addCookie(response, JWT_TYPE_REFRESH, tokenInfo.getRefreshToken(), (int) (REFRESH_TOKEN_EXPIRE_TIME / 1000));
+		CookieUtil.addCookie(response, JWT_TYPE_REFRESH, generatedJwtToken.getRefreshToken(), (int) (REFRESH_TOKEN_EXPIRE_TIME / 1000));
 
-		return UriComponentsBuilder.fromUriString(TARGET_URL)
-			.queryParam("token", tokenInfo.getAccessToken())
+		return UriComponentsBuilder
+			.fromUriString(TARGET_URL)
+			.queryParam("token", generatedJwtToken.getAccessToken())
 			.build().toUriString();
 	}
 

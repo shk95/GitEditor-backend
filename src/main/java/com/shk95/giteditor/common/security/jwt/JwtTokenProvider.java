@@ -2,8 +2,8 @@ package com.shk95.giteditor.common.security.jwt;
 
 import com.shk95.giteditor.common.exception.TokenValidFailedException;
 import com.shk95.giteditor.config.ApplicationProperties;
-import com.shk95.giteditor.core.user.domain.user.CustomUserDetails;
-import com.shk95.giteditor.core.user.domain.user.GrantedUserInfo;
+import com.shk95.giteditor.core.auth.application.port.out.LoadUserPort;
+import com.shk95.giteditor.core.auth.domain.CustomUserDetails;
 import com.shk95.giteditor.core.user.domain.user.UserId;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
@@ -30,34 +30,29 @@ import static com.shk95.giteditor.config.Constants.Jwt.*;
 @Component
 public class JwtTokenProvider {
 
-	private final GrantedUserInfo grantedUserInfo;
+	private final LoadUserPort loadUserPort;
 	private final Key key;
 
 	//The specified key byte array is 248 bits which is not secure enough for any JWT HMAC-SHA algorithm.
 	// The JWT JWA Specification (RFC 7518, Section 3.2) states that keys used with HMAC-SHA algorithms MUST have a size >= 256 bits (the key size must be greater than or equal to the hash output size).
 	// Consider using the io.jsonwebtoken.security.Keys#secretKeyFor(SignatureAlgorithm) method to create a key guaranteed to be secure enough for your preferred HMAC-SHA algorithm.
-	private JwtTokenProvider(ApplicationProperties properties, GrantedUserInfo grantedUserInfo) {
+	private JwtTokenProvider(ApplicationProperties properties, LoadUserPort loadUserPort) {
 		byte[] keyBytes = Decoders.BASE64.decode(properties.getTokenSecretKey());
 		log.debug("jwt secret key : [{}]", properties.getTokenSecretKey());
 		this.key = Keys.hmacShaKeyFor(keyBytes);
-		this.grantedUserInfo = grantedUserInfo;
+		this.loadUserPort = loadUserPort;
 	}
 
-	//Authentication 을 가지고 AccessToken, RefreshToken 을 생성하는 메서드
+	//Authentication 으로 AccessToken, RefreshToken 을 생성
 	public GeneratedJwtToken generateToken(Authentication authentication) {
-		return this.generateToken(((CustomUserDetails) authentication.getPrincipal()).getUserEntityId()
-			, authentication.getAuthorities());
-	}
-
-	//name, authorities 를 가지고 AccessToken, RefreshToken 을 생성하는 메서드
-	public GeneratedJwtToken generateToken(UserId userId, Collection<? extends GrantedAuthority> inputAuthorities) {
-		Date now = new Date();
+		CustomUserDetails customUserDetails = (CustomUserDetails) (authentication.getPrincipal());
 		//권한 가져오기
-		String authorities = inputAuthorities.stream()
+		final String authorities = customUserDetails.getAuthorities().stream()
 			.map(GrantedAuthority::getAuthority)
 			.collect(Collectors.joining(","));
+		final String subject = customUserDetails.getProviderTypeAndLoginId();
 
-		final String subject = userId.get();
+		final Date now = new Date();
 
 		//Generate AccessToken
 		String accessToken = Jwts.builder()
@@ -90,7 +85,7 @@ public class JwtTokenProvider {
 		if (claims.get(AUTHORITIES_KEY) == null) {
 			throw new TokenValidFailedException("권한 정보가 없는 토큰입니다.");
 		}
-		//클레임에서 권한 정보 가져오기
+		// 권한
 		Collection<? extends GrantedAuthority> authorities =
 			Arrays.stream(claims.get(AUTHORITIES_KEY).toString().split(","))
 				.map(SimpleGrantedAuthority::new)
@@ -100,9 +95,9 @@ public class JwtTokenProvider {
 		try {
 			userId = UserId.of(claims.getSubject());
 		} catch (Exception e) {
-			throw new TokenValidFailedException("권한 정보가 없는 토큰입니다.");
+			throw new TokenValidFailedException("Failed to generate UserId from subject of jwt claims.");
 		}
-		return new UsernamePasswordAuthenticationToken(grantedUserInfo.loadUserWithProvider(userId), accessToken, authorities);
+		return new UsernamePasswordAuthenticationToken(loadUserPort.loadUser(userId), accessToken, authorities);
 	}
 
 	//토큰 유효성 검증

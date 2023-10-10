@@ -1,6 +1,6 @@
 package com.shk95.giteditor.common;
 
-import com.shk95.giteditor.core.user.domain.user.CustomUserDetails;
+import com.shk95.giteditor.core.auth.domain.CustomUserDetails;
 import com.shk95.giteditor.core.user.domain.user.UserId;
 
 public class ServiceUserId {
@@ -14,11 +14,11 @@ public class ServiceUserId {
 	}
 
 	public static ServiceUserId from(CustomUserDetails userDetails) {
-		return new ServiceUserId(userDetails.getUserEntityId());
+		return new ServiceUserId(userDetails.getUserId());
 	}
 
-	public static ServiceUserId from(String userId) {
-		return new ServiceUserId(UserId.of(userId));
+	public static ServiceUserId from(String providerTypeAndLoginId) {
+		return new ServiceUserId(UserId.of(providerTypeAndLoginId));
 	}
 
 	public static ServiceUserId from(UserId userId) {

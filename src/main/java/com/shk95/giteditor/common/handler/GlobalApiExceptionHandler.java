@@ -1,7 +1,7 @@
 package com.shk95.giteditor.common.handler;
 
+import com.shk95.giteditor.common.utils.Response;
 import com.shk95.giteditor.core.github.application.service.GithubInitException;
-import com.shk95.giteditor.utils.Response;
 import io.github.aminovmaksim.chatgpt4j.ChatGPTClientException;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
@@ -24,8 +25,16 @@ public class GlobalApiExceptionHandler extends ResponseEntityExceptionHandler {
 	@ExceptionHandler({Exception.class})
 	protected ResponseEntity<?> handle(RuntimeException ex, HttpServletResponse httpServletResponse) {
 
-		log.error("Unhandled Runtime exception occurred. cause : [" + ex.getCause() + "]" + "\nError message : [" + ex.getMessage() + "]");
+		log.error("Unhandled Runtime exception occurred. Cause : [" + ex.getCause() + "]" + "\nError message : [" + ex.getMessage() + "]");
+		if (log.isDebugEnabled()) ex.printStackTrace();
 		return Response.fail(ex.getMessage(), "Sorry, there was an error on the server side.", HttpStatus.INTERNAL_SERVER_ERROR);
+	}
+
+	@ExceptionHandler({UsernameNotFoundException.class})
+	protected ResponseEntity<?> handle(UsernameNotFoundException ex, HttpServletResponse httpServletResponse) {
+
+		log.info("Cannot find user.");
+		return Response.fail("사용자를 찾을수 없습니다.", HttpStatus.BAD_REQUEST);
 	}
 
 	@ExceptionHandler({IOException.class})

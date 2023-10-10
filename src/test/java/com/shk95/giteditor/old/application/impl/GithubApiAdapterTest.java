@@ -9,8 +9,8 @@ import com.shk95.giteditor.core.github.domain.GithubCredential;
 import com.shk95.giteditor.core.github.domain.GithubFile;
 import com.shk95.giteditor.core.github.domain.GithubFileType;
 import com.shk95.giteditor.core.github.infrastructure.GithubInitializer;
+import com.shk95.giteditor.core.user.application.port.out.ProviderRepositoryPort;
 import com.shk95.giteditor.core.user.domain.provider.Provider;
-import com.shk95.giteditor.core.user.domain.provider.ProviderRepository;
 import com.shk95.giteditor.core.user.domain.user.UserId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -39,7 +39,7 @@ class GithubApiAdapterTest {
 	@Autowired
 	GithubServiceUseCase githubServiceUseCase;
 	@Autowired
-	ProviderRepository providerRepository;
+	ProviderRepositoryPort providerRepositoryPort;
 
 	@MockBean
 	GithubInitializer initializer;
@@ -48,7 +48,7 @@ class GithubApiAdapterTest {
 
 	@BeforeEach
 	public void provideCredential() throws IOException {
-		Provider provider = providerRepository.findAll().stream().filter(
+		Provider provider = providerRepositoryPort.findAll().stream().filter(
 			p -> p.getProviderId().getProviderType() == ProviderType.GITHUB
 		).findFirst().orElseThrow(RuntimeException::new);
 
@@ -72,7 +72,7 @@ class GithubApiAdapterTest {
 	void getTreeRecursively() throws IOException {
 		GetReposCommand command = GetReposCommand.builder().build();
 		String someRepo = githubServiceUseCase.getRepos(serviceUserId.get(), command).get(0).getRepoName();
-		githubServiceUseCase.getFiles(serviceUserId.get() , GetFilesCommand.builder()
+		githubServiceUseCase.getFiles(serviceUserId.get(), GetFilesCommand.builder()
 			.repositoryName(someRepo).recursive(true).build()).forEach(t -> {
 			System.out.println(t.getMode());
 			System.out.println(t.getPath());

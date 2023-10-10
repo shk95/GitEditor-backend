@@ -194,6 +194,13 @@
 			<version>0.64.8</version>
 		</dependency>
 
+		<!--자바 버전 8 -> 9 에서 발생하는 [java.lang.ClassNotFoundException: javax.xml.bind.JAXBException]관련-->
+		<dependency>
+			<groupId>javax.xml.bind</groupId>
+			<artifactId>jaxb-api</artifactId>
+			<version>2.3.1</version>
+		</dependency>
+
 		<!-- https://mvnrepository.com/artifact/com.squareup.okhttp/okhttp -->
 		<dependency>
 			<groupId>com.squareup.okhttp3</groupId>

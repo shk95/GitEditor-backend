@@ -1,6 +1,6 @@
 package com.shk95.giteditor.common.security;
 
-import com.shk95.giteditor.core.user.domain.user.CustomUserDetails;
+import com.shk95.giteditor.core.auth.domain.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.BadCredentialsException;

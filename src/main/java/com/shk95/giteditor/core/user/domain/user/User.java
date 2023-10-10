@@ -8,11 +8,15 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.DynamicInsert;
+import org.hibernate.annotations.DynamicUpdate;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+@DynamicUpdate
+@DynamicInsert
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -41,10 +45,10 @@ public class User extends AbstractBaseTimeEntity {
 	private String profileImageUrl;
 
 	@Column(name = "user_email_verified")
-	private boolean isUserEmailVerified;
+	private boolean userEmailVerified;
 
 	@Column(name = "user_enabled")
-	private boolean isUserEnabled;//TODO: user 활성화 여부 체크 기능
+	private boolean userEnabled;//TODO: user 활성화 여부 체크 기능
 
 	@Column(name = "user_email_verification", unique = true, length = 100)
 	private String emailVerificationCode;
@@ -56,10 +60,10 @@ public class User extends AbstractBaseTimeEntity {
 	private String openAIToken;
 
 	@Column(name = "user_github_enabled")
-	private boolean isGithubEnabled;
+	private boolean githubEnabled;
 
 	@Column(name = "user_openai_enabled")
-	private boolean isOpenAIEnabled;
+	private boolean openAIEnabled;
 
 	@Builder.Default
 	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL,
@@ -79,14 +83,12 @@ public class User extends AbstractBaseTimeEntity {
 		this.password = newPassword;
 	}
 
-	public User activateGithubUsage() {
-		this.isGithubEnabled = true;
-		return this;
+	public void activateGithubUsage() {
+		this.githubEnabled = true;
 	}
 
-	public User deactivateGithubUsage() {
-		this.isGithubEnabled = false;
-		return this;
+	public void deactivateGithubUsage() {
+		this.githubEnabled = false;
 	}
 
 	public void deleteEmailVerificationCode() {
@@ -98,19 +100,19 @@ public class User extends AbstractBaseTimeEntity {
 	}
 
 	public void activateOpenAIUsage() {
-		this.isOpenAIEnabled = true;
+		this.openAIEnabled = true;
 	}
 
 	public void deactivateOpenAIUsage() {
-		this.isOpenAIEnabled = false;
+		this.openAIEnabled = false;
 	}
 
-	public void activateEmailVerified() {
-		this.isUserEmailVerified = true;
+	public void activateEmailVerification() {
+		this.userEmailVerified = true;
 	}
 
 	public void deactivateEmailVerified() {
-		this.isUserEmailVerified = false;
+		this.userEmailVerified = false;
 	}
 
 	public void updateEmail(String email) {
@@ -127,11 +129,11 @@ public class User extends AbstractBaseTimeEntity {
 	}
 
 	public void activateUser() {
-		this.isUserEnabled = true;
+		this.userEnabled = true;
 	}
 
 	public void deActivateUser() {
-		this.isUserEnabled = false;
+		this.userEnabled = false;
 	}
 
 	public void changeRoleFromTempToUser() {
@@ -150,7 +152,7 @@ public class User extends AbstractBaseTimeEntity {
 		this.emailToBeChanged = emailToBeChanged;
 	}
 
-	public void updateEmailFromOld() {
+	public void updateEmail() {
 		if (this.emailToBeChanged != null) {
 			this.defaultEmail = this.emailToBeChanged;
 			this.emailToBeChanged = null;
@@ -162,12 +164,12 @@ public class User extends AbstractBaseTimeEntity {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 		User user = (User) o;
-		return isUserEmailVerified == user.isUserEmailVerified && isUserEnabled == user.isUserEnabled && Objects.equals(userId, user.userId) && Objects.equals(defaultEmail, user.defaultEmail) && role == user.role && Objects.equals(password, user.password) && Objects.equals(username, user.username) && Objects.equals(profileImageUrl, user.profileImageUrl) && Objects.equals(emailVerificationCode, user.emailVerificationCode) && Objects.equals(emailToBeChanged, user.emailToBeChanged) && Objects.equals(providers, user.providers);
+		return userEmailVerified == user.userEmailVerified && userEnabled == user.userEnabled && Objects.equals(userId, user.userId) && Objects.equals(defaultEmail, user.defaultEmail) && role == user.role && Objects.equals(password, user.password) && Objects.equals(username, user.username) && Objects.equals(profileImageUrl, user.profileImageUrl) && Objects.equals(emailVerificationCode, user.emailVerificationCode) && Objects.equals(emailToBeChanged, user.emailToBeChanged) && Objects.equals(providers, user.providers);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(userId, defaultEmail, role, password, username, profileImageUrl, isUserEmailVerified, emailVerificationCode, emailToBeChanged, isUserEnabled, providers);
+		return Objects.hash(userId, defaultEmail, role, password, username, profileImageUrl, userEmailVerified, emailVerificationCode, emailToBeChanged, userEnabled, providers);
 	}
 
 	@Override
@@ -179,10 +181,10 @@ public class User extends AbstractBaseTimeEntity {
 			", password='" + "[password]" + '\'' +
 			", username='" + username + '\'' +
 			", profileImageUrl='" + profileImageUrl + '\'' +
-			", isUserEmailVerified=" + isUserEmailVerified +
+			", isUserEmailVerified=" + userEmailVerified +
 			", emailVerificationCode='" + emailVerificationCode + '\'' +
 			", emailToBeChanged='" + emailToBeChanged + '\'' +
-			", isUserEnabled=" + isUserEnabled +
+			", isUserEnabled=" + userEnabled +
 			", providers=" + providers +
 			'}';
 	}

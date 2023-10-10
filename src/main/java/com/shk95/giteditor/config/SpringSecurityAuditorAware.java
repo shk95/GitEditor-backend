@@ -2,7 +2,7 @@ package com.shk95.giteditor.config;
 
 import com.shk95.giteditor.common.constant.ProviderType;
 import com.shk95.giteditor.common.security.Role;
-import com.shk95.giteditor.core.user.domain.user.CustomUserDetails;
+import com.shk95.giteditor.core.auth.domain.CustomUserDetails;
 import com.shk95.giteditor.core.user.domain.user.UserId;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
@@ -15,7 +15,7 @@ import java.util.Collections;
 import java.util.Optional;
 
 @Slf4j
-public class SpringSecurityAuditorAware implements AuditorAware<UserId> {// TODO:
+public class SpringSecurityAuditorAware implements AuditorAware<UserId> {
 
 	@NotNull
 	@Override
@@ -24,25 +24,24 @@ public class SpringSecurityAuditorAware implements AuditorAware<UserId> {// TODO
 			Optional.ofNullable(SecurityContextHolder.getContext().getAuthentication())
 				.map(Authentication::getPrincipal)
 				.map(o -> {
-					if (o instanceof CustomUserDetails) {
-						CustomUserDetails customUserDetails = (CustomUserDetails) o;
-						log.info("Current Auditor called : {}", customUserDetails.getUserEntityId());
+					if (o instanceof CustomUserDetails customUserDetails) {
+						log.info("Current Auditor called : {}", customUserDetails.getProviderTypeAndLoginId());
 						return customUserDetails;
 					}
 					return null;
 				}).orElseGet(() -> {
 					log.info("Current Auditor called : {}", "ANONYMOUS");
 					return CustomUserDetails.builder()
-						.userId("ANONYMOUS")
+						.providerTypeAndLoginId(ProviderType.ANONYMOUS.name() + "," + "ANONYMOUS")
 						.defaultUsername("ANONYMOUS")
 						.providerType(ProviderType.ANONYMOUS)
-						.role(Role.ANONYMOUS)
+//						.role(Role.ANONYMOUS)
 						.authorities(Collections.singletonList(new SimpleGrantedAuthority(Role.ANONYMOUS.getCode())))
 						.defaultEmail("ANONYMOUS")
 						.isUserEnabled(false)
 						.isUserEmailVerified(false).build();
 				});
-		UserId userId = currentUser.getUserEntityId();
+		UserId userId = currentUser.getUserId();
 		log.info("Current Auditor called : {}", userId);
 		return Optional.ofNullable(userId);
 	}

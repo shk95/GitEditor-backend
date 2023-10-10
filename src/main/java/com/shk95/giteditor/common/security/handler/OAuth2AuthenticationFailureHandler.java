@@ -3,10 +3,18 @@ package com.shk95.giteditor.common.security.handler;
 import com.shk95.giteditor.common.exception.OAuthUserNotRegisteredException;
 import com.shk95.giteditor.common.model.AbstractOAuth2UserInfo;
 import com.shk95.giteditor.common.security.repository.OAuth2AuthorizationRequestBasedOnCookieRepository;
+import com.shk95.giteditor.common.utils.web.CookieUtil;
 import com.shk95.giteditor.config.ApplicationProperties;
-import com.shk95.giteditor.core.user.domain.provider.*;
-import com.shk95.giteditor.core.user.domain.user.*;
-import com.shk95.giteditor.utils.CookieUtil;
+import com.shk95.giteditor.core.auth.application.port.out.LoadUserPort;
+import com.shk95.giteditor.core.auth.domain.CustomUserDetails;
+import com.shk95.giteditor.core.user.application.port.out.GithubTokenHolderPort;
+import com.shk95.giteditor.core.user.application.port.out.OAuthTokenHolderPort;
+import com.shk95.giteditor.core.user.application.port.out.ProviderRepositoryPort;
+import com.shk95.giteditor.core.user.application.port.out.UserCrudRepositoryPort;
+import com.shk95.giteditor.core.user.domain.provider.Provider;
+import com.shk95.giteditor.core.user.domain.provider.ProviderId;
+import com.shk95.giteditor.core.user.domain.provider.ProviderLoginInfo;
+import com.shk95.giteditor.core.user.domain.user.UserId;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -36,11 +44,11 @@ public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationF
 
 	private final ApplicationProperties properties;
 	private final OAuth2AuthorizationRequestBasedOnCookieRepository authorizationRequestRepository;
-	private final ProviderLoginInfoRepository providerLoginInfoRepository;
-	private final GithubServiceRepository githubServiceRepository;
-	private final UserRepository userRepository;
-	private final ProviderRepository providerRepository;
-	private final GrantedUserInfo grantedUserInfo;
+	private final OAuthTokenHolderPort oAuthTokenHolderPort;
+	private final GithubTokenHolderPort githubTokenHolderPort;
+	private final UserCrudRepositoryPort userCrudRepositoryPort;
+	private final ProviderRepositoryPort providerRepositoryPort;
+	private final LoadUserPort loadUserPort;
 
 	/*
 			기능 : 회원가입 추가정보를 받도록 회원가입 페이지로 리디렉션 & oAuth 인증 쿠키 유지 & oAuth 인증시 가입 정보를 넘겨줌
@@ -59,17 +67,18 @@ public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationF
 		if (exception instanceof OAuthUserNotRegisteredException) {
 			AbstractOAuth2UserInfo userInfo = ((OAuthUserNotRegisteredException) exception).getOAuth2UserInfo();
 
-			Optional<Cookie> addServiceCookie = CookieUtil.getCookie(request, ADD_OAUTH_SERVICE_USER_INFO);
-			if (addServiceCookie.isPresent()) {
+			Optional<Cookie> oAuthLoginInfo = CookieUtil.getCookie(request, ADD_OAUTH_SERVICE_USER_INFO);
+			if (oAuthLoginInfo.isPresent()) {
 				// 로그인한 사용자의 서비스 추가
-				this.addOAuthService(userInfo, addServiceCookie.get());
+				this.addOAuthService(userInfo, oAuthLoginInfo.get());
 				CookieUtil.deleteCookie(request, response, ADD_OAUTH_SERVICE_USER_INFO);
 
-				redirectUrl = UriComponentsBuilder.fromUriString(properties.getFrontPageUrl() + OAUTH_DEFAULT_REDIRECT)
-					.queryParam("type", "addGithubService")
+				redirectUrl = UriComponentsBuilder
+					.fromUriString(properties.getFrontPageUrl() + OAUTH_DEFAULT_REDIRECT)
+					.queryParam("type", "addGithubService")// 현재 github 추가만 있음. TODO: 로그인후 OAuth 서비스 추가하는기능 개선
 					.build().toUriString();
 			} else {
-				// oAuth 로 가입한 사용자
+				// oAuth 로 가입하는 사용자
 				this.signup(userInfo);
 				CookieUtil.addCookie(
 					response
@@ -77,14 +86,17 @@ public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationF
 					, CookieUtil.serialize(userInfo.getId())
 					, REDIRECT_SIGNUP_OAUTH_EXPIRE
 				);
-				redirectUrl = properties.getFrontPageUrl() + REDIRECT_SIGNUP_OAUTH_PATH;
+				redirectUrl = UriComponentsBuilder
+					.fromUriString(properties.getFrontPageUrl() + REDIRECT_SIGNUP_OAUTH_PATH)
+					.build().toUriString();
 			}
-		} else {
+		} else {// OAuth 로그인 실패
 			exception.printStackTrace();
 			String frontendHost = CookieUtil.getCookie(request, OAUTH_REDIRECT_URI_PARAM_COOKIE_NAME)
 				.map(Cookie::getValue)
 				.orElse(("/"));
-			redirectUrl = UriComponentsBuilder.fromUriString(frontendHost)
+			redirectUrl = UriComponentsBuilder
+				.fromUriString(frontendHost)
 				.queryParam("error", exception.getLocalizedMessage())
 				.build().toUriString();
 		}
@@ -97,32 +109,40 @@ public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationF
 		// 회원가입이 필요할경우
 		log.info("oAuth 인증 사용자 회원가입 페이지로 리디렉션");
 
-		ProviderLoginInfo loginInfo = new ProviderLoginInfo(
-			userInfo.getId(), userInfo.getProviderType().name()
-			, userInfo.getLoginId(), userInfo.getEmail()
-			, userInfo.getName(), userInfo.getImageUrl());
-		providerLoginInfoRepository.save(loginInfo);
+		ProviderLoginInfo loginInfo =
+			ProviderLoginInfo.builder()
+				.id(userInfo.getId())
+				.providerType(userInfo.getProviderType().name())
+				.loginId(userInfo.getLoginId())
+				.email(userInfo.getEmail())
+				.name(userInfo.getName())
+				.imgUrl(userInfo.getImageUrl()).build();
+		oAuthTokenHolderPort.save(loginInfo);
 	}
 
-	private void addOAuthService(AbstractOAuth2UserInfo userInfo, Cookie cookie) {
+	private void addOAuthService(final AbstractOAuth2UserInfo userInfo, Cookie cookie) {
 		UserId userId = UserId.of(CookieUtil.deserialize(cookie, String.class));
 
-		CustomUserDetails userDetails = (CustomUserDetails) grantedUserInfo.loadUserByUsername(userId.getUserLoginId());
+		CustomUserDetails userDetails = loadUserPort.loadUser(userId);
 		Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 		SecurityContextHolder.getContext().setAuthentication(authentication);
 
-		boolean state = githubServiceRepository.findById(userId.get()).isPresent();
+		boolean state = githubTokenHolderPort.findById(userId.get()).isPresent();
 		if (state) {
-			userRepository.findById(userId)
+			userCrudRepositoryPort.findUserByUserId(userId)
 				.ifPresent(user -> {
 					user.activateGithubUsage();
-					Provider provider = providerRepository.save(Provider.builder()
-						.providerId(new ProviderId(userInfo.getProviderType(), userInfo.getId()))
-						.providerLoginId(userInfo.getLoginId()).providerEmail(userInfo.getEmail())
-						.providerImgUrl(userInfo.getImageUrl()).providerUserName(userInfo.getName())
-						.accessToken(userInfo.getAccessToken()).user(user).build());
+					Provider provider = providerRepositoryPort.save(
+						Provider.builder()
+							.providerId(new ProviderId(userInfo.getProviderType(), userInfo.getId()))
+							.providerLoginId(userInfo.getLoginId())
+							.providerEmail(userInfo.getEmail())
+							.providerImgUrl(userInfo.getImageUrl())
+							.providerUserName(userInfo.getName())
+							.accessToken(userInfo.getAccessToken())
+							.user(user).build());
 				});
-			githubServiceRepository.deleteById(userId.get());
+			githubTokenHolderPort.deleteById(userId.get());
 		}
 	}
 }

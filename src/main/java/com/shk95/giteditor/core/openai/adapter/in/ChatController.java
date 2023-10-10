@@ -3,14 +3,15 @@ package com.shk95.giteditor.core.openai.adapter.in;
 import com.shk95.giteditor.common.ServiceUserId;
 import com.shk95.giteditor.common.security.CurrentUser;
 import com.shk95.giteditor.common.security.UserAuthorize;
+import com.shk95.giteditor.common.utils.Response;
+import com.shk95.giteditor.core.auth.domain.CustomUserDetails;
 import com.shk95.giteditor.core.openai.application.port.in.CreateCompletionUseCase;
 import com.shk95.giteditor.core.openai.application.port.in.LoadMessagesUseCase;
 import com.shk95.giteditor.core.openai.application.port.in.command.GetCompletionCommand;
 import com.shk95.giteditor.core.openai.application.port.in.command.RequestCommand;
 import com.shk95.giteditor.core.openai.application.service.PageResult;
 import com.shk95.giteditor.core.openai.domain.ChatDocument;
-import com.shk95.giteditor.core.user.domain.user.CustomUserDetails;
-import com.shk95.giteditor.utils.Response;
+import com.shk95.giteditor.core.user.application.port.in.FetchUserInfoUseCase;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -27,6 +28,7 @@ public class ChatController {
 
 	private final LoadMessagesUseCase loadCompletionUseCase;
 	private final CreateCompletionUseCase createCompletionUseCase;
+	private final FetchUserInfoUseCase fetchUserInfoUseCase;
 
 	@PostMapping
 	public ResponseEntity<?> createCompletion(@CurrentUser CustomUserDetails userDetails,
@@ -36,9 +38,9 @@ public class ChatController {
 		}
 		ChatDocument chatDocument = createCompletionUseCase.createCompletion(
 			RequestCommand.builder()
-				.userId(ServiceUserId.from(userDetails.getUserEntityId()).get())
+				.userId(ServiceUserId.from(userDetails.getProviderTypeAndLoginId()).get())
 				.prompt(request.getPrompt())
-				.accessToken(userDetails.getOpenAIAccessToken()).build());
+				.accessToken(fetchUserInfoUseCase.fetchOpenAIAccessToken(userDetails.getUserId())).build());
 		return Response.success(ChatResponse.Message.builder()
 				.prompt(chatDocument.getPrompt())
 				.completion(chatDocument.getCompletion())
@@ -54,8 +56,8 @@ public class ChatController {
 		}
 		PageResult<ChatDocument> messages = loadCompletionUseCase.loadMessages(
 			GetCompletionCommand.builder()
-				.userId(ServiceUserId.from(userDetails.getUserEntityId()).get())
-				.accessToken(userDetails.getOpenAIAccessToken())
+				.userId(ServiceUserId.from(userDetails.getProviderTypeAndLoginId()).get())
+				.accessToken(fetchUserInfoUseCase.fetchOpenAIAccessToken(userDetails.getUserId()))
 				.pageAt(Integer.parseInt(pageAt))
 				.size(Integer.parseInt(pageSize))
 				.build());

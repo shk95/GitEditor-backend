@@ -2,11 +2,13 @@ package com.shk95.giteditor.common.security.service;
 
 import com.shk95.giteditor.common.constant.ProviderType;
 import com.shk95.giteditor.common.exception.OAuthUserNotRegisteredException;
+import com.shk95.giteditor.common.model.AbstractOAuth2UserInfo;
+import com.shk95.giteditor.core.auth.application.port.out.LoadUserPort;
+import com.shk95.giteditor.core.auth.domain.CustomUserDetails;
+import com.shk95.giteditor.core.user.application.port.out.ProviderRepositoryPort;
 import com.shk95.giteditor.core.user.domain.provider.Provider;
 import com.shk95.giteditor.core.user.domain.provider.ProviderId;
-import com.shk95.giteditor.core.user.domain.provider.ProviderRepository;
-import com.shk95.giteditor.core.user.domain.user.CustomUserDetails;
-import com.shk95.giteditor.common.model.AbstractOAuth2UserInfo;
+import com.shk95.giteditor.core.user.domain.user.UserId;
 import com.shk95.giteditor.core.user.domain.user.oauth.OAuth2UserInfoFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +21,7 @@ import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserServ
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
@@ -30,10 +32,11 @@ import static com.shk95.giteditor.config.Constants.OAuthService.PROVIDER_ACCESS_
 @Slf4j
 @RequiredArgsConstructor
 @Transactional
-@Service
+@Component
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
-	private final ProviderRepository providerRepository;
+	private final ProviderRepositoryPort providerRepositoryPort;
+	private final LoadUserPort loadUserPort;
 
 	@Override
 	public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
@@ -48,7 +51,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 		}
 	}
 
-	private OAuth2User authProcess(OAuth2UserRequest oAuth2UserRequest, OAuth2User oAuth2User) {
+	private OAuth2User authProcess(OAuth2UserRequest oAuth2UserRequest, OAuth2User oAuth2User) {// TODO: OAuth 인증토큰 관련 개선
 		ProviderType providerType
 			= ProviderType.valueOf(oAuth2UserRequest.getClientRegistration().getRegistrationId().toUpperCase());
 		String retrievedAccessToken = oAuth2UserRequest.getAccessToken().getTokenValue();
@@ -58,21 +61,26 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 		log.debug("#### oAuth2userInfo getAttributes : [{}]\n", oAuth2User.getAttributes());
 		log.debug("#### oAuth2userInfo clientRegistration : [{}]\n", oAuth2UserRequest.getClientRegistration());
 
-		// OAuth 서비스를 통해 로그인성공후 가져온 사용자의 정보를 가져옴.
+		// 로그인성공후 OAuth 서비스 사용자의 정보를 가져옴.
 		AbstractOAuth2UserInfo retrievedUserInfo = OAuth2UserInfoFactory
 			.getOAuth2UserInfo(providerType, oAuth2User.getAttributes(), additionalAttributes);
 
-		// oAuth 가입정보의 pk(provider type, provider id)
-		ProviderId providerId = new ProviderId(providerType, retrievedUserInfo.getId());
-		Provider oAuthUser = providerRepository.findById(providerId).orElseThrow(
-			() -> new OAuthUserNotRegisteredException("서비스에 가입되지 않은 oAuth2 로그인 유저. 가입 필요.", null, retrievedUserInfo));
+		// OAuth 서비스 정보를 DB 에서 확인 pk(provider type, provider id)
+		String oAuthServiceId = retrievedUserInfo.getId();
+		ProviderId providerId = new ProviderId(providerType, oAuthServiceId);
+		Provider oAuthUser = providerRepositoryPort.findById(providerId)
+			.map(provider -> {
+				updateUserInfo(provider, retrievedUserInfo); // 최신화 TODO: 최신화과정을 단일 기능으로 추출.
+				return provider;
+			})
+			.orElseThrow(
+				() -> new OAuthUserNotRegisteredException("서비스에 가입되지 않은 oAuth2 로그인 유저. 가입 필요.", null, retrievedUserInfo)); // 회원가입으로 리다이렉트
 
-		CustomUserDetails userDetails =
-			CustomUserDetails.createUserDetailsOfOAuthUser(oAuthUser.getUser(), oAuth2User.getAttributes()).build();
+		// security 인가
+		CustomUserDetails userDetails = loadUserPort.loadUser(new UserId(providerType, oAuthServiceId));
 		Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 		SecurityContextHolder.getContext().setAuthentication(authentication);
 
-		updateUserInfo(oAuthUser, retrievedUserInfo);// jpa 변경감지 이용 업데이트
 		return userDetails;
 	}
 

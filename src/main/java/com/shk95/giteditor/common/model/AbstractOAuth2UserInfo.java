@@ -29,6 +29,7 @@ public abstract class AbstractOAuth2UserInfo {
 
 	/**
 	 * @return must be unique value
+	 * 서비스에서 제공하는 유일한 변하지않는 값.
 	 */
 	public abstract String getId();
 
