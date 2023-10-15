@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+	<!-- Console Appender: 로그 메시지를 콘솔에 출력 -->
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+			<pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
+		</encoder>
+	</appender>
+
+	<!-- File Appender: 로그 메시지를 파일에 저장 -->
+	<appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>logs/giteditor.log</file>
+		<encoder>
+			<pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
+		</encoder>
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<fileNamePattern>logs/giteditor.%d{yyyy-MM-dd}.log</fileNamePattern>
+			<maxHistory>30</maxHistory>
+		</rollingPolicy>
+	</appender>
+
+	<!-- 로거 정의: 패키지 또는 클래스 이름과 로그 레벨을 설정 -->
+	<logger name="io.github.shk95.giteditor" level="INFO"/>
+
+	<!-- Root Logger: 모든 로그 메시지를 대상으로 함 -->
+	<root level="ERROR">
+		<appender-ref ref="STDOUT"/>
+		<appender-ref ref="FILE"/>
+	</root>
+</configuration>
