@@ -2,6 +2,7 @@ package com.shk95.giteditor.common.handler;
 
 import com.shk95.giteditor.common.utils.Response;
 import com.shk95.giteditor.core.github.application.service.GithubInitException;
+import com.shk95.giteditor.core.user.application.exception.CreateUserIdException;
 import io.github.aminovmaksim.chatgpt4j.ChatGPTClientException;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -25,10 +26,20 @@ public class GlobalApiExceptionHandler extends ResponseEntityExceptionHandler {
 	@ExceptionHandler({Exception.class})
 	protected ResponseEntity<?> handle(RuntimeException ex, HttpServletResponse httpServletResponse) {
 
-		log.error("Unhandled Runtime exception occurred. Cause : [" + ex.getCause() + "]" + "\nError message : [" + ex.getMessage() + "]");
+		log.error("Unhandled Runtime exception occurred. Cause : [" + ex.getCause() + "]" + "\nError message.http : [" + ex.getMessage() + "]");
 		if (log.isDebugEnabled()) ex.printStackTrace();
 		return Response.fail(ex.getMessage(), "Sorry, there was an error on the server side.", HttpStatus.INTERNAL_SERVER_ERROR);
 	}
+
+
+	@ExceptionHandler({CreateUserIdException.class})
+
+	protected ResponseEntity<?> handle(CreateUserIdException ex, HttpServletResponse httpServletResponse) {
+
+		log.warn("Failed to create UserId. {}", ex.getLocalizedMessage());
+		return Response.fail("사용자를 찾을수 없습니다.", HttpStatus.BAD_REQUEST);
+	}
+
 
 	@ExceptionHandler({UsernameNotFoundException.class})
 	protected ResponseEntity<?> handle(UsernameNotFoundException ex, HttpServletResponse httpServletResponse) {
@@ -40,7 +51,7 @@ public class GlobalApiExceptionHandler extends ResponseEntityExceptionHandler {
 	@ExceptionHandler({IOException.class})
 	protected ResponseEntity<?> handle(IOException ex, HttpServletResponse httpServletResponse) {
 
-		log.error("IOException occurred. cause : [" + ex.getCause() + "]" + "\nError message : [" + ex.getMessage() + "]");
+		log.error("IOException occurred. cause : [" + ex.getCause() + "]" + "\nError message.http : [" + ex.getMessage() + "]");
 		return Response.fail(ex.getMessage(), "Sorry, there was an error on the server side.", HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 

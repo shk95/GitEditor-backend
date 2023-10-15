@@ -44,7 +44,7 @@ public class AuthRequest {
 			public OAuth(String username) {
 				this.username = username;
 			}
-/*	@NotEmpty(message = "아이디는 필수 입력값 입니다.")
+/*	@NotEmpty(message.http = "아이디는 필수 입력값 입니다.")
 			@Pattern(regexp = "^[a-zA-Z][a-zA-Z0-9_]{4,25}$")
 			private String userId;*/
 

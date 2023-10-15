@@ -32,7 +32,7 @@ public class AsyncConfig implements AsyncConfigurer {
 		@Override
 		public void handleUncaughtException(Throwable throwable, Method method, Object... obj) {
 
-			log.warn("Exception message - `{}`", throwable.getMessage());
+			log.warn("Exception message.http - `{}`", throwable.getMessage());
 			log.warn("Method name - `{}`", method.getName());
 			for (Object param : obj) {
 				log.warn("Parameter value - `{}`", param);

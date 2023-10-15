@@ -66,6 +66,7 @@ public class SecurityConfiguration {
 				.requestMatchers(antMatcher("/api/**")).hasRole("USER")
 				.requestMatchers(antMatcher("/admin/**")).hasRole("ADMIN")
 				.anyRequest().authenticated())
+//				.anyRequest().permitAll()) // test
 			.oauth2Login(a ->
 				a.authorizationEndpoint(endpoint -> endpoint
 						.baseUri("/oauth2/authorization")

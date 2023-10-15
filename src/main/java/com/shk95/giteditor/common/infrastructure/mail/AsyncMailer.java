@@ -22,7 +22,7 @@ public class AsyncMailer implements Mailer {
 	@Async
 	@Override
 	public void send(Message message) {
-		Assert.notNull(message, "Parameter `message` must not be null");
+		Assert.notNull(message, "Parameter `message.http` must not be null");
 		try {
 			SimpleMailMessage mailMessage = new SimpleMailMessage();
 			if (StringUtils.isNotBlank(message.getFrom())) {
@@ -40,7 +40,7 @@ public class AsyncMailer implements Mailer {
 			mailSender.send(mailMessage);
 			log.info("AsyncMailer -> mail sent");
 		} catch (MailException e) {
-			log.error("Failed to send mail message", e);
+			log.error("Failed to send mail message.http", e);
 		}
 	}
 }

@@ -70,16 +70,16 @@ public class ApiResponse {
     }
 
     /**
-     * <p>성공 응답을 반환합니다. 첫 번째 인자는 message, 두 번째 인자는 data 에 표시됩니다.</p>
+     * <p>성공 응답을 반환합니다. 첫 번째 인자는 message.http, 두 번째 인자는 data 에 표시됩니다.</p>
      * <pre>
      *  {
      *      "status" : "success",
-     *      "message" : "success message",
+     *      "message.http" : "success message.http",
      *      "data" : "배열 또는 단일 데이터"
      *  }
      * </pre>
      *
-     * @param message   응답 바디 message 필드에 포함될 정보
+     * @param message   응답 바디 message.http 필드에 포함될 정보
      * @param data      응답 바디 data 필드에 포함될 정보
      * @return          응답 객체
      */
@@ -92,7 +92,7 @@ public class ApiResponse {
      * <pre>
      *  {
      *      "status" : "success",
-     *      "message" : null,
+     *      "message.http" : null,
      *      "data" : "배열 또는 단일 데이터"
      *  }
      * </pre>
@@ -109,7 +109,7 @@ public class ApiResponse {
      * <pre>
      *  {
      *      "status" : "success",
-     *      "message" : null,
+     *      "message.http" : null,
      *      "data" : null
      *  }
      * </pre>
@@ -125,7 +125,7 @@ public class ApiResponse {
      * <pre>
      *     {
      *         "status" : "success",
-     *         "message" : null,
+     *         "message.http" : null,
      *         "data" : [{data1}, {data2} ...],
      *         "page" : 1,
      *         "size" : 10,
@@ -148,7 +148,7 @@ public class ApiResponse {
      * <pre>
      *     {
      *         "status" : "success",
-     *         "message" : null,
+     *         "message.http" : null,
      *         "data" : [{data1}, {data2} ... ],
      *         "page" : 1,
      *         "size" : 10,
@@ -170,12 +170,12 @@ public class ApiResponse {
      * <pre>
      *     {
      *         "status" : "fail",
-     *         "message" : "fail message",
+     *         "message.http" : "fail message.http",
      *         "errors" : null
      *     }
      * </pre>
      *
-     * @param message   응답 바디 message 필드에 포함될 정보
+     * @param message   응답 바디 message.http 필드에 포함될 정보
      * @return          응답 객체
      */
     public <T> ResponseEntity<?> fail(String message) {
@@ -187,12 +187,12 @@ public class ApiResponse {
      * <pre>
      *     {
      *         "status" : "fail",
-     *         "message" : fail message,
+     *         "message.http" : fail message.http,
      *         "errors" : [{error data1}, {error data2} ... ]
      *     }
      * </pre>
      *
-     * @param message   응답 바디 message 필드에 포함될 정보
+     * @param message   응답 바디 message.http 필드에 포함될 정보
      * @param errors    응답 바디 errors 필드에 포함될 정보
      * @return          응답 객체
      */
@@ -205,7 +205,7 @@ public class ApiResponse {
      * <pre>
      *     {
      *         "status" : "fail",
-     *         "message" : fail message,
+     *         "message.http" : fail message.http,
      *         "errors" : [{error data1}, {error data2} ... ]
      *     }
      * </pre>
@@ -223,7 +223,7 @@ public class ApiResponse {
      * <pre>
      *     {
      *         "status" : "fail",
-     *         "message" : fail message,
+     *         "message.http" : fail message.http,
      *         "errors" : [{error data1}, {error data2} ... ]
      *     }
      * </pre>
@@ -240,7 +240,7 @@ public class ApiResponse {
      * <pre>
      *     {
      *         "status" : "fail",
-     *         "message" : null,
+     *         "message.http" : null,
      *         "errors" : [{error data1}, {error data2} ... ]
      *     }
      * </pre>
@@ -257,11 +257,11 @@ public class ApiResponse {
      * <pre>
      *     {
      *         "status" : "error",
-     *         "message" : "custom error message"
+     *         "message.http" : "custom error message.http"
      *     }
      * </pre>
      *
-     * @param message   응답 바디 message 필드에 포함될 정보
+     * @param message   응답 바디 message.http 필드에 포함될 정보
      * @return          응답 객체
      */
     public <T> ResponseEntity<?> error(String message) {

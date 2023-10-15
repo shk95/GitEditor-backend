@@ -3,7 +3,8 @@ package com.shk95.giteditor.core.user.adapter.out;
 import com.shk95.giteditor.common.constant.ProviderType;
 import com.shk95.giteditor.core.user.application.port.out.FetchUserProjectionPort;
 import com.shk95.giteditor.core.user.application.port.out.UserCrudRepositoryPort;
-import com.shk95.giteditor.core.user.application.port.out.projection.OpenAIAccessToken;
+import com.shk95.giteditor.core.user.application.port.out.projection.OpenAIAccessTokenProjection;
+import com.shk95.giteditor.core.user.application.port.out.projection.UserIdProjection;
 import com.shk95.giteditor.core.user.domain.user.User;
 import com.shk95.giteditor.core.user.domain.user.UserId;
 import com.shk95.giteditor.core.user.infrastructure.JpaUserRepository;
@@ -11,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 
@@ -75,7 +77,12 @@ public class UserRepositoryAdapter implements UserCrudRepositoryPort, FetchUserP
 	}
 
 	@Override
-	public Optional<OpenAIAccessToken> fetchOpenAIAccessToken(UserId userId) {
+	public Optional<OpenAIAccessTokenProjection> fetchOpenAIAccessToken(UserId userId) {
 		return jpaUserRepository.findOpenAiAccessToken(userId);
+	}
+
+	@Override
+	public List<UserIdProjection> fetchUserListByUsername(String username) {
+		return jpaUserRepository.findAllUserIdByUsername(username);
 	}
 }

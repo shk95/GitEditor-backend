@@ -27,7 +27,7 @@ public class AuthEntryPointImpl extends DefaultRedirectStrategy implements Authe
 	public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException)
 		throws IOException, ServletException {
 
-		log.info("Unauthorized request. message : [{}] uri : [{}] request : [{}]"
+		log.info("Unauthorized request. message.http : [{}] uri : [{}] request : [{}]"
 			, authException.getMessage(), request.getRequestURI(), request.getServletPath());
 		response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 		response.setCharacterEncoding("utf-8");

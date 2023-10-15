@@ -51,7 +51,7 @@ public class DefaultMailManager implements MailManager {
 			}
 			return FreeMarkerTemplateUtils.processTemplateIntoString(template, model);
 		} catch (Exception e) {
-			log.error("Failed to create message body from template `" + templateName + "`", e);
+			log.error("Failed to create message.http body from template `" + templateName + "`", e);
 			return null;
 		}
 	}

@@ -32,7 +32,7 @@ public class SendMailAdapter implements SendMailPort {
 			"Welcome to GitEditor",
 			MailTemplate.WELCOME,
 			MessageVariable.from("code", home + "/redirect?type=emailVerification&code=" + code),
-			MessageVariable.from("message", "회원가입을 축하합니다. 아래의 링크를 클릭해서 계정을 활성화해 주세요.")
+			MessageVariable.from("message.http", "회원가입을 축하합니다. 아래의 링크를 클릭해서 계정을 활성화해 주세요.")
 		);
 		return code;
 	}
@@ -45,7 +45,7 @@ public class SendMailAdapter implements SendMailPort {
 			"이메일 변경 안내",
 			MailTemplate.WELCOME,
 			MessageVariable.from("code", home + "/redirect?type=emailVerification&code=" + code),
-			MessageVariable.from("message", "아래의 링크를 클릭해서 이메일을 확인해 주세요.")
+			MessageVariable.from("message.http", "아래의 링크를 클릭해서 이메일을 확인해 주세요.")
 		);
 		return code;
 	}

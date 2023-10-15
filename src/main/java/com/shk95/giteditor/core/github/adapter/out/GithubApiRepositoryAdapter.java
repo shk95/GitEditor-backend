@@ -158,7 +158,7 @@ public class GithubApiRepositoryAdapter implements GithubRepositoryPort, GithubU
 
 		/*try {
 			repository.createCommit()
-				.message(command.getCommitMessage())
+				.message.http(command.getCommitMessage())
 				.tree(command.getTreeSha())
 
 				.parent(command.getParentSha())

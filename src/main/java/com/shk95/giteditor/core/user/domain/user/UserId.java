@@ -1,6 +1,7 @@
 package com.shk95.giteditor.core.user.domain.user;
 
 import com.shk95.giteditor.common.constant.ProviderType;
+import com.shk95.giteditor.core.user.application.exception.CreateUserIdException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EnumType;
@@ -27,8 +28,12 @@ public class UserId implements Serializable {
 	}
 
 	public static UserId of(String providerTypeAndLoginId) {
-		String[] sub = providerTypeAndLoginId.split(",");
-		return new UserId(ProviderType.valueOf(sub[0]), sub[1]);
+		try {
+			String[] sub = providerTypeAndLoginId.split(",");
+			return new UserId(ProviderType.valueOf(sub[0]), sub[1]);
+		} catch (Exception e) {
+			throw new CreateUserIdException("Parameter providerTypeAndLoginId : [" + providerTypeAndLoginId + "]");
+		}
 	}
 
 	public String get() {

@@ -3,7 +3,7 @@ package com.shk95.giteditor.core.user.application.service;
 import com.shk95.giteditor.core.user.application.port.in.FetchUserInfoUseCase;
 import com.shk95.giteditor.core.user.application.port.out.FetchUserProjectionPort;
 import com.shk95.giteditor.core.user.application.port.out.UserCrudRepositoryPort;
-import com.shk95.giteditor.core.user.application.port.out.projection.OpenAIAccessToken;
+import com.shk95.giteditor.core.user.application.port.out.projection.OpenAIAccessTokenProjection;
 import com.shk95.giteditor.core.user.domain.user.User;
 import com.shk95.giteditor.core.user.domain.user.UserId;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +31,7 @@ public class FetchUserService implements FetchUserInfoUseCase {
 	@Override
 	public String fetchOpenAIAccessToken(UserId userId) {
 		return fetchUserProjectionPort.fetchOpenAIAccessToken(userId)
-			.map(OpenAIAccessToken::getOpenAIToken)
+			.map(OpenAIAccessTokenProjection::getOpenAIToken)
 			.orElseGet(String::new);
 	}
 }

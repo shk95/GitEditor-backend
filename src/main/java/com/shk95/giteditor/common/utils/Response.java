@@ -28,13 +28,13 @@ public class Response {
 	 *     {
 	 *         "status" : 200,
 	 *         "result" : success,
-	 *         "message" : message,
+	 *         "message.http" : message.http,
 	 *         "data" : [],
 	 *         "error" : []
 	 *     }
 	 * </pre>
 	 *
-	 * @param msg 응답 바디 message 필드에 포함될 정보
+	 * @param msg 응답 바디 message.http 필드에 포함될 정보
 	 * @return 응답 객체
 	 */
 	public static ResponseEntity<?> success(String msg) {
@@ -47,7 +47,7 @@ public class Response {
 	 *     {
 	 *         "status" : 200,
 	 *         "result" : success,
-	 *         "message" : null,
+	 *         "message.http" : null,
 	 *         "data" : [{data1}, {data2}...],
 	 *         "error" : []
 	 *     }
@@ -66,7 +66,7 @@ public class Response {
 	 *     {
 	 *         "status" : 200,
 	 *         "result" : success,
-	 *         "message" : null,
+	 *         "message.http" : null,
 	 *         "data" : [],
 	 *         "error" : []
 	 *     }
@@ -95,13 +95,13 @@ public class Response {
 	 *     {
 	 *         "status" : HttpStatus Code,
 	 *         "result" : fail,
-	 *         "message" : message,
+	 *         "message.http" : message.http,
 	 *         "data" : [],
 	 *         "error" : [{error1}, {error2}...]
 	 *     }
 	 * </pre>
 	 *
-	 * @param msg    응답 바디 message 필드에 포함될 정보
+	 * @param msg    응답 바디 message.http 필드에 포함될 정보
 	 * @param status 응답 바디 status 필드에 포함될 응답 상태 코드
 	 * @return 응답 객체
 	 */
