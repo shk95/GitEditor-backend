@@ -1,4 +1,4 @@
-package com.shk95.giteditor.common.utils.character;
+package com.shk95.giteditor.common.utils.string;
 
 import com.shk95.giteditor.common.constant.Constants;
 import org.springframework.util.AntPathMatcher;

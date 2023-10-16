@@ -3,6 +3,7 @@ package com.shk95.giteditor.core.github.application.port.in;
 import com.shk95.giteditor.core.github.application.service.command.*;
 import com.shk95.giteditor.core.github.domain.GithubFile;
 import com.shk95.giteditor.core.github.domain.GithubRepo;
+import com.shk95.giteditor.core.user.domain.user.UserId;
 
 import java.io.IOException;
 import java.util.List;
@@ -36,4 +37,6 @@ public interface GithubServiceUseCase {
 	void deleteDirectory(String userId, File.DeleteCommand command) throws IOException;
 
 	GithubFile readBlobAsString(String userId, GetFilesCommand command) throws IOException;
+
+	String getRepoReadme(UserId userId, String repoName);
 }

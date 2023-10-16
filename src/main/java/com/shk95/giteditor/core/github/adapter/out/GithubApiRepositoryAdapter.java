@@ -2,7 +2,6 @@ package com.shk95.giteditor.core.github.adapter.out;
 
 import com.shk95.giteditor.core.github.application.port.out.GithubOperationPort;
 import com.shk95.giteditor.core.github.application.port.out.GithubRepositoryPort;
-import com.shk95.giteditor.core.github.application.port.out.GithubUserPort;
 import com.shk95.giteditor.core.github.application.service.command.*;
 import com.shk95.giteditor.core.github.domain.*;
 import com.shk95.giteditor.core.github.infrastructure.GithubInitializer;
@@ -11,37 +10,20 @@ import lombok.extern.slf4j.Slf4j;
 import org.kohsuke.github.*;
 import org.springframework.stereotype.Repository;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static com.shk95.giteditor.common.utils.string.InputStreamUtil.convertStreamToString;
+import static com.shk95.giteditor.core.github.infrastructure.GithubUtils.readBlobAsString;
+
 @Slf4j
 @RequiredArgsConstructor
 @Repository
-public class GithubApiRepositoryAdapter implements GithubRepositoryPort, GithubUserPort, GithubOperationPort {
+public class GithubApiRepositoryAdapter implements GithubRepositoryPort, GithubOperationPort {
 
 	private final GithubInitializer initializer;
-
-	private static String readBlobAsString(GHBlob content) {
-		StringBuilder sb = new StringBuilder();
-		try {
-			InputStream is = content.read();
-			BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
-			String line;
-			while ((line = reader.readLine()) != null) {
-				sb.append(line).append("\n");
-			}
-		} catch (Exception e) {
-			log.warn("Unexpected exception occurred while reading blob as string. {}", e.getMessage());
-			return null;
-		}
-		return sb.toString();
-	}
 
 	@Override
 	public List<GithubRepo> getRepos(GithubCredential credential, GetReposCommand command) throws IOException {
@@ -134,6 +116,12 @@ public class GithubApiRepositoryAdapter implements GithubRepositoryPort, GithubU
 	}
 
 	@Override
+	public String getRepoReadme(GithubCredential credential, String repoName) throws IOException {
+		GitHub github = initializer.getInstance(credential);
+		return convertStreamToString(github.getRepository(repoName).getReadme().read());
+	}
+
+	@Override
 	public boolean commit(GithubCredential credential, CommitFilesCommand command) throws IOException {
 		GitHub github = initializer.getInstance(credential);
 
@@ -142,15 +130,18 @@ public class GithubApiRepositoryAdapter implements GithubRepositoryPort, GithubU
 			: github.getUser(command.getOwner()).getRepository(command.getRepositoryName());
 
 		List<GithubFile> createdFiles = new ArrayList<>();
-		command.getFiles().forEach
-			(file -> {
+		command.getFiles()
+			.forEach(file -> {
 				try {
-					GHTree tree = repository.createTree().add(
-							file.getPath(), file.getBlobContent().getByteContent(), file.getMode().isExecutable())
-						.baseTree(command.getBaseTreeSha()).create();
-					createdFiles.add(GithubFile.builder()
-						.sha(tree.getSha()).build());
-
+					GHTree tree = repository
+						.createTree()
+						.add(file.getPath(), file.getBlobContent().getByteContent(), file.getMode().isExecutable())
+						.baseTree(command.getBaseTreeSha())
+						.create();
+					createdFiles
+						.add(
+							GithubFile.builder()
+								.sha(tree.getSha()).build());
 				} catch (IOException e) {
 					log.info("{}.commitFiles | some errors occurred while creating tree. {}", getClass().getName(), e.getMessage());
 				}

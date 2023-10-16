@@ -10,7 +10,7 @@ import com.shk95.giteditor.common.service.mail.MailManager;
 import com.shk95.giteditor.common.service.mail.MailTemplate;
 import com.shk95.giteditor.common.service.mail.MessageVariable;
 import com.shk95.giteditor.common.utils.ImageUtils;
-import com.shk95.giteditor.common.utils.character.PasswordUtil;
+import com.shk95.giteditor.common.utils.string.PasswordUtil;
 import com.shk95.giteditor.core.auth.domain.CustomUserDetails;
 import com.shk95.giteditor.core.openai.application.port.in.command.UpdateOpenAIServiceCommand;
 import com.shk95.giteditor.core.openai.application.port.out.GptApiPort;

@@ -1,4 +1,4 @@
-package com.shk95.giteditor.common.utils.character;
+package com.shk95.giteditor.common.utils.string;
 
 
 import java.nio.charset.Charset;

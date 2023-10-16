@@ -1,4 +1,4 @@
-package com.shk95.giteditor.common.utils.character;
+package com.shk95.giteditor.common.utils.string;
 
 import org.apache.commons.lang3.ArrayUtils;
 

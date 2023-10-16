@@ -17,13 +17,15 @@ public interface GithubRepositoryPort {
 
 	void delete(GithubCredential credential, File.DeleteCommand command) throws IOException;
 
-	boolean commit(GithubCredential credential, CommitFilesCommand command) throws IOException;
+	boolean commit(GithubCredential credential, CommitFilesCommand command) throws IOException; // 구현에 문제가 있다.
 
 	void deleteDirectory(GithubCredential credential, File.DeleteCommand command) throws IOException;
 
 	GithubFile get(GithubCredential credential, GetFilesCommand command) throws IOException;
 
 	GithubFile get(GithubCredential credential, File.ReadCommand command) throws IOException;
+
+	String getRepoReadme(GithubCredential credential, String repoName) throws IOException;
 
 	void update(GithubCredential credential, File.UpdateCommand command) throws IOException;
 

@@ -18,4 +18,6 @@ public class GithubRepo {
 	private String htmlUrl;
 	private String defaultBranch;
 	private GithubOwner owner;
+
+	private String readme;
 }

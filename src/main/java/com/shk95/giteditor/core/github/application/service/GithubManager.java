@@ -4,10 +4,10 @@ import com.shk95.giteditor.core.github.application.port.in.GithubServiceUseCase;
 import com.shk95.giteditor.core.github.application.port.out.GetCredentialPort;
 import com.shk95.giteditor.core.github.application.port.out.GithubOperationPort;
 import com.shk95.giteditor.core.github.application.port.out.GithubRepositoryPort;
-import com.shk95.giteditor.core.github.application.port.out.GithubUserPort;
 import com.shk95.giteditor.core.github.application.service.command.*;
 import com.shk95.giteditor.core.github.domain.GithubFile;
 import com.shk95.giteditor.core.github.domain.GithubRepo;
+import com.shk95.giteditor.core.user.domain.user.UserId;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -23,7 +23,6 @@ public class GithubManager implements GithubServiceUseCase {
 	private final GetCredentialPort getCredentialPort;
 	private final GithubRepositoryPort githubRepositoryPort;
 	private final GithubOperationPort githubOperationPort;
-	private final GithubUserPort githubUserPort;
 
 	@Override
 	public List<GithubRepo> getRepos(String userId, GetReposCommand command) throws IOException {
@@ -93,5 +92,14 @@ public class GithubManager implements GithubServiceUseCase {
 	@Override
 	public GithubFile readBlobAsString(String userId, GetFilesCommand command) throws IOException {
 		return githubRepositoryPort.get(getCredentialPort.fetch(userId), command);
+	}
+
+	@Override
+	public String getRepoReadme(UserId userId, String repoName) {
+		try {
+			return githubRepositoryPort.getRepoReadme(getCredentialPort.fetch(userId.get()), repoName);
+		} catch (IOException e) {
+			return "";
+		}
 	}
 }

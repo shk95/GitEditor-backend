@@ -10,7 +10,7 @@ import java.io.IOException;
 @Component
 public class GithubInitializer {
 
-	public GitHub getInstance(GithubCredential credential) throws IOException {
+	public GitHub getInstance(GithubCredential credential) throws IOException { // org.kohsuke.github
 		return new GitHubBuilder().withOAuthToken(credential.getAccessToken(), credential.getGithubLoginId()).build();
 	}
 }
