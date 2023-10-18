@@ -21,6 +21,7 @@
 		<im4java.version>1.4.0</im4java.version>
 		<kohsuke-github.version>1.316</kohsuke-github.version>
 		<aws.sdk.version>1.11.163</aws.sdk.version>
+		<discord-jda.version>5.0.0-beta.14</discord-jda.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -206,6 +207,19 @@
 			<groupId>com.squareup.okhttp3</groupId>
 			<artifactId>okhttp</artifactId>
 			<version>4.11.0</version>
+		</dependency>
+
+		<!-- without audio-->
+		<dependency>
+			<groupId>net.dv8tion</groupId>
+			<artifactId>JDA</artifactId>
+			<version>${discord-jda.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>club.minnced</groupId>
+					<artifactId>opus-java</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 	</dependencies>

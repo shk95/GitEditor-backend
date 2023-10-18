@@ -36,8 +36,7 @@ public class UserManagementController {
 	@GetMapping("/profile")
 	public ResponseEntity<?> me(@CurrentUser CustomUserDetails userDetails) {
 		UserResponse.Me me = fetchUserInfoUseCase.fetchUser(userDetails.getUserId())
-			.map(user ->
-				UserResponse.Me.from(user, userDetails))
+			.map(UserResponse.Me::from)
 			.orElseGet(UserResponse.Me::new);
 		return Response.success(me, "회원정보를 성공적으로 가져왔습니다.", HttpStatus.OK);
 	}
@@ -141,6 +140,29 @@ public class UserManagementController {
 			.accessToken(request.getAccessToken()).build())
 			? Response.success("서비스가 추가되었습니다.")
 			: Response.fail("서비스 추가에 실패하였습니다.", HttpStatus.BAD_REQUEST);
+	}
+
+	@GetMapping("/profile/discord")
+	public ResponseEntity<?> getDiscordId(@CurrentUser CustomUserDetails userDetails) {
+		String discordId = fetchUserInfoUseCase.fetchDiscordIdByUserId(userDetails.getUserId());
+		return Response.success(discordId, "추가되었습니다", HttpStatus.OK);
+	}
+
+	@PostMapping("/profile/discord")
+	public ResponseEntity<?> updateDiscordId(@CurrentUser CustomUserDetails userDetails,
+	                                         @RequestBody UserRequest.Discord request) {
+		boolean process = manageUserUseCase.updateDiscordId(new DiscordDto(userDetails.getUserId(), request.getDiscordId()));
+		return process
+			? Response.success("변경되었습니다")
+			: Response.fail("디스코드 아이디 업데이트 실패", HttpStatus.INTERNAL_SERVER_ERROR);
+	}
+
+	@DeleteMapping("/profile/discord")
+	public ResponseEntity<?> deleteDiscordId(@CurrentUser CustomUserDetails userDetails) {
+		boolean process = manageUserUseCase.updateDiscordId(new DiscordDto(userDetails.getUserId(), null));
+		return process
+			? Response.success()
+			: Response.fail("디스코드 아이디 업데이트 실패", HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 
 	@UserOrTempAuthorize

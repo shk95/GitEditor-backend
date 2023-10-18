@@ -7,6 +7,8 @@ import java.util.Optional;
 
 public interface FetchUserInfoUseCase {
 
+	String fetchDiscordIdByUserId(UserId userId);
+
 	Optional<User> fetchUser(UserId userId);
 
 	String fetchOpenAIAccessToken(UserId userId);

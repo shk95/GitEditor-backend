@@ -28,6 +28,7 @@ public final class ApplicationProperties {
 	private Image image;
 	private Cdn cdn;
 	private CacheConfig cache;
+	private Discord discord;
 
 	@Setter
 	@Getter
@@ -95,6 +96,21 @@ public final class ApplicationProperties {
 			private Boolean eternal;
 			private Long diskExpiryThreadIntervalSeconds;
 			private String memoryStoreEvictionPolicy;
+		}
+	}
+
+	@Setter
+	@Getter
+	public static class Discord {
+
+		public Bot bot;
+
+		@Setter
+		@Getter
+		public static class Bot {
+
+			@NotEmpty
+			private String token;
 		}
 	}
 }

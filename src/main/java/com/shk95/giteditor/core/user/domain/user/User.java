@@ -59,6 +59,9 @@ public class User extends AbstractBaseTimeEntity {
 	@Column(name = "user_openai_token", length = 128)
 	private String openAIToken;
 
+	@Column(name = "user_discord_id", unique = true)
+	private String discordId;
+
 	@Column(name = "user_github_enabled")
 	private boolean githubEnabled;
 
@@ -159,17 +162,21 @@ public class User extends AbstractBaseTimeEntity {
 		}
 	}
 
+	public void updateDiscordId(String discordId) {
+		this.discordId = discordId;
+	}
+
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 		User user = (User) o;
-		return userEmailVerified == user.userEmailVerified && userEnabled == user.userEnabled && Objects.equals(userId, user.userId) && Objects.equals(defaultEmail, user.defaultEmail) && role == user.role && Objects.equals(password, user.password) && Objects.equals(username, user.username) && Objects.equals(profileImageUrl, user.profileImageUrl) && Objects.equals(emailVerificationCode, user.emailVerificationCode) && Objects.equals(emailToBeChanged, user.emailToBeChanged) && Objects.equals(providers, user.providers);
+		return userEmailVerified == user.userEmailVerified && userEnabled == user.userEnabled && githubEnabled == user.githubEnabled && openAIEnabled == user.openAIEnabled && Objects.equals(userId, user.userId) && Objects.equals(defaultEmail, user.defaultEmail) && role == user.role && Objects.equals(password, user.password) && Objects.equals(username, user.username) && Objects.equals(profileImageUrl, user.profileImageUrl) && Objects.equals(emailVerificationCode, user.emailVerificationCode) && Objects.equals(emailToBeChanged, user.emailToBeChanged) && Objects.equals(openAIToken, user.openAIToken) && Objects.equals(discordId, user.discordId) && Objects.equals(providers, user.providers);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(userId, defaultEmail, role, password, username, profileImageUrl, userEmailVerified, emailVerificationCode, emailToBeChanged, userEnabled, providers);
+		return Objects.hash(userId, defaultEmail, role, password, username, profileImageUrl, userEmailVerified, userEnabled, emailVerificationCode, emailToBeChanged, openAIToken, discordId, githubEnabled, openAIEnabled, providers);
 	}
 
 	@Override
@@ -178,14 +185,19 @@ public class User extends AbstractBaseTimeEntity {
 			"userId=" + userId +
 			", defaultEmail='" + defaultEmail + '\'' +
 			", role=" + role +
-			", password='" + "[password]" + '\'' +
+			", password='" + password + '\'' +
 			", username='" + username + '\'' +
 			", profileImageUrl='" + profileImageUrl + '\'' +
-			", isUserEmailVerified=" + userEmailVerified +
+			", userEmailVerified=" + userEmailVerified +
+			", userEnabled=" + userEnabled +
 			", emailVerificationCode='" + emailVerificationCode + '\'' +
 			", emailToBeChanged='" + emailToBeChanged + '\'' +
-			", isUserEnabled=" + userEnabled +
+			", openAIToken='" + openAIToken + '\'' +
+			", discordId='" + discordId + '\'' +
+			", githubEnabled=" + githubEnabled +
+			", openAIEnabled=" + openAIEnabled +
 			", providers=" + providers +
 			'}';
 	}
+
 }

@@ -1,6 +1,7 @@
 package com.shk95.giteditor.core.user.application.port.in;
 
 import com.shk95.giteditor.core.openai.application.port.in.command.UpdateOpenAIServiceCommand;
+import com.shk95.giteditor.core.user.adapter.in.DiscordDto;
 import com.shk95.giteditor.core.user.application.service.command.*;
 import com.shk95.giteditor.core.user.domain.user.UserId;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,6 +23,8 @@ public interface ManageUserUseCase {
 	boolean uploadProfileImage(UserId userId, String folder, MultipartFile file);
 
 	boolean updateOpenAIService(UpdateOpenAIServiceCommand command);
+
+	boolean updateDiscordId(DiscordDto dto);
 
 	void deleteUser(DeleteUserCommand command);
 }

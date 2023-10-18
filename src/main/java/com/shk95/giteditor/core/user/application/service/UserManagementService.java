@@ -14,6 +14,7 @@ import com.shk95.giteditor.common.utils.string.PasswordUtil;
 import com.shk95.giteditor.core.auth.domain.CustomUserDetails;
 import com.shk95.giteditor.core.openai.application.port.in.command.UpdateOpenAIServiceCommand;
 import com.shk95.giteditor.core.openai.application.port.out.GptApiPort;
+import com.shk95.giteditor.core.user.adapter.in.DiscordDto;
 import com.shk95.giteditor.core.user.application.port.in.ManageUserUseCase;
 import com.shk95.giteditor.core.user.application.port.out.GithubTokenHolderPort;
 import com.shk95.giteditor.core.user.application.port.out.SendMailPort;
@@ -76,18 +77,14 @@ public class UserManagementService implements ManageUserUseCase {
 	@Override
 	public void updateUsername(UpdateUserCommand command) {
 		userCrudRepositoryPort.findUserByUserId(command.getUserId())
-			.ifPresent(user -> {
-				user.updateUserName(command.getUsername());
-			});
+			.ifPresent(user -> user.updateUserName(command.getUsername()));
 	}
 
 	@Transactional
 	@Override
 	public void updatePassword(UpdateUserCommand command) {
 		userCrudRepositoryPort.findUserByUserId(command.getUserId())
-			.ifPresent(user -> {
-				user.updatePassword(encoder.encode(command.getPassword()));
-			});
+			.ifPresent(user -> user.updatePassword(encoder.encode(command.getPassword())));
 	}
 
 	@Transactional
@@ -172,6 +169,19 @@ public class UserManagementService implements ManageUserUseCase {
 				user.activateOpenAIUsage();
 				return true;
 			}).orElse(false);
+	}
+
+	@Transactional
+	@Override
+	public boolean updateDiscordId(DiscordDto dto) {
+		try {
+			userCrudRepositoryPort.findUserByUserId(dto.getUserId())
+				.ifPresent(user -> user.updateDiscordId(dto.getDiscordId()));
+		} catch (Exception e) {
+			log.info("failed to update discord id. {}", e.getMessage());
+			return false;
+		}
+		return true;
 	}
 
 	@Transactional

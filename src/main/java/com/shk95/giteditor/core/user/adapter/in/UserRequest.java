@@ -56,4 +56,11 @@ public class UserRequest {
 		@NotBlank
 		private String accessToken;
 	}
+
+	@Getter
+	public static class Discord {
+
+		private String discordId;
+	}
+
 }

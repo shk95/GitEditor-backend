@@ -3,6 +3,7 @@ package com.shk95.giteditor.core.user.adapter.out;
 import com.shk95.giteditor.common.constant.ProviderType;
 import com.shk95.giteditor.core.user.application.port.out.FetchUserProjectionPort;
 import com.shk95.giteditor.core.user.application.port.out.UserCrudRepositoryPort;
+import com.shk95.giteditor.core.user.application.port.out.projection.DiscordIdProjection;
 import com.shk95.giteditor.core.user.application.port.out.projection.OpenAIAccessTokenProjection;
 import com.shk95.giteditor.core.user.application.port.out.projection.SimpleUserProjection;
 import com.shk95.giteditor.core.user.application.port.out.projection.UserIdProjection;
