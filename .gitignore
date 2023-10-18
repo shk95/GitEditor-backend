@@ -43,3 +43,4 @@ build/
 /src/test/memo/
 
 .DS_Store
+.jpb
