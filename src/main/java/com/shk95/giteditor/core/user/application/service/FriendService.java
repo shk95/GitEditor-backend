@@ -78,6 +78,7 @@ public class FriendService implements AddFriendUseCase, AcceptFriendUseCase, Get
 					.map(friend ->
 						new FriendDto(friend.getAddressee().getUserId().getProviderType(),
 							friend.getAddressee().getUserId().getUserLoginId(),
+							friend.getAddressee().getProfileImageUrl(),
 							friend.getAddressee().getDefaultEmail(),
 							friend.getAddressee().getUsername(),
 							friend.getStatus())).collect(Collectors.toList())

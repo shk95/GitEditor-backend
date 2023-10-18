@@ -6,6 +6,7 @@ import com.shk95.giteditor.core.user.domain.friend.FriendshipStatus;
 public record FriendDto(
 	ProviderType addresseeUserIdProviderType,
 	String addresseeUserIdUserLoginId,
+	String profileImg,
 	String addresseeDefaultEmail,
 	String addresseeUsername,
 	FriendshipStatus status

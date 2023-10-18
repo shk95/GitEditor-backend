@@ -16,12 +16,24 @@ import java.util.List;
 
 @Slf4j
 @RequiredArgsConstructor
-@RequestMapping("/messages")
+@RequestMapping("/user/messages")
 @RestController
 public class MessageController {
 
 	private final GetMessageUseCase getMessageUseCase;
 	private final SendMessageUseCase sendMessageUseCase;
+
+	@GetMapping("/unread/count")
+	public ResponseEntity<?> getUnreadCount(@CurrentUser CustomUserDetails userDetails) {
+		int count = getMessageUseCase.getUnreadCount(userDetails.getUserId());
+		return Response.success(count);
+	}
+
+	@GetMapping("/unread")
+	public ResponseEntity<?> getUnreadMessages(@CurrentUser CustomUserDetails userDetails) {
+		List<MessageDto> messages = getMessageUseCase.getUnreadMessages(userDetails.getUserId());
+		return Response.success(messages);
+	}
 
 	@PostMapping("/send")
 	public ResponseEntity<?> sendMessage(@CurrentUser CustomUserDetails userDetails,
@@ -36,10 +48,12 @@ public class MessageController {
 	@GetMapping("/conversation")
 	public ResponseEntity<?> getConversation(@CurrentUser CustomUserDetails userDetails,
 	                                         @RequestParam String recipientId) {
-		List<MessageDto> conversation = getMessageUseCase
-			.getMessagesFrom(
-				userDetails.getUserId(),
-				UserId.of(recipientId));
+		// 메시지는 가져오면서 읽음으로 처리
+		List<MessageDto> conversation =
+			getMessageUseCase
+				.getMessagesFrom(
+					userDetails.getUserId(),
+					UserId.of(recipientId));
 		return Response.success(conversation);
 	}
 

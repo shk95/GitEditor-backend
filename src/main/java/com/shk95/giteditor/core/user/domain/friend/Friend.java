@@ -26,8 +26,8 @@ public class Friend {
 
 	@ManyToOne
 	@JoinColumns({
-		@JoinColumn(name = "sender_prv_typ", referencedColumnName = "user_prv_typ"),
-		@JoinColumn(name = "sender_login_id", referencedColumnName = "user_login_id")
+		@JoinColumn(name = "addressee_prv_typ", referencedColumnName = "user_prv_typ"),
+		@JoinColumn(name = "addressee_login_id", referencedColumnName = "user_login_id")
 	})
 	private User addressee;
 

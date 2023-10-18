@@ -7,9 +7,4 @@ public interface UserIdProjection {
 	String getUserLoginId();
 
 	ProviderType getProviderType();
-
-	String getDefaultEmail();
-
-	String getProfileImageUrl();
-
 }

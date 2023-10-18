@@ -1,8 +1,8 @@
 package com.shk95.giteditor.core.user.application.service;
 
-import com.shk95.giteditor.core.user.application.port.in.FindUserUseCase;
+import com.shk95.giteditor.core.user.application.port.in.SearchUserUseCase;
 import com.shk95.giteditor.core.user.application.port.out.FetchUserProjectionPort;
-import com.shk95.giteditor.core.user.application.port.out.projection.UserIdProjection;
+import com.shk95.giteditor.core.user.application.port.out.projection.SimpleUserProjection;
 import com.shk95.giteditor.core.user.application.service.dto.UserDto;
 import com.shk95.giteditor.core.user.domain.user.UserId;
 import lombok.RequiredArgsConstructor;
@@ -16,20 +16,21 @@ import java.util.stream.Collectors;
 @Slf4j
 @RequiredArgsConstructor
 @Service
-public class FindUserService implements FindUserUseCase {
+public class SearchUserService implements SearchUserUseCase {
 
 	private final FetchUserProjectionPort fetchUserProjectionPort;
 
 	@Transactional(readOnly = true)
 	@Override
-	public List<UserDto> getUserListByUsername(String username) {
-		List<UserIdProjection> list = fetchUserProjectionPort.fetchUserListByUsername(username);
-		list.forEach(a -> log.debug(a.toString()));
+	public List<UserDto> getUserListLikeUsername(String username) {
+		List<SimpleUserProjection> list = fetchUserProjectionPort.fetchUserListLikeUsername(username);
 		return list.stream()
-			.map(l -> new UserDto(
-				new UserId(l.getProviderType(), l.getUserLoginId()).get(),
-				l.getProfileImageUrl(),
-				l.getDefaultEmail()))
+			.map(l ->
+				new UserDto(
+					new UserId(l.getProviderType(), l.getUserLoginId()).get(),
+					l.getUsername(),
+					l.getProfileImageUrl(),
+					l.getDefaultEmail()))
 			.collect(Collectors.toList());
 	}
 }

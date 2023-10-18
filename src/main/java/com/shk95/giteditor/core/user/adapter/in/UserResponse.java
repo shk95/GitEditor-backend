@@ -2,7 +2,6 @@ package com.shk95.giteditor.core.user.adapter.in;
 
 import com.shk95.giteditor.common.constant.ProviderType;
 import com.shk95.giteditor.common.security.Role;
-import com.shk95.giteditor.core.auth.domain.CustomUserDetails;
 import com.shk95.giteditor.core.user.domain.provider.Provider;
 import com.shk95.giteditor.core.user.domain.user.User;
 import lombok.Builder;
@@ -24,10 +23,12 @@ public class UserResponse {
 		private String defaultEmail;
 		private String defaultUsername;
 		private String defaultImgUrl;//default profile image
+
 		private String providerEmail;
 		private String providerLoginId;
 		private String providerUsername;
 		private String providerImgUrl;
+
 		private boolean githubEnabled;
 		private boolean openAIEnabled;
 		private Map<String, Object> attributes;
@@ -53,12 +54,12 @@ public class UserResponse {
 			this.attributes = attributes;
 		}
 
-		public static Me from(User user, CustomUserDetails userDetails) {
+		public static Me from(User user) {
 			Provider provider = user.getProviders().stream()
 				.filter(p -> user.getUserId().getProviderType() == p.getProviderId().getProviderType())
 				.findFirst().orElseGet(Provider::new);
 			return Me.builder()
-				.userId(userDetails.getProviderTypeAndLoginId())
+				.userId(user.getUserId().getUserLoginId())
 				.role(user.getRole())
 				.providerType(user.getUserId().getProviderType())
 				.defaultEmail(user.getDefaultEmail())

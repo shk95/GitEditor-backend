@@ -63,6 +63,7 @@ public class SecurityConfiguration {
 				.requestMatchers(antMatcher("/user/signup/oauth")).permitAll()
 				.requestMatchers(antMatcher("/user/profile/password")).permitAll()
 				.requestMatchers(antMatcher("/user/profile/email")).permitAll()
+				.requestMatchers(antMatcher("/search/**")).permitAll()
 				.requestMatchers(antMatcher("/api/**")).hasRole("USER")
 				.requestMatchers(antMatcher("/admin/**")).hasRole("ADMIN")
 				.anyRequest().authenticated())

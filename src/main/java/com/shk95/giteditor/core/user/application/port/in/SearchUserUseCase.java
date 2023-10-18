@@ -4,8 +4,8 @@ import com.shk95.giteditor.core.user.application.service.dto.UserDto;
 
 import java.util.List;
 
-public interface FindUserUseCase {
+public interface SearchUserUseCase {
 
-	List<UserDto> getUserListByUsername(String username); // 서비스 사용자 이름
+	List<UserDto> getUserListLikeUsername(String username); // 서비스 사용자 이름
 
 }

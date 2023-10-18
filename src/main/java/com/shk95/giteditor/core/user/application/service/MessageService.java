@@ -28,44 +28,60 @@ public class MessageService implements SendMessageUseCase, GetMessageUseCase {
 	private final MessageRepositoryPort messageRepositoryPort;
 	private final UserCrudRepositoryPort userCrudRepositoryPort;
 
+	private final Function<Message, MessageDto> messageMapper = message ->
+		new MessageDto(
+			message.getSender().getUserId().getProviderType(),
+			message.getSender().getUserId().getUserLoginId(),
+			message.getSender().getUsername(),
+			message.getRecipient().getUserId().getProviderType(),
+			message.getRecipient().getUserId().getUserLoginId(),
+			message.getRecipient().getUsername(),
+			message.getContent(),
+			message.getSender().getProfileImageUrl(),
+			message.getRecipient().getProfileImageUrl(),
+			message.getTimestamp());
+
+	@Transactional(readOnly = true)
+	@Override
+	public int getUnreadCount(UserId myId) {
+		return messageRepositoryPort.countUnreadMessage(myId);
+	}
+
+	@Transactional(readOnly = true)
+	@Override
+	public List<MessageDto> getUnreadMessages(UserId myId) {
+		return messageRepositoryPort.getUnreadMessages(myId).stream()
+			.map(messageMapper).toList();
+	}
+
 	@Transactional(readOnly = true)
 	@Override
 	public List<MessageDto> getAllMyMessages(UserId myId) {
 		return userCrudRepositoryPort.findUserByUserId(myId)
 			.map(messageRepositoryPort::findBySender)
 			.map(messages -> messages.stream()
-				.map(message -> new MessageDto(message.getSender().getUserId().getProviderType(),
-					message.getSender().getUserId().getUserLoginId(),
-					message.getRecipient().getUserId().getProviderType(),
-					message.getRecipient().getUserId().getUserLoginId(),
-					message.getContent(),
-					message.getTimestamp()))
-				.collect(Collectors.toList()))
+				.map(messageMapper).collect(Collectors.toList()))
 			.orElseGet(ArrayList::new);
 	}
 
-	@Transactional(readOnly = true)
+	@Transactional
 	@Override
 	public List<MessageDto> getMessagesFrom(UserId myId, UserId recipientId) {
-		Function<Message, MessageDto> toDto = message ->
-			new MessageDto(
-				message.getSender().getUserId().getProviderType(),
-				message.getSender().getUserId().getUserLoginId(),
-				message.getRecipient().getUserId().getProviderType(),
-				message.getRecipient().getUserId().getUserLoginId(),
-				message.getContent(),
-				message.getTimestamp());
-
 		Optional<User> me = userCrudRepositoryPort.findUserByUserId(myId);
 		Optional<User> recipient = userCrudRepositoryPort.findUserByUserId(recipientId);
 		if (me.isEmpty() || recipient.isEmpty()) {
 			log.info("User not found. sender : [{}], recipient : [{}]", myId, recipientId);
 			return new ArrayList<>();
 		}
-		List<MessageDto> sent = messageRepositoryPort.findBySenderAndRecipient(me.get(), recipient.get()).stream()
-			.map(toDto).toList();
-		List<MessageDto> received = messageRepositoryPort.findBySenderAndRecipient(recipient.get(), me.get()).stream()
-			.map(toDto).toList();
+		List<MessageDto> sent = messageRepositoryPort
+			.findBySenderAndRecipient(me.get(), recipient.get()).stream()
+			.map(messageMapper)
+			.toList();
+		List<MessageDto> received = messageRepositoryPort
+			.findBySenderAndRecipient(recipient.get(), me.get()).stream()
+			.map(Message::markAsRead)
+			.map(messageMapper)
+			.toList();
 
 		List<MessageDto> result = new ArrayList<>();
 		result.addAll(sent);

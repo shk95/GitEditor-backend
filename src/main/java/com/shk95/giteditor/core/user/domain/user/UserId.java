@@ -18,10 +18,10 @@ import java.util.Objects;
 public class UserId implements Serializable {
 
 	@Enumerated(EnumType.STRING)
-	@Column(name = "user_prv_typ", nullable = false, length = 20)
+	@Column(name = "user_prv_typ", nullable = false, length = 20, columnDefinition = "varchar(20)")
 	private ProviderType providerType;
 
-	@Column(name = "user_login_id", nullable = false, length = 50)
+	@Column(name = "user_login_id", nullable = false, length = 50, columnDefinition = "varchar(50)")
 	private String userLoginId;
 
 	protected UserId() {

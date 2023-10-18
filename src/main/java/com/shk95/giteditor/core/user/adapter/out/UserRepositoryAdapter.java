@@ -4,6 +4,7 @@ import com.shk95.giteditor.common.constant.ProviderType;
 import com.shk95.giteditor.core.user.application.port.out.FetchUserProjectionPort;
 import com.shk95.giteditor.core.user.application.port.out.UserCrudRepositoryPort;
 import com.shk95.giteditor.core.user.application.port.out.projection.OpenAIAccessTokenProjection;
+import com.shk95.giteditor.core.user.application.port.out.projection.SimpleUserProjection;
 import com.shk95.giteditor.core.user.application.port.out.projection.UserIdProjection;
 import com.shk95.giteditor.core.user.domain.user.User;
 import com.shk95.giteditor.core.user.domain.user.UserId;
@@ -31,6 +32,16 @@ public class UserRepositoryAdapter implements UserCrudRepositoryPort, FetchUserP
 	@Override
 	public User saveAndFlush(User user) {
 		return jpaUserRepository.saveAndFlush(user);
+	}
+
+	@Override
+	public Optional<UserIdProjection> fetchUserIdByDiscordId(String discordId) {
+		return jpaUserRepository.findUserIdByDiscordId(discordId);
+	}
+
+	@Override
+	public Optional<DiscordIdProjection> fetchDiscordIdByUserID(UserId userId) {
+		return jpaUserRepository.findDiscordIdByUserId(userId);
 	}
 
 	@Override
@@ -82,7 +93,7 @@ public class UserRepositoryAdapter implements UserCrudRepositoryPort, FetchUserP
 	}
 
 	@Override
-	public List<UserIdProjection> fetchUserListByUsername(String username) {
-		return jpaUserRepository.findAllUserIdByUsername(username);
+	public List<SimpleUserProjection> fetchUserListLikeUsername(String username) {
+		return jpaUserRepository.findUserIdLikeUsername("%" + username + "%");
 	}
 }

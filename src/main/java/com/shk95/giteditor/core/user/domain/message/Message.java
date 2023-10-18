@@ -34,6 +34,9 @@ public class Message {
 	@Column(name = "content", updatable = false)
 	private String content;
 
+	@Column(name = "msg_read")
+	private boolean read;
+
 	@CreationTimestamp
 	@Column(name = "timestamp", updatable = false)
 	private LocalDateTime timestamp;
@@ -48,5 +51,10 @@ public class Message {
 		this.recipient = recipient;
 		this.content = content;
 //		this.timestamp = timestamp;
+	}
+
+	public Message markAsRead() {
+		this.read = true;
+		return this;
 	}
 }

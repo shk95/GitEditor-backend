@@ -18,7 +18,7 @@ import java.util.List;
 
 @Slf4j
 @RequiredArgsConstructor
-@RequestMapping("/friends")
+@RequestMapping("/user/friend")
 @RestController
 public class FriendController {
 
@@ -28,18 +28,20 @@ public class FriendController {
 
 	// 본인은 ACCEPTED, 상대방에게는 PENDING 처리
 	@PostMapping("/request")
-	public ResponseEntity<?> sendFriendRequest(@CurrentUser CustomUserDetails userDetails, @RequestParam String addresseeId) {
+	public ResponseEntity<?> sendFriendRequest(@CurrentUser CustomUserDetails userDetails,
+	                                           @RequestBody FriendRequest request) {
 		UserId myId = userDetails.getUserId();
-		UserId addresseeUserId = UserId.of(addresseeId);
+		UserId addresseeUserId = UserId.of(request.getAddresseeId());
 		addFriendUseCase.request(myId, addresseeUserId);
 		return Response.success();
 	}
 
 	// 본인의 PENDING -> ACCEPTED
 	@PostMapping("/accept")
-	public ResponseEntity<?> acceptFriendRequest(@CurrentUser CustomUserDetails userDetails, @RequestParam String addresseeId) {
+	public ResponseEntity<?> acceptFriendRequest(@CurrentUser CustomUserDetails userDetails,
+	                                             @RequestBody FriendRequest request) {
 		UserId myId = userDetails.getUserId();
-		UserId addresseeUserId = UserId.of(addresseeId);
+		UserId addresseeUserId = UserId.of(request.getAddresseeId());
 		acceptFriendUseCase.acceptRequest(myId, addresseeUserId);
 		return Response.success();
 	}

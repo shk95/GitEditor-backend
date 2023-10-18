@@ -1,8 +1,7 @@
 package com.shk95.giteditor.core.user.adapter.in;
 
-import com.shk95.giteditor.common.security.UserAuthorize;
 import com.shk95.giteditor.common.utils.Response;
-import com.shk95.giteditor.core.user.application.port.in.FindUserUseCase;
+import com.shk95.giteditor.core.user.application.port.in.SearchUserUseCase;
 import com.shk95.giteditor.core.user.application.service.dto.UserDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,22 +14,16 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @Slf4j
-@UserAuthorize
 @RequiredArgsConstructor
-@RequestMapping("/user/id")
+@RequestMapping("/search/user/")
 @RestController
-public class GetUserController {
+public class SearchUserController {
 
-	private final FindUserUseCase findUserUseCase;
+	private final SearchUserUseCase searchUserUseCase;
 
-	/*@GetMapping("/me")
-	public ResponseEntity<?> me(@CurrentUser CustomUserDetails userDetails) {
-		return Response.success(new UserIdDto(userDetails.getProviderTypeAndLoginId()));
-	}*/
-
-	@GetMapping("/{username}")
-	public ResponseEntity<?> getUserByUsername(@PathVariable String username) {
-		List<UserDto> list = findUserUseCase.getUserListByUsername(username);
+	@GetMapping("/username/{username}")
+	public ResponseEntity<?> searchUserLikeUsername(@PathVariable String username) {
+		List<UserDto> list = searchUserUseCase.getUserListLikeUsername(username);
 		return Response.success(list);
 	}
 

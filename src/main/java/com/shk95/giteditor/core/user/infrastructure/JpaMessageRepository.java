@@ -8,6 +8,10 @@ import java.util.List;
 
 public interface JpaMessageRepository extends JpaRepository<Message, Long> {
 
+	int countByRecipientAndRead(User me, boolean read);
+
+	List<Message> findByRecipientAndReadOrderByTimestampAsc(User recipient, boolean read);
+
 	List<Message> findBySender(User sender);
 
 	List<Message> findBySenderAndRecipient(User sender, User recipient);

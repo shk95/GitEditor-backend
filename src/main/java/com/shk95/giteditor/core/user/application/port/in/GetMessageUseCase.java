@@ -7,6 +7,10 @@ import java.util.List;
 
 public interface GetMessageUseCase {
 
+	int getUnreadCount(UserId myId);
+
+	List<MessageDto> getUnreadMessages(UserId myId);
+
 	List<MessageDto> getAllMyMessages(UserId myId);
 
 	List<MessageDto> getMessagesFrom(UserId myId, UserId recipientId);

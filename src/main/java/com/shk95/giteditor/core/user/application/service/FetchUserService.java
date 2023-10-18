@@ -32,6 +32,6 @@ public class FetchUserService implements FetchUserInfoUseCase {
 	public String fetchOpenAIAccessToken(UserId userId) {
 		return fetchUserProjectionPort.fetchOpenAIAccessToken(userId)
 			.map(OpenAIAccessTokenProjection::getOpenAIToken)
-			.orElseGet(String::new);
+			.orElse("");
 	}
 }
